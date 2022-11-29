@@ -20,6 +20,8 @@ public class FilmValidationTest {
     public static final String VALID_DESCRIPTION = "Valid Description";
     public static final int VALID_DURATION = 120;
     public static final LocalDate VALID_RELEASE_DATE = LocalDate.of(1999, Month.JULY, 7);
+    public static final LocalDate CINEMA_BIRTHDAY = LocalDate.of(1895, Month.DECEMBER, 28);
+    public static final int MAX_DESCRIPTION_SIZE = 200;
     private Validator validator;
     private final Film film = new Film();
 
@@ -41,7 +43,7 @@ public class FilmValidationTest {
 
     @Test
     public void invalidNameShouldFailValidation() {
-        film.setName(" ");
+        film.setName("");
         Set<ConstraintViolation<Film>> violations = validator.validate(film);
         assertFalse(violations.isEmpty(), violations.toString());
         violations.clear();
@@ -54,11 +56,14 @@ public class FilmValidationTest {
 
     @Test
     public void invalidDescriptionShouldFailValidation() {
-        film.setDescription("0sq9I1Epv0zhgzbrMJCMHbPOJMZrYgRfzsAZR8YUkiZHtFGfLqz7kIthrHsex3AMpW4YCXnezGKmIS03TdgGdlYK"
-                + "dGiVusr1DyLwq421mcTMvczYbOsthZlOcr9xS59bpT3BLlTxpV9GmFhbjRWKqULmWRhTomP90BzalGyAXRjQwcl7rR6VfGyA2J"
-                + "xLpcFqjFx138LK7");
+        film.setDescription("a".repeat(MAX_DESCRIPTION_SIZE + 1));
         Set<ConstraintViolation<Film>> violations = validator.validate(film);
         assertFalse(violations.isEmpty(), violations.toString());
+        violations.clear();
+
+        film.setDescription("a".repeat(MAX_DESCRIPTION_SIZE));
+        violations = validator.validate(film);
+        assertTrue(violations.isEmpty(), violations.toString());
     }
 
     @Test
@@ -68,9 +73,14 @@ public class FilmValidationTest {
         assertFalse(violations.isEmpty(), violations.toString());
         violations.clear();
 
-        film.setReleaseDate(LocalDate.of(1895, Month.DECEMBER, 28).minusDays(1));
+        film.setReleaseDate(CINEMA_BIRTHDAY.minusDays(1));
         violations = validator.validate(film);
         assertFalse(violations.isEmpty(), violations.toString());
+        violations.clear();
+
+        film.setReleaseDate(CINEMA_BIRTHDAY);
+        violations = validator.validate(film);
+        assertTrue(violations.isEmpty(), violations.toString());
     }
 
     @Test

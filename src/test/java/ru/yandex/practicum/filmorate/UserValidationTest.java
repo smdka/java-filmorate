@@ -80,5 +80,10 @@ public class UserValidationTest {
         user.setBirthday(LocalDate.now().plusDays(1));
         Set<ConstraintViolation<User>> violations = validator.validate(user);
         assertFalse(violations.isEmpty(), violations.toString());
+        violations.clear();
+
+        user.setBirthday(LocalDate.now());
+        violations = validator.validate(user);
+        assertTrue(violations.isEmpty(), violations.toString());
     }
 }

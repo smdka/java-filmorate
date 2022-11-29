@@ -1,6 +1,8 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.User;
 
@@ -21,32 +23,33 @@ public class UserController {
     }
 
     @PostMapping
-    public User add(@Valid @RequestBody User user) {
-        useLoginIfNameIsNull(user);
+    public ResponseEntity<User> add(@Valid @RequestBody User user) {
+        useLoginIfNameIsBlank(user);
         user.setId(++id);
         users.put(user.getId(), user);
         log.info("Пользователь '{}' успешно создан и ему присвоен id = {}", user.getName(), user.getId());
-        return user;
+        return ResponseEntity.ok(user);
     }
 
-    private void useLoginIfNameIsNull(User user) {
-        if (user.getName() == null) {
+    private void useLoginIfNameIsBlank(User user) {
+        String name = user.getName();
+        if (name == null || name.isBlank()) {
             String login = user.getLogin();
             user.setName(login);
         }
     }
 
     @PutMapping
-    public User update(@Valid @RequestBody User newUser) throws IllegalArgumentException {
+    public ResponseEntity<User> update(@Valid @RequestBody User newUser) {
         if (!isExist(newUser)) {
-            log.warn("Не удалось обновить пользователя");
-            throw new IllegalArgumentException("Пользователь с id = " + newUser.getId() + " не существует");
+            log.warn("Пользователь с id = " + newUser.getId() + " не существует");
+            return new ResponseEntity<>(newUser, HttpStatus.NOT_FOUND);
         }
-        useLoginIfNameIsNull(newUser);
+        useLoginIfNameIsBlank(newUser);
         User currentUser = users.get(newUser.getId());
         currentUser.updateFrom(newUser);
         log.info("Пользователь '{}' успешно обновлен", currentUser.getName());
-        return currentUser;
+        return ResponseEntity.ok(currentUser);
     }
 
     private boolean isExist(User newUser) {

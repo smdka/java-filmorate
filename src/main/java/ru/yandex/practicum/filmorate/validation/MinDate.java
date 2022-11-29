@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.annotation;
+package ru.yandex.practicum.filmorate.validation;
 
 import javax.validation.Constraint;
 import javax.validation.Payload;
@@ -9,8 +9,9 @@ import java.lang.annotation.*;
 @Documented
 @Constraint(validatedBy = DateValidator.class)
 
-public @interface NotBeforeCinemaBirthday {
-    public String message() default "Дата не должна быть раньше 28.12.1895 г.";
+public @interface MinDate {
+    public String date();
+    public String message() default "Дата не должна быть раньше указанной";
     public Class<?>[] groups() default {};
     public Class<? extends Payload>[] payload() default {};
 }
