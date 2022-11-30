@@ -14,7 +14,8 @@ public class Film {
     @NotBlank(message = "Имя фильма обязательно")
     private String name;
 
-    @Size(max = MAX_DESCRIPTION_SIZE, message = "Описание фильма не может быть больше 200 символов")
+    @Size(max = MAX_DESCRIPTION_SIZE,
+            message = "Описание фильма не может быть больше" + MAX_DESCRIPTION_SIZE + "символов")
     private String description;
 
     @NotNull(message = "Дата релиза обязательна")

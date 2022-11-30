@@ -14,7 +14,7 @@ public class User {
     private String email;
 
     @NotBlank(message = "Login обязателен")
-    @Pattern(regexp = "^[a-zA-Z0-9_.]*$")
+    @Pattern(regexp = "^\\S*$")
     private String login;
 
     private String name;
