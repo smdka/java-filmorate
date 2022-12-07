@@ -26,23 +26,28 @@ public class FilmController {
     public ResponseEntity<Film> add(@Valid @RequestBody Film film) {
         film.setId(++id);
         films.put(film.getId(), film);
+        return filmAddedResponse(film);
+    }
+
+    private static ResponseEntity<Film> filmAddedResponse(Film film) {
         log.info("Фильм '{}' успешно добавлен и ему присвоен id = {}", film.getName(), film.getId());
         return ResponseEntity.ok(film);
     }
 
     @PutMapping
     public ResponseEntity<Film> update(@Valid @RequestBody Film newFilm) {
-        if (!isExist(newFilm)) {
-            log.warn("Фильм с id = " + newFilm.getId() + " не существует");
-            return new ResponseEntity<>(newFilm, HttpStatus.NOT_FOUND);
-        }
-        Film currentFilm = films.get(newFilm.getId());
-        currentFilm.updateFrom(newFilm);
-        log.info("Фильм '{}' успешно обновлен", currentFilm.getName());
-        return ResponseEntity.ok(currentFilm);
+        return films.replace(newFilm.getId(), newFilm) != null
+                ? filmUpdatedResponse(newFilm)
+                : filmNotFoundResponse(newFilm);
     }
 
-    private boolean isExist(Film newFilm) {
-        return films.containsKey(newFilm.getId());
+    private static ResponseEntity<Film> filmUpdatedResponse(Film newFilm) {
+        log.info("Фильм с id = '{}' успешно обновлен", newFilm.getId());
+        return ResponseEntity.ok(newFilm);
+    }
+
+    private static ResponseEntity<Film> filmNotFoundResponse(Film newFilm) {
+        log.warn("Фильм с id = '{}' не существует", newFilm.getId());
+        return new ResponseEntity<>(newFilm, HttpStatus.NOT_FOUND);
     }
 }

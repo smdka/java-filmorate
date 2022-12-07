@@ -27,11 +27,15 @@ public class UserController {
         useLoginIfNameIsBlank(user);
         user.setId(++id);
         users.put(user.getId(), user);
+        return userAddedResponse(user);
+    }
+
+    private static ResponseEntity<User> userAddedResponse(User user) {
         log.info("Пользователь '{}' успешно создан и ему присвоен id = {}", user.getName(), user.getId());
         return ResponseEntity.ok(user);
     }
 
-    private void useLoginIfNameIsBlank(User user) {
+    private static void useLoginIfNameIsBlank(User user) {
         String name = user.getName();
         if (name == null || name.isBlank()) {
             String login = user.getLogin();
@@ -41,18 +45,19 @@ public class UserController {
 
     @PutMapping
     public ResponseEntity<User> update(@Valid @RequestBody User newUser) {
-        if (!isExist(newUser)) {
-            log.warn("Пользователь с id = " + newUser.getId() + " не существует");
-            return new ResponseEntity<>(newUser, HttpStatus.NOT_FOUND);
-        }
         useLoginIfNameIsBlank(newUser);
-        User currentUser = users.get(newUser.getId());
-        currentUser.updateFrom(newUser);
-        log.info("Пользователь '{}' успешно обновлен", currentUser.getName());
-        return ResponseEntity.ok(currentUser);
+        return users.replace(newUser.getId(), newUser) != null
+                ? userUpdatedResponse(newUser)
+                : userNotFoundResponse(newUser);
     }
 
-    private boolean isExist(User newUser) {
-        return users.containsKey(newUser.getId());
+    private static ResponseEntity<User> userUpdatedResponse(User newUser) {
+        log.info("Пользователь с id = '{}' успешно обновлен", newUser.getId());
+        return ResponseEntity.ok(newUser);
+    }
+
+    private static ResponseEntity<User> userNotFoundResponse(User newUser) {
+        log.warn("Пользователь с id = '{}' не существует", newUser.getId());
+        return new ResponseEntity<>(newUser, HttpStatus.NOT_FOUND);
     }
 }

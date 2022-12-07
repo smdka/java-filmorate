@@ -9,6 +9,7 @@ import java.time.LocalDate;
 @Data
 public class Film {
     public static final int MAX_DESCRIPTION_SIZE = 200;
+    public static final String CINEMA_BIRTHDAY = "28.12.1895";
     private int id;
 
     @NotBlank(message = "Имя фильма обязательно")
@@ -19,16 +20,9 @@ public class Film {
     private String description;
 
     @NotNull(message = "Дата релиза обязательна")
-    @MinDate(date = "28.12.1895")
+    @MinDate(date = CINEMA_BIRTHDAY)
     private LocalDate releaseDate;
 
     @Positive(message = "Продолжительность фильма должна быть больше 0")
     private int duration;
-
-    public void updateFrom(Film newFilm) {
-        this.name = newFilm.getName();
-        this.description = newFilm.getDescription();
-        this.releaseDate = newFilm.getReleaseDate();
-        this.duration = newFilm.getDuration();
-    }
 }

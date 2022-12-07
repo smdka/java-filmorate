@@ -21,11 +21,4 @@ public class User {
 
     @PastOrPresent(message = "Дата рождения не может быть позже текущей")
     private LocalDate birthday;
-
-    public void updateFrom(User newUser) {
-        this.email = newUser.getEmail();
-        this.login = newUser.getLogin();
-        this.name = newUser.getName();
-        this.birthday = newUser.birthday;
-    }
 }
