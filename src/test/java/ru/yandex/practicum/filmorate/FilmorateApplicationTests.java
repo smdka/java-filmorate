@@ -47,19 +47,19 @@ class FilmorateApplicationTests {
 	public void emptyRequestShouldReturnBadRequest() throws Exception {
 		this.mockMvc.perform(post("/users"))
 				.andDo(print())
-				.andExpect(status().isBadRequest());
+				.andExpect(status().is5xxServerError());
 
 		this.mockMvc.perform(put("/users"))
 				.andDo(print())
-				.andExpect(status().isBadRequest());
+				.andExpect(status().is5xxServerError());
 
 		this.mockMvc.perform(post("/films"))
 				.andDo(print())
-				.andExpect(status().isBadRequest());
+				.andExpect(status().is5xxServerError());
 
 		this.mockMvc.perform(put("/films"))
 				.andDo(print())
-				.andExpect(status().isBadRequest());
+				.andExpect(status().is5xxServerError());
 	}
 
 	@Test
