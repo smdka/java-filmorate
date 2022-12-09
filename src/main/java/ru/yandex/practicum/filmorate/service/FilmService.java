@@ -25,20 +25,29 @@ public class FilmService {
     public Film add(Film film) {
         film.setId(++id);
         storage.add(film);
-        log.info("Фильм '{}' успешно добавлен и ему присвоен id = {}", film.getName(), film.getId());
+        log.info("Фильм {} успешно добавлен и ему присвоен id = {}", film.getName(), film.getId());
         return film;
+    }
+
+    public Film update(Film newFilm) {
+        int filmId = newFilm.getId();
+        if (!storage.update(newFilm)) {
+            filmIdIsInvalid(filmId);
+        }
+        log.debug("Фильм с id = {} успешно обновлен", filmId);
+        return newFilm;
     }
 
     public Film getFilmById(int filmId) {
         Film film = storage.getFilmById(filmId);
         checkFilmIsNull(filmId, film);
 
-        log.debug("Фильм с id = '{}' успешно отправлен", film.getId());
+        log.debug("Фильм с id = {} успешно отправлен", film.getId());
         return film;
     }
 
     private static void filmIdIsInvalid(int filmId) {
-        log.warn("Передан неверный id фильма: {}", filmId);
+        log.warn("Фильм с id = {} не существует", filmId);
         throw new NoSuchElementException(String.format("Фильм с id = %d не существует", filmId));
     }
 
@@ -51,7 +60,7 @@ public class FilmService {
         if (!storage.delete(filmId)) {
             filmIdIsInvalid(filmId);
         }
-        log.debug("Фильм с id = '{}' успешно удален", filmId);
+        log.debug("Фильм с id = {} успешно удален", filmId);
     }
 
     public Film addLikeToFilm(int filmId, int userId) {
@@ -71,7 +80,7 @@ public class FilmService {
 
     private void updateFilmAndLog(int filmId, int userId, Film film) {
         storage.update(film);
-        log.debug("Лайк от пользователя с id = {}' успешно добавлен в фильм с id = {}", userId, filmId);
+        log.debug("Лайк от пользователя с id = {} успешно добавлен в фильм с id = {}", userId, filmId);
     }
 
     public Film deleteLikeFromFilm(int filmId, int userId) {
@@ -87,13 +96,5 @@ public class FilmService {
         Comparator<Film> byLikes = Comparator.comparingInt(Film::getLikesCount).reversed();
         log.debug("Топ {} фильмов успешно отправлен", n);
         return storage.getTopN(n, byLikes);
-    }
-
-    public Film updateFilm(Film newFilm) {
-        if (!storage.update(newFilm)) {
-            filmIdIsInvalid(newFilm.getId());
-        }
-        log.debug("Фильм с id = '{}' успешно обновлен", newFilm.getId());
-        return newFilm;
     }
 }

@@ -36,4 +36,8 @@ public class User {
     public int getFriendsCount() {
         return friends.size();
     }
+
+    public Set<Integer> getFriends() {
+        return new HashSet<>(friends);
+    }
 }

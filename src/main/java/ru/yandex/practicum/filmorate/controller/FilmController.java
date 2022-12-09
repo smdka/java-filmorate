@@ -2,8 +2,9 @@ package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exception.IncorrectParameterException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
@@ -30,49 +31,54 @@ public class FilmController {
     @GetMapping("/{id}")
     public Film getFilm(@PathVariable int id) {
         log.debug("Получен запрос GET /films/" + id);
-        checkParameterIsNegative(id, "id");
         return filmService.getFilmById(id);
     }
 
     @GetMapping("/popular")
     public Collection<Film> getMostPopularFilms(@RequestParam(defaultValue = "10") int count) {
         log.debug("Получен запрос GET /films/popular/" + count);
-        checkParameterIsNegative(count, "count");
         return filmService.getTopNFilmsByLikes(count);
     }
 
-    private static void checkParameterIsNegative(int parameter, String parameterName) {
-        if (parameter <= 0) {
-            log.warn("Переданный параметр отрицателен");
-            throw new IncorrectParameterException(parameterName);
-        }
-    }
-
     @PostMapping
-    public Film addFilm(@Valid @RequestBody Film film) {
+    public Film add(@Valid @RequestBody Film film, BindingResult bindingResult) {
         log.debug("Получен запрос POST /films");
+        checkForErrors(bindingResult);
         return filmService.add(film);
     }
 
+    private static void checkForErrors(BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            log.warn("Не пройдена валидация фильма: " + bindingResult.getAllErrors());
+            throw new ValidationException("Не пройдена валидация фильма");
+        }
+    }
+
     @PutMapping
-    public Film updateFilm(@Valid @RequestBody Film newFilm) {
+    public Film update(@Valid @RequestBody Film newFilm, BindingResult bindingResult) {
         log.debug("Получен запрос PUT /films");
-        return filmService.updateFilm(newFilm);
+        checkForErrors(bindingResult);
+        return filmService.update(newFilm);
     }
 
     @PutMapping("/{id}/like/{userId}")
     public Film addLikeToFilm(@PathVariable int id, @PathVariable int userId) {
         log.debug("Получен запрос PUT /films/" + id + "/like/" + userId);
-        checkParameterIsNegative(id, "id");
-        checkParameterIsNegative(userId, "userId");
+        checkUserIdIsNegative(userId);
         return filmService.addLikeToFilm(id, userId);
+    }
+
+    static void checkUserIdIsNegative(int userId) {
+        if (userId <= 0) {
+            log.warn("Пользователь с id = {} не существует", userId);
+            throw new NoSuchElementException("Пользователь с id = "+ userId + " не существует");
+        }
     }
 
     @DeleteMapping("/{id}/like/{userId}")
     public Film deleteLikeFromFilm(@PathVariable int id, @PathVariable int userId) {
         log.debug("Получен запрос DELETE /films/" + id + "/like/" + userId);
-        checkParameterIsNegative(id, "id");
-        checkParameterIsNegative(userId, "userId");
+        checkUserIdIsNegative(userId);
         return filmService.deleteLikeFromFilm(id, userId);
     }
 }

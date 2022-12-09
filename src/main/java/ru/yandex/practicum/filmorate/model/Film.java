@@ -40,4 +40,8 @@ public class Film {
     public int getLikesCount() {
         return likesFromUsers.size();
     }
+
+    public Set<Integer> getLikesFromUsers() {
+        return new HashSet<>(likesFromUsers);
+    }
 }
