@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
@@ -34,7 +35,7 @@ public class UserService {
         useLoginIfNameIsBlank(newUser);
         int userId = newUser.getId();
         if (!storage.update(newUser)) {
-            userIdIsInvalid(userId);
+            throwUserNotFoundException(userId);
         }
         log.debug("Пользователь с id = {} успешно отправлен", userId);
         return newUser;
@@ -57,13 +58,13 @@ public class UserService {
 
     private static void checkUserIsNull(int userId, User user) {
         if (user == null) {
-            userIdIsInvalid(userId);
+            throwUserNotFoundException(userId);
         }
     }
 
-    private static void userIdIsInvalid(int userId) {
+    private static void throwUserNotFoundException(int userId) {
         log.warn("Пользователь с id = {} не существует", userId);
-        throw new NoSuchElementException(String.format("Пользователь с id = %d не существует", userId));
+        throw new UserNotFoundException(String.format("Пользователь с id = %d не существует", userId));
     }
 
     public Collection<User> getAllUsers() {
@@ -73,7 +74,7 @@ public class UserService {
 
     public void deleteUserById(int userId) {
         if (!storage.delete(userId)) {
-            userIdIsInvalid(userId);
+            throwUserNotFoundException(userId);
         }
         log.debug("Пользователь с id = {} успешно удален", userId);
     }
@@ -89,8 +90,8 @@ public class UserService {
         friend.addFriend(user);
         storage.update(friend);
         log.debug("Пользователи с id = " + userId + " и " + friendId + " теперь друзья");
-        log.debug("Друзья пользователя с id = " + userId + ": " + user.getFriends());
-        log.debug("Друзья пользователя с id = " + friendId + ": " + friend.getFriends());
+        log.debug("Друзья пользователя с id = " + userId + ": " + user.getFriendIds());
+        log.debug("Друзья пользователя с id = " + friendId + ": " + friend.getFriendIds());
         return Map.of(user, friend);
     }
 
@@ -103,8 +104,8 @@ public class UserService {
         user.deleteFriend(friend);
         storage.update(user);
         log.debug("Пользователь с id = " + friendId + " удален из друзей пользователя с id = " + userId);
-        log.debug("Друзья пользователя с id = " + userId + ": " + user.getFriends());
-        log.debug("Друзья пользователя с id = " + friendId + ": " + friend.getFriends());
+        log.debug("Друзья пользователя с id = " + userId + ": " + user.getFriendIds());
+        log.debug("Друзья пользователя с id = " + friendId + ": " + friend.getFriendIds());
         return user;
     }
 
@@ -115,8 +116,8 @@ public class UserService {
         User friend = storage.getUserById(friendId);
         checkUserIsNull(friendId, friend);
 
-        Set<Integer> userFriends = user.getFriends();
-        userFriends.retainAll(friend.getFriends());
+        Set<Integer> userFriends = user.getFriendIds();
+        userFriends.retainAll(friend.getFriendIds());
         log.debug("Список общих друзей для пользователя с id = " + userId
                 + " и пользователя с id = " + friendId + " отправлен");
         return userFriends.stream()
@@ -128,7 +129,7 @@ public class UserService {
         User user = storage.getUserById(userId);
         checkUserIsNull(userId, user);
         log.debug("Список друзей для пользователя с id = " + userId + " отправлен");
-        return user.getFriends().stream()
+        return user.getFriendIds().stream()
                 .map(storage::getUserById)
                 .collect(toList());
     }

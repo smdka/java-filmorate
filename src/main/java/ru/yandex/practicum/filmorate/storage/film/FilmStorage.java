@@ -11,6 +11,6 @@ public interface FilmStorage {
     public void add(Film film);
     public boolean update(Film film);
     public boolean delete(int filmId);
-    public List<Film> getTopN(int N, Comparator<Film> comparator);
+    public List<Film> getTopN(int n, Comparator<Film> comparator);
     public Film getFilmById(int id);
 }

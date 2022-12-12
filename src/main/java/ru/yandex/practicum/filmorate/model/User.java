@@ -10,7 +10,7 @@ import java.util.Set;
 @Data
 public class User {
     private int id;
-    private final Set<Integer> friends = new HashSet<>();
+    private final Set<Integer> friendIds = new HashSet<>();
 
     @NotBlank(message = "Email обязателен")
     @Email(message = "Неверный email")
@@ -26,18 +26,18 @@ public class User {
     private LocalDate birthday;
 
     public void addFriend(User user) {
-        friends.add(user.getId());
+        friendIds.add(user.getId());
     }
 
     public void deleteFriend(User user) {
-        friends.remove(user.getId());
+        friendIds.remove(user.getId());
     }
 
     public int getFriendsCount() {
-        return friends.size();
+        return friendIds.size();
     }
 
-    public Set<Integer> getFriends() {
-        return new HashSet<>(friends);
+    public Set<Integer> getFriendIds() {
+        return new HashSet<>(friendIds);
     }
 }

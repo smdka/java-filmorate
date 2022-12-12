@@ -3,12 +3,12 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.exception.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.NoSuchElementException;
 
 @Service
 @Slf4j
@@ -32,7 +32,7 @@ public class FilmService {
     public Film update(Film newFilm) {
         int filmId = newFilm.getId();
         if (!storage.update(newFilm)) {
-            filmIdIsInvalid(filmId);
+            throwFilmNotFoundException(filmId);
         }
         log.debug("Фильм с id = {} успешно обновлен", filmId);
         return newFilm;
@@ -46,9 +46,9 @@ public class FilmService {
         return film;
     }
 
-    private static void filmIdIsInvalid(int filmId) {
+    private static void throwFilmNotFoundException(int filmId) {
         log.warn("Фильм с id = {} не существует", filmId);
-        throw new NoSuchElementException(String.format("Фильм с id = %d не существует", filmId));
+        throw new FilmNotFoundException(String.format("Фильм с id = %d не существует", filmId));
     }
 
     public Collection<Film> getAllFilms() {
@@ -58,7 +58,7 @@ public class FilmService {
 
     public void deleteFilmById(int filmId) {
         if (!storage.delete(filmId)) {
-            filmIdIsInvalid(filmId);
+            throwFilmNotFoundException(filmId);
         }
         log.debug("Фильм с id = {} успешно удален", filmId);
     }
@@ -68,19 +68,19 @@ public class FilmService {
         checkFilmIsNull(filmId, film);
 
         film.addLikeFromUser(userId);
-        updateFilmAndLog(filmId, userId, film);
+        updateFilmAndLog(userId, film);
         return film;
     }
 
     private static void checkFilmIsNull(int filmId, Film film) {
         if (film == null) {
-            filmIdIsInvalid(filmId);
+            throwFilmNotFoundException(filmId);
         }
     }
 
-    private void updateFilmAndLog(int filmId, int userId, Film film) {
+    private void updateFilmAndLog(int userId, Film film) {
         storage.update(film);
-        log.debug("Лайк от пользователя с id = {} успешно добавлен в фильм с id = {}", userId, filmId);
+        log.debug("Лайк от пользователя с id = {} успешно добавлен в фильм с id = {}", userId, film.getId());
     }
 
     public Film deleteLikeFromFilm(int filmId, int userId) {
@@ -88,7 +88,7 @@ public class FilmService {
         checkFilmIsNull(filmId, film);
 
         film.deleteLikeFromUser(userId);
-        updateFilmAndLog(filmId, userId, film);
+        updateFilmAndLog(userId, film);
         return film;
     }
 

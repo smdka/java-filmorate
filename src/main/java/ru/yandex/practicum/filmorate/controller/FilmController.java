@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
@@ -71,7 +72,7 @@ public class FilmController {
     static void checkUserIdIsNegative(int userId) {
         if (userId <= 0) {
             log.warn("Пользователь с id = {} не существует", userId);
-            throw new NoSuchElementException("Пользователь с id = "+ userId + " не существует");
+            throw new UserNotFoundException("Пользователь с id = " + userId + " не существует");
         }
     }
 

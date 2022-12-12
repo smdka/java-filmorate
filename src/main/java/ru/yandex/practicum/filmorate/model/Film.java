@@ -13,7 +13,7 @@ public class Film {
     public static final int MAX_DESCRIPTION_SIZE = 200;
     public static final String CINEMA_BIRTHDAY = "28.12.1895";
     private int id;
-    private final Set<Integer> likesFromUsers = new HashSet<>();
+    private final Set<Integer> whoLikedUserIds = new HashSet<>();
 
     @NotBlank(message = "Имя фильма обязательно")
     private String name;
@@ -30,18 +30,18 @@ public class Film {
     private int duration;
 
     public void addLikeFromUser(int userId) {
-        likesFromUsers.add(userId);
+        whoLikedUserIds.add(userId);
     }
 
     public void deleteLikeFromUser(int userId) {
-        likesFromUsers.remove(userId);
+        whoLikedUserIds.remove(userId);
     }
 
     public int getLikesCount() {
-        return likesFromUsers.size();
+        return whoLikedUserIds.size();
     }
 
-    public Set<Integer> getLikesFromUsers() {
-        return new HashSet<>(likesFromUsers);
+    public Set<Integer> getWhoLikedUserIds() {
+        return new HashSet<>(whoLikedUserIds);
     }
 }
