@@ -4,10 +4,13 @@ import lombok.Data;
 
 import javax.validation.constraints.*;
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
 @Data
 public class User {
     private int id;
+    private final Set<Integer> friendIds = new HashSet<>();
 
     @NotBlank(message = "Email обязателен")
     @Email(message = "Неверный email")
@@ -22,10 +25,19 @@ public class User {
     @PastOrPresent(message = "Дата рождения не может быть позже текущей")
     private LocalDate birthday;
 
-    public void updateFrom(User newUser) {
-        this.email = newUser.getEmail();
-        this.login = newUser.getLogin();
-        this.name = newUser.getName();
-        this.birthday = newUser.birthday;
+    public void addFriend(User user) {
+        friendIds.add(user.getId());
+    }
+
+    public void deleteFriend(User user) {
+        friendIds.remove(user.getId());
+    }
+
+    public int getFriendsCount() {
+        return friendIds.size();
+    }
+
+    public Set<Integer> getFriendIds() {
+        return new HashSet<>(friendIds);
     }
 }

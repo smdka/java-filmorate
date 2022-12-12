@@ -1,48 +1,88 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.service.FilmService;
 
 import javax.validation.Valid;
 import java.util.*;
 
+@Slf4j
 @RestController
 @RequestMapping("/films")
-@Slf4j
 public class FilmController {
-    private final Map<Integer, Film> films = new HashMap<>();
-    private int id = 0;
+    private final FilmService filmService;
+
+    @Autowired
+    public FilmController(FilmService filmService) {
+        this.filmService = filmService;
+    }
 
     @GetMapping
     public Collection<Film> findAll() {
-        log.info("Список фильмов отправлен");
-        return films.values();
+        log.debug("Получен запрос GET /films");
+        return filmService.getAllFilms();
+    }
+
+    @GetMapping("/{id}")
+    public Film getFilm(@PathVariable int id) {
+        log.debug("Получен запрос GET /films/" + id);
+        return filmService.getFilmById(id);
+    }
+
+    @GetMapping("/popular")
+    public Collection<Film> getMostPopularFilms(@RequestParam(defaultValue = "10") int count) {
+        log.debug("Получен запрос GET /films/popular/" + count);
+        return filmService.getTopNFilmsByLikes(count);
     }
 
     @PostMapping
-    public ResponseEntity<Film> add(@Valid @RequestBody Film film) {
-        film.setId(++id);
-        films.put(film.getId(), film);
-        log.info("Фильм '{}' успешно добавлен и ему присвоен id = {}", film.getName(), film.getId());
-        return ResponseEntity.ok(film);
+    public Film add(@Valid @RequestBody Film film, BindingResult bindingResult) {
+        log.debug("Получен запрос POST /films");
+        checkForErrors(bindingResult);
+        return filmService.add(film);
+    }
+
+    private static void checkForErrors(BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            for (FieldError e : bindingResult.getFieldErrors()) {
+                log.warn("Не пройдена валидация фильма: " + e.getField() + " = " + e.getRejectedValue());
+            }
+            throw new ValidationException(bindingResult.getFieldErrors().toString());
+        }
     }
 
     @PutMapping
-    public ResponseEntity<Film> update(@Valid @RequestBody Film newFilm) {
-        if (!isExist(newFilm)) {
-            log.warn("Фильм с id = " + newFilm.getId() + " не существует");
-            return new ResponseEntity<>(newFilm, HttpStatus.NOT_FOUND);
-        }
-        Film currentFilm = films.get(newFilm.getId());
-        currentFilm.updateFrom(newFilm);
-        log.info("Фильм '{}' успешно обновлен", currentFilm.getName());
-        return ResponseEntity.ok(currentFilm);
+    public Film update(@Valid @RequestBody Film newFilm, BindingResult bindingResult) {
+        log.debug("Получен запрос PUT /films");
+        checkForErrors(bindingResult);
+        return filmService.update(newFilm);
     }
 
-    private boolean isExist(Film newFilm) {
-        return films.containsKey(newFilm.getId());
+    @PutMapping("/{id}/like/{userId}")
+    public Film addLikeToFilm(@PathVariable int id, @PathVariable int userId) {
+        log.debug("Получен запрос PUT /films/" + id + "/like/" + userId);
+        checkUserIdIsNegative(userId);
+        return filmService.addLikeToFilm(id, userId);
+    }
+
+    static void checkUserIdIsNegative(int userId) {
+        if (userId <= 0) {
+            log.warn("Пользователь с id = {} не существует", userId);
+            throw new UserNotFoundException("Пользователь с id = " + userId + " не существует");
+        }
+    }
+
+    @DeleteMapping("/{id}/like/{userId}")
+    public Film deleteLikeFromFilm(@PathVariable int id, @PathVariable int userId) {
+        log.debug("Получен запрос DELETE /films/" + id + "/like/" + userId);
+        checkUserIdIsNegative(userId);
+        return filmService.deleteLikeFromFilm(id, userId);
     }
 }

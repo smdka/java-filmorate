@@ -1,58 +1,84 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.UserService;
 
 import javax.validation.Valid;
 import java.util.*;
 
+@Slf4j
 @RestController
 @RequestMapping("/users")
-@Slf4j
 public class UserController {
-    private final Map<Integer, User> users = new HashMap<>();
-    private int id = 0;
+    private final UserService userService;
+
+    @Autowired
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
 
     @GetMapping
     public Collection<User> findAll() {
-        log.info("Список пользователей отправлен");
-        return users.values();
+        log.debug("Получен запрос GET /users");
+        return userService.getAllUsers();
+    }
+
+    @GetMapping("/{id}")
+    public User getUserById(@PathVariable int id) {
+        log.debug("Получен запрос GET /users/" + id);
+        return userService.getUserById(id);
+    }
+
+    @GetMapping("/{id}/friends")
+    public List<User> getFriends(@PathVariable int id) {
+        log.debug("Получен запрос GET /users/" + id + "/friends");
+        return userService.getFriends(id);
+    }
+
+    @GetMapping("/{id}/friends/common/{otherId}")
+    public List<User> getCommonFriends(@PathVariable int id, @PathVariable int otherId) {
+        log.debug("Получен запрос GET /users/" + id + "/friends/common/" + otherId);
+        return userService.getCommonFriends(id, otherId);
     }
 
     @PostMapping
-    public ResponseEntity<User> add(@Valid @RequestBody User user) {
-        useLoginIfNameIsBlank(user);
-        user.setId(++id);
-        users.put(user.getId(), user);
-        log.info("Пользователь '{}' успешно создан и ему присвоен id = {}", user.getName(), user.getId());
-        return ResponseEntity.ok(user);
+    public User add(@Valid @RequestBody User user, BindingResult bindingResult) {
+        log.debug("Получен запрос POST /users/");
+        checkForErrors(bindingResult);
+        return userService.add(user);
     }
 
-    private void useLoginIfNameIsBlank(User user) {
-        String name = user.getName();
-        if (name == null || name.isBlank()) {
-            String login = user.getLogin();
-            user.setName(login);
+    private static void checkForErrors(BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            for (FieldError e : bindingResult.getFieldErrors()) {
+                log.warn("Не пройдена валидация пользователя: " + e.getField() + " = " + e.getRejectedValue());
+            }
+            throw new ValidationException(bindingResult.getFieldErrors().toString());
         }
     }
 
     @PutMapping
-    public ResponseEntity<User> update(@Valid @RequestBody User newUser) {
-        if (!isExist(newUser)) {
-            log.warn("Пользователь с id = " + newUser.getId() + " не существует");
-            return new ResponseEntity<>(newUser, HttpStatus.NOT_FOUND);
-        }
-        useLoginIfNameIsBlank(newUser);
-        User currentUser = users.get(newUser.getId());
-        currentUser.updateFrom(newUser);
-        log.info("Пользователь '{}' успешно обновлен", currentUser.getName());
-        return ResponseEntity.ok(currentUser);
+    public User update(@Valid @RequestBody User newUser, BindingResult bindingResult) {
+        log.debug("Получен запрос PUT /users/");
+        checkForErrors(bindingResult);
+        return userService.update(newUser);
     }
 
-    private boolean isExist(User newUser) {
-        return users.containsKey(newUser.getId());
+    @PutMapping("/{id}/friends/{friendId}")
+    public Map<User, User> addFriend(@PathVariable int id, @PathVariable int friendId) {
+        log.debug("Получен запрос PUT /users/" + id + "/friends/" + friendId);
+        return userService.addFriendsToEachOther(id, friendId);
+    }
+
+    @DeleteMapping("/{id}/friends/{friendId}")
+    public User deleteFriend(@PathVariable int id, @PathVariable int friendId) {
+        log.debug("Получен запрос DELETE /users/" + id + "/friends/" + friendId);
+        return userService.deleteFriend(id, friendId);
     }
 }

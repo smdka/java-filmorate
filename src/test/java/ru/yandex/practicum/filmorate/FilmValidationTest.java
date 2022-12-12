@@ -94,6 +94,4 @@ public class FilmValidationTest {
         violations = validator.validate(film);
         assertFalse(violations.isEmpty(), violations.toString());
     }
-
-
 }

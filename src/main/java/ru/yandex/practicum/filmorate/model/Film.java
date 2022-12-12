@@ -5,11 +5,15 @@ import ru.yandex.practicum.filmorate.validation.MinDate;
 
 import javax.validation.constraints.*;
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
 @Data
 public class Film {
     public static final int MAX_DESCRIPTION_SIZE = 200;
+    public static final String CINEMA_BIRTHDAY = "28.12.1895";
     private int id;
+    private final Set<Integer> whoLikedUserIds = new HashSet<>();
 
     @NotBlank(message = "Имя фильма обязательно")
     private String name;
@@ -19,16 +23,25 @@ public class Film {
     private String description;
 
     @NotNull(message = "Дата релиза обязательна")
-    @MinDate(date = "28.12.1895")
+    @MinDate(date = CINEMA_BIRTHDAY)
     private LocalDate releaseDate;
 
     @Positive(message = "Продолжительность фильма должна быть больше 0")
     private int duration;
 
-    public void updateFrom(Film newFilm) {
-        this.name = newFilm.getName();
-        this.description = newFilm.getDescription();
-        this.releaseDate = newFilm.getReleaseDate();
-        this.duration = newFilm.getDuration();
+    public void addLikeFromUser(int userId) {
+        whoLikedUserIds.add(userId);
+    }
+
+    public void deleteLikeFromUser(int userId) {
+        whoLikedUserIds.remove(userId);
+    }
+
+    public int getLikesCount() {
+        return whoLikedUserIds.size();
+    }
+
+    public Set<Integer> getWhoLikedUserIds() {
+        return new HashSet<>(whoLikedUserIds);
     }
 }
