@@ -24,7 +24,7 @@ public class UserService {
     }
 
     public User add(User user) {
-        useLoginIfNameIsBlank(user);
+        useLoginIfNameIsEmpty(user);
         user.setId(++id);
         storage.add(user);
         log.info("Пользователь {} успешно добавлен и ему присвоен id = {}", user.getName(), user.getId());
@@ -32,7 +32,7 @@ public class UserService {
     }
 
     public User update(User newUser) {
-        useLoginIfNameIsBlank(newUser);
+        useLoginIfNameIsEmpty(newUser);
         int userId = newUser.getId();
         if (!storage.update(newUser)) {
             throwUserNotFoundException(userId);
@@ -41,12 +41,16 @@ public class UserService {
         return newUser;
     }
 
-    private static void useLoginIfNameIsBlank(User user) {
+    private static void useLoginIfNameIsEmpty(User user) {
         String name = user.getName();
-        if (name == null || name.isBlank()) {
+        if (isEmpty(name)) {
             String login = user.getLogin();
             user.setName(login);
         }
+    }
+
+    private static boolean isEmpty(String name) {
+        return name == null || name.isBlank();
     }
 
     public User getUserById(int userId) {

@@ -9,5 +9,6 @@ public interface UserStorage {
     public void add(User user);
     public boolean update(User user);
     public boolean delete(int id);
+    //TODO переделать на Optional<Film>
     public User getUserById(int id);
 }
