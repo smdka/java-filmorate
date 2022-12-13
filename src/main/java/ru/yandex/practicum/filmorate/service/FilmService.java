@@ -80,7 +80,9 @@ public class FilmService {
 
     private void updateFilmAndLog(int userId, Film film) {
         storage.update(film);
-        log.debug("Лайк от пользователя с id = {} успешно добавлен в фильм с id = {}", userId, film.getId());
+        int filmId = film.getId();
+        log.debug("Лайк от пользователя с id = {} успешно добавлен в фильм с id = {}", userId, filmId);
+        log.debug("Список id пользователей, поставивших лайк фильму с id = " + filmId +": " + film.getWhoLikedUserIds());
     }
 
     public Film deleteLikeFromFilm(int filmId, int userId) {

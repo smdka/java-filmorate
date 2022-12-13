@@ -9,8 +9,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
-import ru.yandex.practicum.filmorate.controller.FilmController;
-import ru.yandex.practicum.filmorate.controller.UserController;
+import ru.yandex.practicum.filmorate.controller.FilmsController;
+import ru.yandex.practicum.filmorate.controller.UsersController;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.nio.charset.StandardCharsets;
@@ -27,9 +27,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class FilmorateApplicationTests {
 
     @Autowired
-    private FilmController filmController;
+    private FilmsController filmsController;
     @Autowired
-    private UserController userController;
+    private UsersController usersController;
 
     @Autowired
     private MockMvc mockMvc;
@@ -39,8 +39,8 @@ class FilmorateApplicationTests {
 
     @Test
     void contextLoads() {
-        assertThat(filmController).isNotNull();
-        assertThat(userController).isNotNull();
+        assertThat(filmsController).isNotNull();
+        assertThat(usersController).isNotNull();
     }
 
     @Test

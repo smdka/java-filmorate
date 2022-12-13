@@ -16,11 +16,11 @@ import java.util.*;
 @Slf4j
 @RestController
 @RequestMapping("/films")
-public class FilmController {
+public class FilmsController {
     private final FilmService filmService;
 
     @Autowired
-    public FilmController(FilmService filmService) {
+    public FilmsController(FilmService filmService) {
         this.filmService = filmService;
     }
 

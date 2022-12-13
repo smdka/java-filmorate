@@ -15,11 +15,11 @@ import java.util.*;
 @Slf4j
 @RestController
 @RequestMapping("/users")
-public class UserController {
+public class UsersController {
     private final UserService userService;
 
     @Autowired
-    public UserController(UserService userService) {
+    public UsersController(UserService userService) {
         this.userService = userService;
     }
 
