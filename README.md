@@ -27,7 +27,7 @@ FROM user_friends AS uf
 WHERE uf.user_id IN (SELECT user_id,
                             friend_with
                      FROM user_friends
-                     WHERE user_id = other_id AND confirmed = TRUE)
+                     WHERE user_id = other_id AND confirmed IS TRUE)
 AND user_id = id AND confirmed IS TRUE;
 ```
 ###### Получение всех фильмов:
