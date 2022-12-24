@@ -41,6 +41,12 @@ SELECT *
 FROM films
 WHERE film_id = id;
 ```
+###### Получение списка лайков фильма по id:
+```
+SELECT liked_by
+FROM film_likes
+WHERE film_id = id;
+```
 ###### Получение списка топ N самых популярных фильмов:
 ```
 SELECT *
