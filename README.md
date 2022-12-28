@@ -41,7 +41,7 @@ SELECT *
 FROM films
 WHERE film_id = id;
 ```
-###### Получение списка лайков фильма по id:
+###### Получение списка id пользователей, поставивших лайк фильму по id:
 ```
 SELECT liked_by
 FROM film_likes
