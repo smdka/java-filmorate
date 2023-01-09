@@ -1,22 +1,24 @@
 package ru.yandex.practicum.filmorate.model;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import ru.yandex.practicum.filmorate.validation.MinDate;
 
 import javax.validation.constraints.*;
 import java.time.LocalDate;
-import java.util.HashSet;
 import java.util.Set;
 
 @Data
+@AllArgsConstructor
 public class Film {
     public static final int MAX_DESCRIPTION_SIZE = 200;
     public static final String CINEMA_BIRTHDAY = "28.12.1895";
+
     private int id;
-    private final Set<Integer> whoLikedUserIds = new HashSet<>();
+    private Set<Integer> whoLikedUserIds;
 
     @NotBlank(message = "Имя фильма обязательно")
-    private String name;
+    private String title;
 
     @Size(max = MAX_DESCRIPTION_SIZE,
             message = "Описание фильма не может быть больше" + MAX_DESCRIPTION_SIZE + "символов")
@@ -29,6 +31,12 @@ public class Film {
     @Positive(message = "Продолжительность фильма должна быть больше 0")
     private int duration;
 
+    @NotNull
+    private int mpaRatingId;
+
+    @NotNull
+    private Set<Integer> genreIds;
+
     public void addLikeFromUser(int userId) {
         whoLikedUserIds.add(userId);
     }
@@ -39,9 +47,5 @@ public class Film {
 
     public int getLikesCount() {
         return whoLikedUserIds.size();
-    }
-
-    public Set<Integer> getWhoLikedUserIds() {
-        return new HashSet<>(whoLikedUserIds);
     }
 }

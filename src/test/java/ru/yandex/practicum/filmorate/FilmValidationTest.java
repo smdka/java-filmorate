@@ -7,7 +7,6 @@ import ru.yandex.practicum.filmorate.model.Film;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
 import javax.validation.Validator;
-import javax.validation.ValidatorFactory;
 import java.time.LocalDate;
 import java.time.Month;
 import java.util.Set;
@@ -22,14 +21,16 @@ public class FilmValidationTest {
     public static final LocalDate VALID_RELEASE_DATE = LocalDate.of(1999, Month.JULY, 7);
     public static final LocalDate CINEMA_BIRTHDAY = LocalDate.of(1895, Month.DECEMBER, 28);
     public static final int MAX_DESCRIPTION_SIZE = 200;
-    private Validator validator;
+    private final Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
     private final Film film = new Film();
 
     @BeforeEach
     public void setUp() {
-        ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
-        validator = factory.getValidator();
-        film.setName(VALID_NAME);
+        setValidFilmAttributes();
+    }
+
+    private void setValidFilmAttributes() {
+        film.setTitle(VALID_NAME);
         film.setDescription(VALID_DESCRIPTION);
         film.setDuration(VALID_DURATION);
         film.setReleaseDate(VALID_RELEASE_DATE);
@@ -43,12 +44,12 @@ public class FilmValidationTest {
 
     @Test
     public void invalidNameShouldFailValidation() {
-        film.setName("");
+        film.setTitle("");
         Set<ConstraintViolation<Film>> violations = validator.validate(film);
         assertFalse(violations.isEmpty(), violations.toString());
         violations.clear();
 
-        film.setName(null);
+        film.setTitle(null);
         violations = validator.validate(film);
         assertFalse(violations.isEmpty(), violations.toString());
         violations.clear();
