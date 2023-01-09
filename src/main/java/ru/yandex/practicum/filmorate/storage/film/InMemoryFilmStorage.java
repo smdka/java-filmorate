@@ -21,8 +21,9 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public void add(Film film) {
+    public int add(Film film) {
         films.put(film.getId(), film);
+        return 0;
     }
 
     @Override
@@ -44,7 +45,10 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public Film getFilmById(int id) {
-        return films.get(id);
+    public Optional<Film> getFilmById(int id) {
+        Film film = films.get(id);
+        return film == null ?
+                Optional.empty() :
+                Optional.of(film);
     }
 }

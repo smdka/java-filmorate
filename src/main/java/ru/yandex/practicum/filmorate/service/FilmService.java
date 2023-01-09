@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -17,7 +18,7 @@ public class FilmService {
     private int id;
 
     @Autowired
-    public FilmService(FilmStorage storage) {
+    public FilmService(@Qualifier("filmDbStorage") FilmStorage storage) {
         this.storage = storage;
         this.id = 0;
     }
@@ -25,7 +26,7 @@ public class FilmService {
     public Film add(Film film) {
         film.setId(++id);
         storage.add(film);
-        log.info("Фильм {} успешно добавлен и ему присвоен id = {}", film.getName(), film.getId());
+        log.info("Фильм {} успешно добавлен и ему присвоен id = {}", film.getTitle(), film.getId());
         return film;
     }
 
@@ -39,7 +40,7 @@ public class FilmService {
     }
 
     public Film getFilmById(int filmId) {
-        Film film = storage.getFilmById(filmId);
+        Film film = storage.getFilmById(filmId).orElseThrow();
         checkFilmIsNull(filmId, film);
 
         log.debug("Фильм с id = {} успешно отправлен", film.getId());
@@ -64,7 +65,7 @@ public class FilmService {
     }
 
     public Film addLikeToFilm(int filmId, int userId) {
-        Film film = storage.getFilmById(filmId);
+        Film film = storage.getFilmById(filmId).orElseThrow();
         checkFilmIsNull(filmId, film);
 
         film.addLikeFromUser(userId);
@@ -84,7 +85,7 @@ public class FilmService {
     }
 
     public Film deleteLikeFromFilm(int filmId, int userId) {
-        Film film = storage.getFilmById(filmId);
+        Film film = storage.getFilmById(filmId).orElseThrow();
         checkFilmIsNull(filmId, film);
 
         film.deleteLikeFromUser(userId);

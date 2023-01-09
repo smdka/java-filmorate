@@ -7,7 +7,6 @@ import ru.yandex.practicum.filmorate.model.User;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
 import javax.validation.Validator;
-import javax.validation.ValidatorFactory;
 import java.time.LocalDate;
 import java.time.Month;
 import java.util.Set;
@@ -20,13 +19,15 @@ public class UserValidationTest {
     public static final String VALID_EMAIL = "pepe_the_frog@yandex.ru";
     public static final String VALID_LOGIN = "Valid_Login";
     public static final LocalDate VALID_BIRTHDAY = LocalDate.of(1989, Month.MAY, 1);
-    private Validator validator;
+    private final Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
     private final User user = new User();
 
     @BeforeEach
     public void setUp() {
-        ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
-        validator = factory.getValidator();
+        setValidUserAttributes();
+    }
+
+    private void setValidUserAttributes() {
         user.setName(VALID_NAME);
         user.setEmail(VALID_EMAIL);
         user.setLogin(VALID_LOGIN);
