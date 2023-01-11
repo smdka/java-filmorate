@@ -39,7 +39,7 @@ public class FilmsController {
     @GetMapping("/popular")
     public Collection<Film> getMostPopularFilms(@RequestParam(defaultValue = "10") int count) {
         log.debug("Получен запрос GET /films/popular/" + count);
-        return filmService.getTopNFilmsByLikes(count);
+        return filmService.getTopNMostPopular(count);
     }
 
     @PostMapping
