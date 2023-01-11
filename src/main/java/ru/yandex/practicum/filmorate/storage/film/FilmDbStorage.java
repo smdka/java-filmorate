@@ -18,7 +18,7 @@ import java.util.*;
 
 @Repository
 public class FilmDbStorage implements FilmStorage {
-    private final JdbcTemplate jdbcTemplate;
+    private JdbcTemplate jdbcTemplate;
 
     public FilmDbStorage(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;

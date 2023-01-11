@@ -11,7 +11,7 @@ import java.util.Optional;
 
 @Repository
 public class MpaDbStorage {
-    private final JdbcTemplate jdbcTemplate;
+    private JdbcTemplate jdbcTemplate;
 
     public MpaDbStorage(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;

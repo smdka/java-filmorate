@@ -11,7 +11,7 @@ import java.util.Optional;
 
 @Repository
 public class GenreDbStorage {
-    private final JdbcTemplate jdbcTemplate;
+    private JdbcTemplate jdbcTemplate;
 
 
     public GenreDbStorage(JdbcTemplate jdbcTemplate) {

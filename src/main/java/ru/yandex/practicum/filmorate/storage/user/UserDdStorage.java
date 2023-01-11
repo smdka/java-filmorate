@@ -15,7 +15,7 @@ import java.util.*;
 
 @Repository
 public class UserDdStorage implements UserStorage {
-    private final JdbcTemplate jdbcTemplate;
+    private JdbcTemplate jdbcTemplate;
 
     public UserDdStorage(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
