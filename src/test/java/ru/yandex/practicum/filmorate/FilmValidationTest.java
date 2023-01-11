@@ -14,13 +14,13 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class FilmValidationTest {
-    public static final String VALID_NAME = "Valid Name";
-    public static final String VALID_DESCRIPTION = "Valid Description";
-    public static final int VALID_DURATION = 120;
-    public static final LocalDate VALID_RELEASE_DATE = LocalDate.of(1999, Month.JULY, 7);
-    public static final LocalDate CINEMA_BIRTHDAY = LocalDate.of(1895, Month.DECEMBER, 28);
-    public static final int MAX_DESCRIPTION_SIZE = 200;
+class FilmValidationTest {
+    private static final String VALID_NAME = "Valid Name";
+    private static final String VALID_DESCRIPTION = "Valid Description";
+    private static final int VALID_DURATION = 120;
+    private static final LocalDate VALID_RELEASE_DATE = LocalDate.of(1999, Month.JULY, 7);
+    private static final LocalDate CINEMA_BIRTHDAY = LocalDate.of(1895, Month.DECEMBER, 28);
+    private static final int MAX_DESCRIPTION_SIZE = 200;
     private final Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
     private final Film film = new Film();
 
@@ -30,33 +30,33 @@ public class FilmValidationTest {
     }
 
     private void setValidFilmAttributes() {
-        film.setTitle(VALID_NAME);
+        film.setName(VALID_NAME);
         film.setDescription(VALID_DESCRIPTION);
         film.setDuration(VALID_DURATION);
         film.setReleaseDate(VALID_RELEASE_DATE);
     }
 
     @Test
-    public void validFilmShouldPassValidation() {
+    void validFilmShouldPassValidation() {
         Set<ConstraintViolation<Film>> violations = validator.validate(film);
         assertTrue(violations.isEmpty(), violations.toString());
     }
 
     @Test
-    public void invalidNameShouldFailValidation() {
-        film.setTitle("");
+    void invalidNameShouldFailValidation() {
+        film.setName("");
         Set<ConstraintViolation<Film>> violations = validator.validate(film);
         assertFalse(violations.isEmpty(), violations.toString());
         violations.clear();
 
-        film.setTitle(null);
+        film.setName(null);
         violations = validator.validate(film);
         assertFalse(violations.isEmpty(), violations.toString());
         violations.clear();
     }
 
     @Test
-    public void invalidDescriptionShouldFailValidation() {
+    void invalidDescriptionShouldFailValidation() {
         film.setDescription("a".repeat(MAX_DESCRIPTION_SIZE + 1));
         Set<ConstraintViolation<Film>> violations = validator.validate(film);
         assertFalse(violations.isEmpty(), violations.toString());
@@ -68,7 +68,7 @@ public class FilmValidationTest {
     }
 
     @Test
-    public void invalidReleaseDateShouldFailValidation() {
+    void invalidReleaseDateShouldFailValidation() {
         film.setReleaseDate(null);
         Set<ConstraintViolation<Film>> violations = validator.validate(film);
         assertFalse(violations.isEmpty(), violations.toString());
@@ -85,7 +85,7 @@ public class FilmValidationTest {
     }
 
     @Test
-    public void invalidDurationShouldFailValidation() {
+    void invalidDurationShouldFailValidation() {
         film.setDuration(-1);
         Set<ConstraintViolation<Film>> violations = validator.validate(film);
         assertFalse(violations.isEmpty(), violations.toString());
