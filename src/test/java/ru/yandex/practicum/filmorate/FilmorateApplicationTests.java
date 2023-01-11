@@ -27,9 +27,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class FilmorateApplicationTests {
 
     @Autowired
-    private FilmsController filmsController;
+    private FilmsController filmController;
     @Autowired
-    private UsersController usersController;
+    private UsersController userController;
 
     @Autowired
     private MockMvc mockMvc;
@@ -39,12 +39,12 @@ class FilmorateApplicationTests {
 
     @Test
     void contextLoads() {
-        assertThat(filmsController).isNotNull();
-        assertThat(usersController).isNotNull();
+        assertThat(filmController).isNotNull();
+        assertThat(userController).isNotNull();
     }
 
     @Test
-    public void emptyRequestShouldReturnBadRequest() throws Exception {
+    void emptyRequestShouldReturnBadRequest() throws Exception {
         this.mockMvc.perform(post("/users"))
                 .andDo(print())
                 .andExpect(status().isBadRequest());
@@ -63,7 +63,7 @@ class FilmorateApplicationTests {
     }
 
     @Test
-    public void	blankUserNameShouldBeReplacedWithLogin() throws Exception {
+    void blankUserNameShouldBeReplacedWithLogin() throws Exception {
         User user = new User();
         user.setLogin("login");
         user.setName("");

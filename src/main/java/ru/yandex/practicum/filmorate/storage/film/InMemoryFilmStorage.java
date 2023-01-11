@@ -5,8 +5,6 @@ import ru.yandex.practicum.filmorate.model.Film;
 
 import java.util.*;
 
-import static java.util.stream.Collectors.*;
-
 @Component
 public class InMemoryFilmStorage implements FilmStorage {
     private final Map<Integer, Film> films;
@@ -21,31 +19,25 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public int add(Film film) {
+    public Film save(Film film) {
         films.put(film.getId(), film);
-        return 0;
+        return film;
     }
 
     @Override
-    public boolean update(Film film) {
-        return films.replace(film.getId(), film) != null;
+    public Optional<Film> update(Film film) {
+        return films.replace(film.getId(), film) == null ?
+                Optional.empty() :
+                Optional.of(film);
     }
 
     @Override
-    public boolean delete(int filmId) {
+    public boolean deleteById(int filmId) {
         return films.remove(filmId) != null;
     }
 
     @Override
-    public List<Film> getTopN(int n, Comparator<Film> comparator) {
-        return films.values().stream()
-                .sorted(comparator)
-                .limit(n)
-                .collect(toList());
-    }
-
-    @Override
-    public Optional<Film> getFilmById(int id) {
+    public Optional<Film> findById(int id) {
         Film film = films.get(id);
         return film == null ?
                 Optional.empty() :
