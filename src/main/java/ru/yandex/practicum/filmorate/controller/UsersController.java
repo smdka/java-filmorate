@@ -15,11 +15,11 @@ import java.util.*;
 @Slf4j
 @RestController
 @RequestMapping("/users")
-public class UserController {
+public class UsersController {
     private final UserService userService;
 
     @Autowired
-    public UserController(UserService userService) {
+    public UsersController(UserService userService) {
         this.userService = userService;
     }
 
@@ -73,7 +73,7 @@ public class UserController {
     @PutMapping("/{id}/friends/{friendId}")
     public Map<User, User> addFriend(@PathVariable int id, @PathVariable int friendId) {
         log.debug("Получен запрос PUT /users/" + id + "/friends/" + friendId);
-        return userService.addFriendsToEachOther(id, friendId);
+        return userService.sendFriendRequest(id, friendId);
     }
 
     @DeleteMapping("/{id}/friends/{friendId}")

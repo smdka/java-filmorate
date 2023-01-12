@@ -16,11 +16,11 @@ import java.util.*;
 @Slf4j
 @RestController
 @RequestMapping("/films")
-public class FilmController {
+public class FilmsController {
     private final FilmService filmService;
 
     @Autowired
-    public FilmController(FilmService filmService) {
+    public FilmsController(FilmService filmService) {
         this.filmService = filmService;
     }
 
@@ -39,7 +39,7 @@ public class FilmController {
     @GetMapping("/popular")
     public Collection<Film> getMostPopularFilms(@RequestParam(defaultValue = "10") int count) {
         log.debug("Получен запрос GET /films/popular/" + count);
-        return filmService.getTopNFilmsByLikes(count);
+        return filmService.getTopNMostPopular(count);
     }
 
     @PostMapping
