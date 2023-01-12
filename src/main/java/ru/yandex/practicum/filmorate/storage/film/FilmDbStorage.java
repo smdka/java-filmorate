@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.storage.film;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
@@ -16,12 +17,10 @@ import java.time.LocalDate;
 import java.util.*;
 
 @Repository
+@RequiredArgsConstructor
 public class FilmDbStorage implements FilmStorage {
-    private JdbcTemplate jdbcTemplate;
+    private final JdbcTemplate jdbcTemplate;
 
-    public FilmDbStorage(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
-    }
     @Override
     public Collection<Film> findAll() {
         String sql = "SELECT FILMS.ID, " +

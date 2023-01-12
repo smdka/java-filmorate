@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.storage.user;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -15,12 +16,9 @@ import java.time.LocalDate;
 import java.util.*;
 
 @Repository
+@RequiredArgsConstructor
 public class UserDdStorage implements UserStorage {
-    private JdbcTemplate jdbcTemplate;
-
-    public UserDdStorage(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
-    }
+    private final JdbcTemplate jdbcTemplate;
 
     @Override
     public Collection<User> findAll() {

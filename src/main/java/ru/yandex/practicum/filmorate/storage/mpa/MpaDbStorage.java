@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.storage.mpa;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Mpa;
@@ -10,12 +11,9 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
+@RequiredArgsConstructor
 public class MpaDbStorage {
-    private JdbcTemplate jdbcTemplate;
-
-    public MpaDbStorage(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
-    }
+    private final JdbcTemplate jdbcTemplate;
 
     public List<Mpa> findAll() {
         return jdbcTemplate.query("SELECT * FROM MPA", this::mapRowToMpa);
