@@ -11,4 +11,5 @@ public interface UserStorage {
     Optional<User> update(User user);
     boolean deleteById(int id);
     Optional<User> findById(int id);
+    Collection<User> findFriendsById(int id);
 }

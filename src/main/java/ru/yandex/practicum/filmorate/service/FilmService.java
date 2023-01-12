@@ -45,11 +45,6 @@ public class FilmService {
         return film;
     }
 
-    private void throwFilmNotFoundException(int filmId) {
-        log.warn("Фильм с id = {} не существует", filmId);
-        throw new FilmNotFoundException(String.format("Фильм с id = %d не существует", filmId));
-    }
-
     public Collection<Film> getAllFilms() {
         log.debug("Список всех фильмов успешно отправлен");
         return storage.findAll();
@@ -57,7 +52,8 @@ public class FilmService {
 
     public void deleteFilmById(int filmId) {
         if (!storage.deleteById(filmId)) {
-            throwFilmNotFoundException(filmId);
+            log.warn("Фильм с id = {} не существует", filmId);
+            throw new FilmNotFoundException(String.format("Фильм с id = %d не существует", filmId));
         }
         log.debug("Фильм с id = {} успешно удален", filmId);
     }
@@ -80,7 +76,7 @@ public class FilmService {
         storage.update(film);
         int filmId = film.getId();
         log.debug("Лайк от пользователя с id = {} успешно добавлен в фильм с id = {}", userId, filmId);
-        log.debug("Список id пользователей, поставивших лайк фильму с id = " + filmId +": " + film.getLikes());
+        log.debug("Список id пользователей, поставивших лайк фильму с id = " + filmId +": " + film.getWhoLikedUserIds());
     }
 
     public Film deleteLikeFromFilm(int filmId, int userId) {

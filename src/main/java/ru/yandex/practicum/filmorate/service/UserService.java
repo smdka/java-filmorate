@@ -11,8 +11,6 @@ import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 import java.util.*;
 import java.util.function.Supplier;
 
-import static java.util.stream.Collectors.*;
-
 @Service
 @Slf4j
 //TODO переделать пробрасывание исключения
@@ -64,11 +62,6 @@ public class UserService {
         };
     }
 
-    private void throwUserNotFoundException(int userId) {
-        log.warn("Пользователь с id = {} не существует", userId);
-        throw new UserNotFoundException(String.format("Пользователь с id = %d не существует", userId));
-    }
-
     public Collection<User> getAllUsers() {
         log.debug("Список всех пользователей успешно отправлен");
         return storage.findAll();
@@ -76,7 +69,8 @@ public class UserService {
 
     public void deleteUserById(int userId) {
         if (!storage.deleteById(userId)) {
-            throwUserNotFoundException(userId);
+            log.warn("Пользователь с id = {} не существует", userId);
+            throw new UserNotFoundException(String.format("Пользователь с id = %d не существует", userId));
         }
         log.debug("Пользователь с id = {} успешно удален", userId);
     }
@@ -106,26 +100,30 @@ public class UserService {
     }
 
     public List<User> getCommonFriends(int  userId, int friendId) {
-        User user = storage.findById(userId).orElseThrow(userNotFoundException(userId));
-        User friend = storage.findById(friendId).orElseThrow(userNotFoundException(userId));
+        Collection<User> userFriends = storage.findFriendsById(userId);
+        ifNullThrowException(userId, userFriends);
 
-        Set<Integer> userFriends = user.getFriendIds();
-        userFriends.retainAll(friend.getFriendIds());
+        Collection<User> friendFriends = storage.findFriendsById(friendId);
+        ifNullThrowException(friendId, userFriends);
+
+        userFriends.retainAll(friendFriends);
         log.debug("Список общих друзей для пользователя с id = " + userId
                 + " и пользователя с id = " + friendId + " отправлен");
-        return userFriends.stream()
-                .map(storage::findById)
-                .flatMap(Optional::stream)
-                .collect(toList());
+        return new ArrayList<>(userFriends);
     }
 
-    public List<User> getFriends(int userId) {
-        User user = storage.findById(userId).orElseThrow(userNotFoundException(userId));
-        log.debug("Список друзей для пользователя с id = " + userId + " отправлен");
-        return user.getFriendIds().stream()
-                .map(storage::findById)
-                .flatMap(Optional::stream)
-                .collect(toList());
+    private void ifNullThrowException(int id, Object o) {
+        if (o == null) {
+            log.warn("Пользователь с id = {} не существует", id);
+            throw new UserNotFoundException(String.format("Пользователь с id = %d не существует", id));
+        }
+    }
+
+    public List<User> getFriends(int id) {
+        Collection<User> friends = storage.findFriendsById(id);
+        ifNullThrowException(id, friends);
+        log.debug("Список друзей для пользователя с id = " + id + " отправлен");
+        return new ArrayList<>(friends);
     }
 }
 

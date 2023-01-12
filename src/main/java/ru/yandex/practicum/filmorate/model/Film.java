@@ -15,10 +15,8 @@ import java.util.*;
 public class Film {
     public static final int MAX_DESCRIPTION_SIZE = 200;
     public static final String CINEMA_BIRTHDAY = "28.12.1895";
-
     private int id;
-
-    private Set<Like> likes = new HashSet<>();
+    private Set<Integer> whoLikedUserIds = new HashSet<>();
 
     @NotBlank(message = "Имя фильма обязательно")
     private String name;
@@ -33,28 +31,26 @@ public class Film {
 
     @Positive(message = "Продолжительность фильма должна быть больше 0")
     private int duration;
-
     private Mpa mpa;
-
     private Set<Genre> genres = new TreeSet<>();
 
     public void addLikeFromUser(int userId) {
-        likes.add(new Like(userId));
+        whoLikedUserIds.add(userId);
     }
 
     public void deleteLikeFromUser(int userId) {
-        likes.remove(new Like(userId));
+        whoLikedUserIds.remove(userId);
     }
 
     public int getLikesCount() {
-        return likes.size();
+        return whoLikedUserIds.size();
     }
 
     public Set<Genre> getGenres() {
         return new TreeSet<>(genres);
     }
 
-    public Set<Like> getLikes() {
-        return new HashSet<>(likes);
+    public Set<Integer> getWhoLikedUserIds() {
+        return new HashSet<>(whoLikedUserIds);
     }
 }

@@ -6,7 +6,6 @@ import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.model.Like;
 import ru.yandex.practicum.filmorate.model.Mpa;
 
 import java.sql.Date;
@@ -98,14 +97,14 @@ public class FilmDbStorage implements FilmStorage {
     private void saveLikes(Film film) {
         jdbcTemplate.update("DELETE FROM FILM_LIKES WHERE FILM_ID = ?", film.getId());
 
-        Set<Like> likes = film.getLikes();
+        Set<Integer> whoLikedUserIds = film.getWhoLikedUserIds();
 
         String sql = "INSERT INTO FILM_LIKES (FILM_ID, LIKED_BY_USER_ID) VALUES (?, ?)";
         int filmId = film.getId();
 
-        if (likes != null) {
-            for(Like like : likes) {
-                jdbcTemplate.update(sql, filmId, like.getUserId());
+        if (whoLikedUserIds != null) {
+            for(int id : whoLikedUserIds) {
+                jdbcTemplate.update(sql, filmId, id);
             }
         }
     }
@@ -141,18 +140,14 @@ public class FilmDbStorage implements FilmStorage {
         int duration = row.getInt("DURATION");
         Mpa mpa = new Mpa(row.getInt("MPA_ID"), row.getString("MPA_NAME"));
         Set<Genre> genres = getGenresByFilmId(id);
-        Set<Like> likes = getLikesByFilmId(id);
+        Set<Integer> likes = getWhoLikedIdsByFilmId(id);
         return new Film(id, likes, name, description, releaseDate, duration, mpa, genres);
     }
 
-    private Set<Like> getLikesByFilmId(int id) {
+    private Set<Integer> getWhoLikedIdsByFilmId(int id) {
         String sql = "SELECT LIKED_BY_USER_ID FROM FILM_LIKES " +
                      "WHERE FILM_ID = ?";
-        return new HashSet<>(jdbcTemplate.query(sql, this::mapRowToLike, id));
-    }
-
-    private Like mapRowToLike(ResultSet rs, int rowNum) throws SQLException {
-        return new Like(rs.getInt("LIKED_BY_USER_ID"));
+        return new HashSet<>(jdbcTemplate.query(sql, (rs, rowNum) -> rs.getInt("LIKED_BY_USER_ID"), id));
     }
 
     private Set<Genre> getGenresByFilmId(int id) {

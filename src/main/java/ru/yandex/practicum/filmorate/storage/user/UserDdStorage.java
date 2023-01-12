@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.storage.user;
 
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
@@ -111,5 +112,17 @@ public class UserDdStorage implements UserStorage {
         return results.isEmpty() ?
                 Optional.empty() :
                 Optional.of(results.get(0));
+    }
+
+    @Override
+    public Collection<User> findFriendsById(int id) {
+        try {
+            String sql = "SELECT U.* FROM USER_FRIENDS UF " +
+                    "LEFT JOIN USERS U on U.ID = UF.FRIEND_ID " +
+                    "WHERE USER_ID = ? ";
+            return jdbcTemplate.query(sql, this::mapRowToUser, id);
+        } catch (EmptyResultDataAccessException e) {
+            return null;
+        }
     }
 }
