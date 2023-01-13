@@ -4,16 +4,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.MpaNotFoundException;
 import ru.yandex.practicum.filmorate.model.Mpa;
-import ru.yandex.practicum.filmorate.storage.mpa.MpaDbStorage;
+import ru.yandex.practicum.filmorate.storage.mpa.MpaStorage;
 
 import java.util.Collection;
 
 @Service
 @Slf4j
 public class MpaService {
-    private final MpaDbStorage storage;
+    private final MpaStorage storage;
 
-    public MpaService(MpaDbStorage storage) {
+    public MpaService(MpaStorage storage) {
         this.storage = storage;
     }
 

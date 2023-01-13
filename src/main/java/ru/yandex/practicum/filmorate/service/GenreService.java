@@ -4,16 +4,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.GenreNotFoundException;
 import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.storage.genre.GenreDbStorage;
+import ru.yandex.practicum.filmorate.storage.genre.GenreStorage;
 
 import java.util.Collection;
 
 @Service
 @Slf4j
 public class GenreService {
-    private final GenreDbStorage storage;
+    private final GenreStorage storage;
 
-    public GenreService(GenreDbStorage storage) {
+    public GenreService(GenreStorage storage) {
         this.storage = storage;
     }
 

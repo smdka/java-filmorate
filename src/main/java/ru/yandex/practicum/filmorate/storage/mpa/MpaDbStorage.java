@@ -12,9 +12,10 @@ import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
-public class MpaDbStorage {
+public class MpaDbStorage implements MpaStorage {
     private final JdbcTemplate jdbcTemplate;
 
+    @Override
     public List<Mpa> findAll() {
         return jdbcTemplate.query("SELECT * FROM MPA", this::mapRowToMpa);
     }
@@ -23,6 +24,7 @@ public class MpaDbStorage {
         return new Mpa(rs.getInt("ID"), rs.getString("NAME"));
     }
 
+    @Override
     public Optional<Mpa> findById(int id) {
         String sql = "SELECT * FROM MPA WHERE ID = ?";
         List<Mpa> results = jdbcTemplate.query(sql, this::mapRowToMpa, id);

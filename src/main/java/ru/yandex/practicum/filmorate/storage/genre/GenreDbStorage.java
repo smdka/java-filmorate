@@ -12,13 +12,15 @@ import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
-public class GenreDbStorage {
+public class GenreDbStorage implements GenreStorage {
     private final JdbcTemplate jdbcTemplate;
 
+    @Override
     public List<Genre> findAll() {
         return jdbcTemplate.query("SELECT * FROM GENRES", this::mapRowToGenre);
     }
 
+    @Override
     public Optional<Genre> findById(int id) {
         String sql = "SELECT * FROM GENRES WHERE ID = ?";
         List<Genre> results = jdbcTemplate.query(sql, this::mapRowToGenre, id);
