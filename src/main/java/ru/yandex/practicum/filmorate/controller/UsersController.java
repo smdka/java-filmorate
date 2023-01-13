@@ -37,13 +37,13 @@ public class UsersController {
 
     @GetMapping("/{id}/friends")
     public List<User> getFriends(@PathVariable int id) {
-        log.debug("Получен запрос GET /users/" + id + "/friends");
+        log.debug("Получен запрос GET /users/{}/friends", id);
         return userService.getFriends(id);
     }
 
     @GetMapping("/{id}/friends/common/{otherId}")
     public List<User> getCommonFriends(@PathVariable int id, @PathVariable int otherId) {
-        log.debug("Получен запрос GET /users/" + id + "/friends/common/" + otherId);
+        log.debug("Получен запрос GET /users/{}/friends/common/{}", id, otherId);
         return userService.getCommonFriends(id, otherId);
     }
 
@@ -57,7 +57,7 @@ public class UsersController {
     private static void checkForErrors(BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             for (FieldError e : bindingResult.getFieldErrors()) {
-                log.warn("Не пройдена валидация пользователя: " + e.getField() + " = " + e.getRejectedValue());
+                log.warn("Не пройдена валидация пользователя: {} = {}", e.getField(), e.getRejectedValue());
             }
             throw new ValidationException(bindingResult.getFieldErrors().toString());
         }
@@ -70,15 +70,15 @@ public class UsersController {
         return userService.update(newUser);
     }
 
-    @PutMapping("/{id}/friends/{friendId}")
-    public Map<User, User> addFriend(@PathVariable int id, @PathVariable int friendId) {
-        log.debug("Получен запрос PUT /users/" + id + "/friends/" + friendId);
-        return userService.sendFriendRequest(id, friendId);
+    @PutMapping("/{userId}/friends/{friendId}")
+    public Map<User, User> addFriend(@PathVariable int userId, @PathVariable int friendId) {
+        log.debug("Получен запрос PUT /users/{}/friends/{}", userId, friendId);
+        return userService.sendFriendRequest(userId, friendId);
     }
 
-    @DeleteMapping("/{id}/friends/{friendId}")
-    public User deleteFriend(@PathVariable int id, @PathVariable int friendId) {
-        log.debug("Получен запрос DELETE /users/" + id + "/friends/" + friendId);
-        return userService.deleteFriend(id, friendId);
+    @DeleteMapping("/{userId}/friends/{friendId}")
+    public User deleteFriend(@PathVariable int userId, @PathVariable int friendId) {
+        log.debug("Получен запрос DELETE /users/{}/friends/{}", userId, friendId);
+        return userService.deleteFriend(userId, friendId);
     }
 }

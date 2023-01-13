@@ -11,14 +11,13 @@ import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
-import java.util.function.Supplier;
 
 import static java.util.stream.Collectors.*;
 
 @Service
 @Slf4j
-//TODO переделать пробрасывание исключения
 public class FilmService {
+    private static final String FILM_NOT_EXISTS_MSG = "Фильм с id = %d не существует";
     private final FilmStorage storage;
 
     @Autowired
@@ -33,15 +32,16 @@ public class FilmService {
     }
 
     public Film update(Film newFilm) {
-        int filmId = newFilm.getId();
-        Film updatedFilm = storage.update(newFilm).orElseThrow(filmNotFoundException(filmId));
-        log.debug("Фильм с id = {} успешно обновлен", filmId);
+        int id = newFilm.getId();
+        Film updatedFilm = storage.update(newFilm)
+                .orElseThrow(() -> new FilmNotFoundException(String.format(FILM_NOT_EXISTS_MSG, id)));
+        log.debug("Фильм с id = {} успешно обновлен", id);
         return updatedFilm;
     }
 
-    public Film getFilmById(int filmId) {
-        Film film = storage.findById(filmId).orElseThrow(filmNotFoundException(filmId));
-        log.debug("Фильм с id = {} успешно отправлен", film.getId());
+    public Film getFilmById(int id) {
+        Film film = getFilmOrElseThrow(id);
+        log.debug("Фильм с id = {} успешно отправлен", id);
         return film;
     }
 
@@ -50,40 +50,38 @@ public class FilmService {
         return storage.findAll();
     }
 
-    public void deleteFilmById(int filmId) {
-        if (!storage.deleteById(filmId)) {
-            log.warn("Фильм с id = {} не существует", filmId);
-            throw new FilmNotFoundException(String.format("Фильм с id = %d не существует", filmId));
+    public void deleteFilmById(int id) {
+        if (!storage.deleteById(id)) {
+            throw new FilmNotFoundException(String.format(FILM_NOT_EXISTS_MSG, id));
         }
-        log.debug("Фильм с id = {} успешно удален", filmId);
+        log.debug("Фильм с id = {} успешно удален", id);
     }
 
     public Film addLikeToFilm(int filmId, int userId) {
-        Film film = storage.findById(filmId).orElseThrow(filmNotFoundException(filmId));
+        Film film = getFilmOrElseThrow(filmId);
         film.addLikeFromUser(userId);
         updateFilmAndLog(userId, film);
         return film;
-    }
-
-    private Supplier<FilmNotFoundException> filmNotFoundException(int filmId) {
-        return () -> {
-            log.warn("Фильм с id = {} не существует", filmId);
-            return new FilmNotFoundException(String.format("Фильм с id = %d не существует", filmId));
-        };
     }
 
     private void updateFilmAndLog(int userId, Film film) {
         storage.update(film);
         int filmId = film.getId();
         log.debug("Лайк от пользователя с id = {} успешно добавлен в фильм с id = {}", userId, filmId);
-        log.debug("Список id пользователей, поставивших лайк фильму с id = " + filmId +": " + film.getWhoLikedUserIds());
+        log.debug("Список id пользователей, " +
+                  "поставивших лайк фильму с id = " + filmId +": " + film.getWhoLikedUserIds());
     }
 
     public Film deleteLikeFromFilm(int filmId, int userId) {
-        Film film = storage.findById(filmId).orElseThrow(filmNotFoundException(filmId));
+        Film film = getFilmOrElseThrow(filmId);
         film.deleteLikeFromUser(userId);
         updateFilmAndLog(userId, film);
         return film;
+    }
+
+    private Film getFilmOrElseThrow(int id) {
+        return storage.findById(id)
+                .orElseThrow(() -> new FilmNotFoundException(String.format(FILM_NOT_EXISTS_MSG, id)));
     }
 
     public Collection<Film> getTopNMostPopular(int n) {
