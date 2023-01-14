@@ -15,6 +15,7 @@ import java.time.LocalDate;
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest
 @AutoConfigureTestDatabase
@@ -27,16 +28,16 @@ class FilmDbStorageTest {
 
     @Test
     void testFindFilmById() {
-        Optional<Film> filmOptional = filmDdStorage.findById(1);
+        Optional<Film> film = filmDdStorage.findById(1);
 
-        assertThat(filmOptional)
+        assertThat(film)
                 .isPresent()
                 .hasValueSatisfying(Film ->
                         assertThat(Film).hasFieldOrPropertyWithValue("id", 1));
 
-        filmOptional = filmDdStorage.findById(WRONG_ID);
+        film = filmDdStorage.findById(WRONG_ID);
 
-        assertThat(filmOptional).isNotPresent();
+        assertThat(film).isNotPresent();
     }
 
     @Test
@@ -69,7 +70,7 @@ class FilmDbStorageTest {
         film.setDuration(120);
         film.setMpa(new Mpa(1, "G"));
         film.setReleaseDate(LocalDate.of(2022, 1, 11));
-        film.setGenres(Set.of(new Genre(1, "Комедия")));
+        film.setGenres(new TreeSet<>(Set.of(new Genre(1, "Комедия"))));
         Film savedFilm = filmDdStorage.save(film);
 
         assertThat(savedFilm).usingRecursiveComparison()
@@ -90,7 +91,7 @@ class FilmDbStorageTest {
         film.setDuration(120);
         film.setMpa(new Mpa(1, "G"));
         film.setReleaseDate(LocalDate.of(2022, 1, 11));
-        film.setGenres(Set.of(new Genre(1, "Комедия")));
+        film.setGenres(new TreeSet<>(Set.of(new Genre(1, "Комедия"))));
 
         filmDdStorage.update(film);
         Optional<Film> updatedFilm = filmDdStorage.findById(1);
@@ -104,5 +105,45 @@ class FilmDbStorageTest {
         updatedFilm = filmDdStorage.update(film);
 
         assertThat(updatedFilm).isNotPresent();
+    }
+
+    @Test
+    void testMostPopularFilms() {
+        int n = 2;
+        Collection<Film> topNMostPopular = filmDdStorage.findTopNMostPopular(n);
+        System.out.println(topNMostPopular);
+        assertThat(topNMostPopular).hasSize(n);
+    }
+
+    @Test
+    void testAddLikeFromUser() {
+        Film film = filmDdStorage.findById(3).get();
+        int likesCount = film.getLikesCount();
+
+        assertThat(filmDdStorage.addLike(3, 2)).isTrue();
+
+        film = filmDdStorage.findById(3).get();
+
+        assertEquals(likesCount + 1, film.getLikesCount());
+
+        assertThat(filmDdStorage.addLike(WRONG_ID, 2)).isFalse();
+
+        assertThat(filmDdStorage.addLike(3, WRONG_ID)).isFalse();
+    }
+
+    @Test
+    void testDeleteLikeFromUser() {
+        Film film = filmDdStorage.findById(3).get();
+        int likesCount = film.getLikesCount();
+
+        assertThat(filmDdStorage.deleteLike(3, 1)).isTrue();
+
+        film = filmDdStorage.findById(3).get();
+
+        assertEquals(likesCount - 1, film.getLikesCount());
+
+        assertThat(filmDdStorage.deleteLike(WRONG_ID, 2)).isFalse();
+
+        assertThat(filmDdStorage.addLike(3, WRONG_ID)).isFalse();
     }
 }

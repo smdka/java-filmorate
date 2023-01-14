@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.*;
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -29,12 +30,12 @@ public class User {
     @PastOrPresent(message = "Дата рождения не может быть позже текущей")
     private LocalDate birthday;
 
-    public void addFriend(User user) {
-        friendIds.add(user.getId());
+    public void addFriend(int friendId) {
+        friendIds.add(friendId);
     }
 
-    public void deleteFriend(User user) {
-        friendIds.remove(user.getId());
+    public void deleteFriend(int friendId) {
+        friendIds.remove(friendId);
     }
 
     public int getFriendsCount() {
@@ -42,6 +43,6 @@ public class User {
     }
 
     public Set<Integer> getFriendIds() {
-        return new HashSet<>(friendIds);
+        return Collections.unmodifiableSet(friendIds);
     }
 }

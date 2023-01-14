@@ -66,7 +66,7 @@ public class FilmsController {
     }
 
     @PutMapping("/{filmId}/like/{userId}")
-    public Film addLikeToFilm(@PathVariable int filmId, @PathVariable int userId) {
+    public boolean addLikeToFilm(@PathVariable int filmId, @PathVariable int userId) {
         log.debug("Получен запрос PUT /films/{}/like/{}", filmId, userId);
         ifNegativeThrow(userId);
         return filmService.addLikeToFilm(filmId, userId);
@@ -79,7 +79,7 @@ public class FilmsController {
     }
 
     @DeleteMapping("/{filmId}/like/{userId}")
-    public Film deleteLikeFromFilm(@PathVariable int filmId, @PathVariable int userId) {
+    public boolean deleteLikeFromFilm(@PathVariable int filmId, @PathVariable int userId) {
         log.debug("Получен запрос DELETE /films/{}/like/{}", filmId, userId);
         ifNegativeThrow(userId);
         return filmService.deleteLikeFromFilm(filmId, userId);

@@ -9,88 +9,69 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
 import java.util.Collection;
-import java.util.Comparator;
-import java.util.List;
-
-import static java.util.stream.Collectors.*;
 
 @Service
 @Slf4j
 public class FilmService {
     private static final String FILM_NOT_EXISTS_MSG = "Фильм с id = %d не существует";
-    private final FilmStorage storage;
+    private final FilmStorage filmStorage;
 
     @Autowired
-    public FilmService(@Qualifier("filmDbStorage") FilmStorage storage) {
-        this.storage = storage;
+    public FilmService(@Qualifier("filmDbStorage") FilmStorage filmStorage) {
+        this.filmStorage = filmStorage;
     }
 
     public Film add(Film film) {
-        Film f = storage.save(film);
+        Film f = filmStorage.save(film);
         log.info("Фильм {} успешно добавлен и ему присвоен id = {}", f.getName(), f.getId());
         return f;
     }
 
     public Film update(Film newFilm) {
         int id = newFilm.getId();
-        Film updatedFilm = storage.update(newFilm)
+        Film updatedFilm = filmStorage.update(newFilm)
                 .orElseThrow(() -> new FilmNotFoundException(String.format(FILM_NOT_EXISTS_MSG, id)));
         log.debug("Фильм с id = {} успешно обновлен", id);
         return updatedFilm;
     }
 
     public Film getFilmById(int id) {
-        Film film = getFilmOrElseThrow(id);
+        Film film = filmStorage.findById(id)
+                .orElseThrow(() -> new FilmNotFoundException(String.format(FILM_NOT_EXISTS_MSG, id)));
         log.debug("Фильм с id = {} успешно отправлен", id);
         return film;
     }
 
     public Collection<Film> getAllFilms() {
         log.debug("Список всех фильмов успешно отправлен");
-        return storage.findAll();
+        return filmStorage.findAll();
     }
 
     public void deleteFilmById(int id) {
-        if (!storage.deleteById(id)) {
+        if (!filmStorage.deleteById(id)) {
             throw new FilmNotFoundException(String.format(FILM_NOT_EXISTS_MSG, id));
         }
         log.debug("Фильм с id = {} успешно удален", id);
     }
 
-    public Film addLikeToFilm(int filmId, int userId) {
-        Film film = getFilmOrElseThrow(filmId);
-        film.addLikeFromUser(userId);
-        updateFilmAndLog(userId, film);
-        return film;
+    public boolean addLikeToFilm(int filmId, int userId) {
+        if (filmStorage.addLike(filmId, userId)) {
+            log.debug("Лайк от пользователя с id = {} успешно добавлен в фильм с id = {}", userId, filmId);
+            return true;
+        }
+        return false;
     }
 
-    private void updateFilmAndLog(int userId, Film film) {
-        storage.update(film);
-        int filmId = film.getId();
-        log.debug("Лайк от пользователя с id = {} успешно добавлен в фильм с id = {}", userId, filmId);
-        log.debug("Список id пользователей, " +
-                  "поставивших лайк фильму с id = " + filmId +": " + film.getWhoLikedUserIds());
-    }
-
-    public Film deleteLikeFromFilm(int filmId, int userId) {
-        Film film = getFilmOrElseThrow(filmId);
-        film.deleteLikeFromUser(userId);
-        updateFilmAndLog(userId, film);
-        return film;
-    }
-
-    private Film getFilmOrElseThrow(int id) {
-        return storage.findById(id)
-                .orElseThrow(() -> new FilmNotFoundException(String.format(FILM_NOT_EXISTS_MSG, id)));
+    public boolean deleteLikeFromFilm(int filmId, int userId) {
+        if (filmStorage.deleteLike(filmId, userId)) {
+            log.debug("Лайк от пользователя с id = {} успешно удален из фильма с id = {}", userId, filmId);
+            return true;
+        }
+        return false;
     }
 
     public Collection<Film> getTopNMostPopular(int n) {
-        Comparator<Film> byLikes = Comparator.comparingInt(Film::getLikesCount).reversed();
-        List<Film> films = storage.findAll().stream()
-                        .sorted(byLikes)
-                        .limit(n)
-                        .collect(toList());
         log.debug("Топ {} фильмов успешно отправлен", n);
-        return films;
+        return filmStorage.findTopNMostPopular(n);
     }
 }

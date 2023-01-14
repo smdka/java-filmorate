@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
@@ -71,13 +72,16 @@ public class UsersController {
     }
 
     @PutMapping("/{userId}/friends/{friendId}")
-    public Map<User, User> addFriend(@PathVariable int userId, @PathVariable int friendId) {
+    public boolean addFriend(@PathVariable int userId, @PathVariable int friendId) {
+        if (friendId <= 0) {
+            throw new UserNotFoundException(String.format("Пользователь с id = %d не существует", friendId));
+        }
         log.debug("Получен запрос PUT /users/{}/friends/{}", userId, friendId);
         return userService.sendFriendRequest(userId, friendId);
     }
 
     @DeleteMapping("/{userId}/friends/{friendId}")
-    public User deleteFriend(@PathVariable int userId, @PathVariable int friendId) {
+    public boolean deleteFriend(@PathVariable int userId, @PathVariable int friendId) {
         log.debug("Получен запрос DELETE /users/{}/friends/{}", userId, friendId);
         return userService.deleteFriend(userId, friendId);
     }

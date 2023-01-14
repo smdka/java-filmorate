@@ -1,28 +1,35 @@
 package ru.yandex.practicum.filmorate.storage.user;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.User;
 
+import java.sql.*;
 import java.sql.Date;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.*;
+
+import static java.util.stream.Collectors.toSet;
 
 @Repository
 @RequiredArgsConstructor
 public class UserDdStorage implements UserStorage {
+    private static final String FIND_ALL =
+            "SELECT USERS.*, ARRAY_AGG(UF.FRIEND_ID) FILTER (" +
+            "WHERE UF.FRIEND_ID IS NOT NULL) AS FRIENDS_IDS " +
+            "FROM USERS " +
+            "LEFT JOIN USER_FRIENDS UF on USERS.ID = UF.USER_ID ";
     private final JdbcTemplate jdbcTemplate;
 
     @Override
     public Collection<User> findAll() {
-        return jdbcTemplate.query("SELECT * FROM USERS ", this::mapRowToUser);
+        String sql = FIND_ALL +
+                    "GROUP BY USERS.ID";
+        return jdbcTemplate.query(sql, this::mapRowToUser);
     }
 
     private User mapRowToUser(ResultSet rs, int rowNum) throws SQLException {
@@ -31,13 +38,19 @@ public class UserDdStorage implements UserStorage {
         String login = rs.getString("LOGIN");
         String name = rs.getString("NAME");
         LocalDate birthday = rs.getDate("BIRTHDAY").toLocalDate();
-        Set<Integer> friendsIds = getFriendsIdsByUserId(id);
+        Set<Integer> friendsIds = getSetOfFriendsIds(rs);
         return new User(id, friendsIds, email, login, name, birthday);
     }
 
-    private Set<Integer> getFriendsIdsByUserId(int id) {
-        String sql = "SELECT FRIEND_ID FROM USER_FRIENDS WHERE USER_ID = ?";
-        return new HashSet<>(jdbcTemplate.query(sql, ((rs, rowNum) -> rs.getInt("FRIEND_ID")), id));
+    private Set<Integer> getSetOfFriendsIds(ResultSet rs) throws SQLException {
+        Array idsArr = rs.getArray("FRIENDS_IDS");
+        if (idsArr == null) {
+            return Collections.emptySet();
+        }
+        Object[] values = (Object[]) idsArr.getArray();
+        return Arrays.stream(values)
+                .map(value -> (Integer) value)
+                .collect(toSet());
     }
 
     @Override
@@ -56,7 +69,6 @@ public class UserDdStorage implements UserStorage {
 
         int userId = keyHolder.getKey().intValue();
         user.setId(userId);
-
         return user;
     }
 
@@ -72,22 +84,7 @@ public class UserDdStorage implements UserStorage {
                 user.getId()) == 0) {
             return Optional.empty();
         }
-
-        saveFriends(user);
         return Optional.of(user);
-    }
-
-    private void saveFriends(User user) {
-        String sql = "DELETE FROM USER_FRIENDS WHERE USER_ID = ?";
-        jdbcTemplate.update(sql, user.getId());
-
-        Set<Integer> friendsIds = user.getFriendIds();
-        int userId = user.getId();
-
-        sql = "INSERT INTO USER_FRIENDS (USER_ID, FRIEND_ID) VALUES (?, ?)";
-        for (int friendId : friendsIds) {
-            jdbcTemplate.update(sql, userId, friendId);
-        }
     }
 
     @Override
@@ -99,13 +96,9 @@ public class UserDdStorage implements UserStorage {
 
     @Override
     public Optional<User> findById(int id) {
-        String sql = "SELECT USERS.ID, " +
-                            "USERS.EMAIL, " +
-                            "USERS.LOGIN, " +
-                            "USERS.NAME, " +
-                            "USERS.BIRTHDAY " +
-                     "FROM USERS " +
-                     "WHERE USERS.ID = ?";
+        String sql = FIND_ALL +
+                    "WHERE USERS.ID = ? " +
+                    "GROUP BY USERS.ID";
         List<User> results = jdbcTemplate.query(sql, this::mapRowToUser, id);
         return results.isEmpty() ?
                 Optional.empty() :
@@ -114,13 +107,46 @@ public class UserDdStorage implements UserStorage {
 
     @Override
     public Collection<User> findFriendsById(int id) {
+        String sql = FIND_ALL +
+                    "WHERE USERS.ID IN (" +
+                    "SELECT FRIEND_ID FROM USER_FRIENDS " +
+                    "WHERE USER_ID = ?) " +
+                    "GROUP BY USERS.ID";
+        return jdbcTemplate.query(sql, this::mapRowToUser, id);
+    }
+
+    @Override
+    public boolean addFriend(int userId, int friendId) {
         try {
-            String sql = "SELECT U.* FROM USER_FRIENDS UF " +
-                    "LEFT JOIN USERS U on U.ID = UF.FRIEND_ID " +
-                    "WHERE USER_ID = ? ";
-            return jdbcTemplate.query(sql, this::mapRowToUser, id);
-        } catch (EmptyResultDataAccessException e) {
-            return null;
+            String sql = "INSERT INTO USER_FRIENDS(USER_ID, FRIEND_ID) " +
+                         "VALUES (?, ?)";
+            return jdbcTemplate.update(sql, userId, friendId) > 0;
+        } catch (DataIntegrityViolationException e) {
+            return false;
+        }
+    }
+
+    @Override
+    public boolean removeFriend(int userId, int friendId) {
+        try {
+            String sql = "DELETE FROM USER_FRIENDS " +
+                         "WHERE USER_ID = ? AND FRIEND_ID = ?";
+            return jdbcTemplate.update(sql, userId, friendId) > 0;
+        } catch (DataIntegrityViolationException e) {
+            return false;
+        }
+    }
+
+    @Override
+    public Collection<User> findCommonFriendsByIds(int firstUserId, int secondUserId) {
+        try {
+            String sql = FIND_ALL +
+                    "WHERE USERS.ID IN (SELECT FRIEND_ID FROM USER_FRIENDS WHERE USER_ID = ?) " +
+                    "AND USERS.ID IN (SELECT FRIEND_ID FROM USER_FRIENDS WHERE USER_ID = ?) " +
+                    "GROUP BY USERS.ID";
+            return jdbcTemplate.query(sql, this::mapRowToUser, firstUserId, secondUserId);
+        } catch (DataIntegrityViolationException e) {
+            return Collections.emptyList();
         }
     }
 }

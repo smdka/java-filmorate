@@ -14,7 +14,6 @@ import java.util.*;
 @Slf4j
 public class UserService {
     private static final String USER_NOT_EXISTS_MSG = "Пользователь с id = %d не существует";
-    private static final String FRIENDS_LIST_MSG = "Друзья пользователя с id = {}: {}";
     private final UserStorage storage;
 
     @Autowired
@@ -75,41 +74,38 @@ public class UserService {
         log.debug("Пользователь с id = {} успешно удален", id);
     }
 
-    public Map<User, User> sendFriendRequest(int fromUserId, int toUserId) {
-        User user = getUserOrElseThrow(fromUserId);
-        User friend = getUserOrElseThrow(toUserId);
-
-        user.addFriend(friend);
-        storage.update(user);
-        log.debug("Пользователь с id = {} теперь в списке друзей пользователя с id = {}", toUserId, fromUserId);
-        log.debug(FRIENDS_LIST_MSG, fromUserId, user.getFriendIds());
-        log.debug(FRIENDS_LIST_MSG, toUserId, friend.getFriendIds());
-        return Map.of(user, friend);
+    public boolean sendFriendRequest(int fromUserId, int toUserId) {
+        if (storage.addFriend(fromUserId, toUserId)) {
+            log.debug("Пользователь с id = {} теперь в списке друзей пользователя с id = {}", toUserId, fromUserId);
+            return true;
+        }
+        log.debug("Не удалось добавить пользователя с id = {} в список друзей пользователя с id = {}",
+                  toUserId, fromUserId);
+        return false;
     }
 
-    public User deleteFriend(int userId, int friendId) {
-        User user = getUserOrElseThrow(userId);
-        User friend = getUserOrElseThrow(friendId);
-
-        user.deleteFriend(friend);
-        storage.update(user);
-        log.debug("Пользователь с id = {} удален из друзей пользователя с id = {}", friendId, userId);
-        log.debug(FRIENDS_LIST_MSG, userId, user.getFriendIds());
-        log.debug(FRIENDS_LIST_MSG, friendId, friend.getFriendIds());
-        return user;
+    public boolean deleteFriend(int userId, int friendId) {
+        if (storage.removeFriend(userId, friendId)) {
+            log.debug("Пользователь с id = {} удален из друзей пользователя с id = {}", friendId, userId);
+            return true;
+        }
+        log.debug("Не удалось удалить пользователя с id = {} из списка друзей пользователя с id = {}",
+                friendId, userId);
+        return false;
     }
 
     public List<User> getCommonFriends(int  userId, int friendId) {
-        Collection<User> userFriends = storage.findFriendsById(userId);
-        ifNullThrow(userId, userFriends);
-
-        Collection<User> friendFriends = storage.findFriendsById(friendId);
-        ifNullThrow(friendId, userFriends);
-
-        userFriends.retainAll(friendFriends);
+//        Collection<User> userFriends = storage.findFriendsById(userId);
+//        ifNullThrow(userId, userFriends);
+//
+//        Collection<User> friendFriends = storage.findFriendsById(friendId);
+//        ifNullThrow(friendId, userFriends);
+//
+//        userFriends.retainAll(friendFriends);
+        List<User> result = new ArrayList<>(storage.findCommonFriendsByIds(userId, friendId));
         log.debug("Список общих друзей для пользователя с id = {} и пользователя с id = {} отправлен",
                   userId, friendId);
-        return new ArrayList<>(userFriends);
+        return result;
     }
 
     private void ifNullThrow(int id, Object o) {
