@@ -111,7 +111,6 @@ class FilmDbStorageTest {
     void testMostPopularFilms() {
         int n = 2;
         Collection<Film> topNMostPopular = filmDdStorage.findTopNMostPopular(n);
-        System.out.println(topNMostPopular);
         assertThat(topNMostPopular).hasSize(n);
     }
 
@@ -125,10 +124,6 @@ class FilmDbStorageTest {
         film = filmDdStorage.findById(3).get();
 
         assertEquals(likesCount + 1, film.getLikesCount());
-
-        assertThat(filmDdStorage.addLike(WRONG_ID, 2)).isFalse();
-
-        assertThat(filmDdStorage.addLike(3, WRONG_ID)).isFalse();
     }
 
     @Test
@@ -143,7 +138,5 @@ class FilmDbStorageTest {
         assertEquals(likesCount - 1, film.getLikesCount());
 
         assertThat(filmDdStorage.deleteLike(WRONG_ID, 2)).isFalse();
-
-        assertThat(filmDdStorage.addLike(3, WRONG_ID)).isFalse();
     }
 }

@@ -117,22 +117,4 @@ class UserDbStorageTest {
 
         assertThat(friends).isEmpty();
     }
-
-    @Test
-    void testAddFriend() {
-        boolean isAdded = userDdStorage.addFriend(WRONG_ID, 2);
-        assertThat(isAdded).isFalse();
-
-        isAdded = userDdStorage.addFriend(1, WRONG_ID);
-        assertThat(isAdded).isFalse();
-    }
-
-    @Test
-    void testRemoveFriend() {
-        boolean isRemoved = userDdStorage.addFriend(WRONG_ID, 2);
-        assertThat(isRemoved).isFalse();
-
-        isRemoved = userDdStorage.addFriend(1, WRONG_ID);
-        assertThat(isRemoved).isFalse();
-    }
 }

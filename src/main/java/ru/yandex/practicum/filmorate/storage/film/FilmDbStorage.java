@@ -1,7 +1,6 @@
 package ru.yandex.practicum.filmorate.storage.film;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
@@ -23,12 +22,9 @@ public class FilmDbStorage implements FilmStorage {
     private static final String FIND_ALL =
             "SELECT FILMS.*, " +
                    "MPA.NAME AS MPA_NAME, " +
-                   "ARRAY_AGG(FG.GENRE_ID) FILTER (" +
-                       "WHERE FG.GENRE_ID IS NOT NULL) AS GENRE_IDS, " +
-                   "ARRAY_AGG(G.NAME) FILTER (" +
-                      "WHERE G.NAME IS NOT NULL) AS GENRE_NAMES, " +
-                   "ARRAY_AGG(DISTINCT FL.LIKED_BY_USER_ID) FILTER (" +
-                      "WHERE FL.LIKED_BY_USER_ID IS NOT NULL) AS WHO_LIKED_IDS," +
+                   "ARRAY_AGG(FG.GENRE_ID) AS GENRE_IDS, " +
+                   "ARRAY_AGG(G.NAME) AS GENRE_NAMES, " +
+                   "ARRAY_AGG(FL.LIKED_BY_USER_ID) AS WHO_LIKED_IDS," +
             "FROM FILMS " +
             "LEFT JOIN MPA on FILMS.MPA_ID = MPA.ID " +
             "LEFT JOIN FILM_GENRE FG on FILMS.ID = FG.FILM_ID " +
@@ -57,11 +53,11 @@ public class FilmDbStorage implements FilmStorage {
 
     private SortedSet<Genre> getSetOfGenres(ResultSet row) throws SQLException {
         Array idsArr = row.getArray("GENRE_IDS");
-        if (idsArr == null) {
-            return Collections.emptySortedSet();
-        }
         Array namesArr = row.getArray("GENRE_NAMES");
         Object[] idsArrValues = (Object[]) idsArr.getArray();
+        if (idsArrValues[0] == null) {
+            return Collections.emptySortedSet();
+        }
         Object[] namesArrValues = (Object[]) namesArr.getArray();
         SortedSet<Genre> result = new TreeSet<>();
         for (int i = 0; i < idsArrValues.length; i++) {
@@ -72,10 +68,10 @@ public class FilmDbStorage implements FilmStorage {
 
     private Set<Integer> getSetOfLikes(ResultSet rs) throws SQLException {
         Array likesArray = rs.getArray("WHO_LIKED_IDS");
-        if (likesArray == null) {
+        Object[] values = (Object[]) likesArray.getArray();
+        if (values[0] == null) {
             return Collections.emptySet();
         }
-        Object[] values = (Object[]) likesArray.getArray();
         return Arrays.stream(values)
                 .map(value -> (Integer) value)
                 .collect(toSet());
@@ -102,7 +98,6 @@ public class FilmDbStorage implements FilmStorage {
         film.setId(filmId);
 
         saveGenres(film);
-        saveLikes(film);
         return film;
     }
 
@@ -115,11 +110,9 @@ public class FilmDbStorage implements FilmStorage {
         int filmId = film.getId();
 
         if (!whoLikedUserIds.isEmpty()) {
-            for(int id : whoLikedUserIds) {
+            for (int id : whoLikedUserIds) {
                 jdbcTemplate.update(sql, filmId, id);
             }
-        } else {
-            jdbcTemplate.update(sql, filmId, null);
         }
     }
 
@@ -131,7 +124,7 @@ public class FilmDbStorage implements FilmStorage {
         String sql = "INSERT INTO FILM_GENRE (FILM_ID, GENRE_ID) VALUES (?, ?)";
 
         if (!genres.isEmpty()) {
-            for(Genre genre : genres) {
+            for (Genre genre : genres) {
                 jdbcTemplate.update(sql, filmId, genre.getId());
             }
         }
@@ -183,23 +176,14 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public boolean addLike(int filmId, int userId) {
-        try {
-            String sql = "INSERT INTO FILM_LIKES(FILM_ID, LIKED_BY_USER_ID) " +
-                    "VALUES (?, ?)";
-            return jdbcTemplate.update(sql, filmId, userId) > 0;
-        } catch (DataIntegrityViolationException e) {
-            return false;
-        }
+        String sql = "MERGE INTO FILM_LIKES(FILM_ID, LIKED_BY_USER_ID) VALUES (?, ?)";
+        return jdbcTemplate.update(sql, filmId, userId) > 0;
     }
 
     @Override
     public boolean deleteLike(int filmId, int userId) {
-        try {
-            String sql = "DELETE FROM FILM_LIKES " +
-                         "WHERE FILM_ID = ? AND LIKED_BY_USER_ID = ?";
-            return jdbcTemplate.update(sql, filmId, userId) > 0;
-        } catch (DataIntegrityViolationException e) {
-            return false;
-        }
+        String sql = "DELETE FROM FILM_LIKES " +
+                     "WHERE FILM_ID = ? AND LIKED_BY_USER_ID = ?";
+        return jdbcTemplate.update(sql, filmId, userId) > 0;
     }
 }

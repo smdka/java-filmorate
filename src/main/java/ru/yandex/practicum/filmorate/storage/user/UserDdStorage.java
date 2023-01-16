@@ -1,7 +1,6 @@
 package ru.yandex.practicum.filmorate.storage.user;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
@@ -19,8 +18,7 @@ import static java.util.stream.Collectors.toSet;
 @RequiredArgsConstructor
 public class UserDdStorage implements UserStorage {
     private static final String FIND_ALL =
-            "SELECT USERS.*, ARRAY_AGG(UF.FRIEND_ID) FILTER (" +
-            "WHERE UF.FRIEND_ID IS NOT NULL) AS FRIENDS_IDS " +
+            "SELECT USERS.*, ARRAY_AGG(UF.FRIEND_ID) AS FRIENDS_IDS " +
             "FROM USERS " +
             "LEFT JOIN USER_FRIENDS UF on USERS.ID = UF.USER_ID ";
     private final JdbcTemplate jdbcTemplate;
@@ -44,10 +42,10 @@ public class UserDdStorage implements UserStorage {
 
     private Set<Integer> getSetOfFriendsIds(ResultSet rs) throws SQLException {
         Array idsArr = rs.getArray("FRIENDS_IDS");
-        if (idsArr == null) {
+        Object[] values = (Object[]) idsArr.getArray();
+        if (values[0] == null) {
             return Collections.emptySet();
         }
-        Object[] values = (Object[]) idsArr.getArray();
         return Arrays.stream(values)
                 .map(value -> (Integer) value)
                 .collect(toSet());
@@ -55,7 +53,8 @@ public class UserDdStorage implements UserStorage {
 
     @Override
     public User save(User user) {
-        String sql = "INSERT INTO USERS (EMAIL, LOGIN, NAME, BIRTHDAY) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO USERS (EMAIL, LOGIN, NAME, BIRTHDAY) " +
+                     "VALUES (?, ?, ?, ?)";
         KeyHolder keyHolder = new GeneratedKeyHolder();
 
         jdbcTemplate.update(connection -> {
@@ -74,14 +73,14 @@ public class UserDdStorage implements UserStorage {
 
     @Override
     public Optional<User> update(User user) {
-        String sql = "UPDATE USERS SET " +
-                     "EMAIL = ?, LOGIN = ?, NAME = ?, BIRTHDAY = ? " +
+        String sql = "UPDATE USERS " +
+                     "SET EMAIL = ?, LOGIN = ?, NAME = ?, BIRTHDAY = ? " +
                      "WHERE ID = ?";
-        if (jdbcTemplate.update(sql, user.getEmail(),
+        if (jdbcTemplate.update(sql,
+                user.getEmail(),
                 user.getLogin(),
                 user.getName(),
-                Date.valueOf(user.getBirthday()),
-                user.getId()) == 0) {
+                Date.valueOf(user.getBirthday()), user.getId()) == 0) {
             return Optional.empty();
         }
         return Optional.of(user);
@@ -108,45 +107,33 @@ public class UserDdStorage implements UserStorage {
     @Override
     public Collection<User> findFriendsById(int id) {
         String sql = FIND_ALL +
-                    "WHERE USERS.ID IN (" +
-                    "SELECT FRIEND_ID FROM USER_FRIENDS " +
-                    "WHERE USER_ID = ?) " +
+                    "INNER JOIN USER_FRIENDS U on USERS.ID = U.FRIEND_ID " +
+                    "WHERE U.USER_ID = ? " +
                     "GROUP BY USERS.ID";
         return jdbcTemplate.query(sql, this::mapRowToUser, id);
     }
 
     @Override
     public boolean addFriend(int userId, int friendId) {
-        try {
-            String sql = "INSERT INTO USER_FRIENDS(USER_ID, FRIEND_ID) " +
-                         "VALUES (?, ?)";
-            return jdbcTemplate.update(sql, userId, friendId) > 0;
-        } catch (DataIntegrityViolationException e) {
-            return false;
-        }
+        String sql = "MERGE INTO USER_FRIENDS(USER_ID, FRIEND_ID) " +
+                     "VALUES (?, ?)";
+        return jdbcTemplate.update(sql, userId, friendId) > 0;
     }
 
     @Override
     public boolean removeFriend(int userId, int friendId) {
-        try {
-            String sql = "DELETE FROM USER_FRIENDS " +
-                         "WHERE USER_ID = ? AND FRIEND_ID = ?";
-            return jdbcTemplate.update(sql, userId, friendId) > 0;
-        } catch (DataIntegrityViolationException e) {
-            return false;
-        }
+        String sql = "DELETE FROM USER_FRIENDS " +
+                     "WHERE USER_ID = ? AND FRIEND_ID = ?";
+        return jdbcTemplate.update(sql, userId, friendId) > 0;
     }
 
     @Override
     public Collection<User> findCommonFriendsByIds(int firstUserId, int secondUserId) {
-        try {
-            String sql = FIND_ALL +
-                    "WHERE USERS.ID IN (SELECT FRIEND_ID FROM USER_FRIENDS WHERE USER_ID = ?) " +
-                    "AND USERS.ID IN (SELECT FRIEND_ID FROM USER_FRIENDS WHERE USER_ID = ?) " +
+        String sql = FIND_ALL +
+                    "INNER JOIN USER_FRIENDS U on USERS.ID = U.FRIEND_ID " +
+                    "INNER JOIN USER_FRIENDS F on USERS.ID = F.FRIEND_ID " +
+                    "WHERE U.USER_ID = ? AND F.USER_ID = ? " +
                     "GROUP BY USERS.ID";
-            return jdbcTemplate.query(sql, this::mapRowToUser, firstUserId, secondUserId);
-        } catch (DataIntegrityViolationException e) {
-            return Collections.emptyList();
-        }
+        return jdbcTemplate.query(sql, this::mapRowToUser, firstUserId, secondUserId);
     }
 }

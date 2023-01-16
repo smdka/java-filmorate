@@ -46,7 +46,7 @@ public class UserService {
         }
     }
 
-    private static boolean isEmpty(String name) {
+    private boolean isEmpty(String name) {
         return name == null || name.isBlank();
     }
 
@@ -95,30 +95,14 @@ public class UserService {
     }
 
     public List<User> getCommonFriends(int  userId, int friendId) {
-//        Collection<User> userFriends = storage.findFriendsById(userId);
-//        ifNullThrow(userId, userFriends);
-//
-//        Collection<User> friendFriends = storage.findFriendsById(friendId);
-//        ifNullThrow(friendId, userFriends);
-//
-//        userFriends.retainAll(friendFriends);
-        List<User> result = new ArrayList<>(storage.findCommonFriendsByIds(userId, friendId));
         log.debug("Список общих друзей для пользователя с id = {} и пользователя с id = {} отправлен",
                   userId, friendId);
-        return result;
+        return (List<User>) storage.findCommonFriendsByIds(userId, friendId);
     }
 
-    private void ifNullThrow(int id, Object o) {
-        if (o == null) {
-            throw new UserNotFoundException(String.format(USER_NOT_EXISTS_MSG, id));
-        }
-    }
-
-    public List<User> getFriends(int id) {
-        Collection<User> friends = storage.findFriendsById(id);
-        ifNullThrow(id, friends);
+    public List<User> getFriendsById(int id) {
         log.debug("Список друзей для пользователя с id = {} отправлен", id);
-        return new ArrayList<>(friends);
+        return (List<User>) storage.findFriendsById(id);
     }
 }
 

@@ -39,7 +39,7 @@ public class UsersController {
     @GetMapping("/{id}/friends")
     public List<User> getFriends(@PathVariable int id) {
         log.debug("Получен запрос GET /users/{}/friends", id);
-        return userService.getFriends(id);
+        return userService.getFriendsById(id);
     }
 
     @GetMapping("/{id}/friends/common/{otherId}")
@@ -72,17 +72,20 @@ public class UsersController {
     }
 
     @PutMapping("/{userId}/friends/{friendId}")
-    public boolean addFriend(@PathVariable int userId, @PathVariable int friendId) {
+    public void addFriend(@PathVariable int userId, @PathVariable int friendId) {
         if (friendId <= 0) {
             throw new UserNotFoundException(String.format("Пользователь с id = %d не существует", friendId));
         }
         log.debug("Получен запрос PUT /users/{}/friends/{}", userId, friendId);
-        return userService.sendFriendRequest(userId, friendId);
+        userService.sendFriendRequest(userId, friendId);
     }
 
     @DeleteMapping("/{userId}/friends/{friendId}")
-    public boolean deleteFriend(@PathVariable int userId, @PathVariable int friendId) {
+    public void deleteFriend(@PathVariable int userId, @PathVariable int friendId) {
+        if (friendId <= 0) {
+            throw new UserNotFoundException(String.format("Пользователь с id = %d не существует", friendId));
+        }
         log.debug("Получен запрос DELETE /users/{}/friends/{}", userId, friendId);
-        return userService.deleteFriend(userId, friendId);
+        userService.deleteFriend(userId, friendId);
     }
 }

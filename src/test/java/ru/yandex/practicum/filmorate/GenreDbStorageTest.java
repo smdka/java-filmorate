@@ -9,7 +9,7 @@ import org.springframework.test.context.jdbc.Sql;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.storage.genre.GenreDbStorage;
 
-import java.util.List;
+import java.util.Collection;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -25,7 +25,7 @@ class GenreDbStorageTest {
 
     @Test
     void findAllTest() {
-        List<Genre> genres = genreDbStorage.findAll();
+        Collection<Genre> genres = genreDbStorage.findAll();
 
         assertThat(genres).hasSize(EXPECTED_GENRE_COUNT);
     }

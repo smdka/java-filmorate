@@ -63,7 +63,7 @@ public class InMemoryUserStorage implements UserStorage {
             return false;
         }
         user.addFriend(friendId);
-        return false;
+        return true;
     }
 
     @Override
@@ -73,7 +73,7 @@ public class InMemoryUserStorage implements UserStorage {
             return false;
         }
         user.deleteFriend(friendId);
-        return false;
+        return true;
     }
 
     @Override
@@ -81,15 +81,11 @@ public class InMemoryUserStorage implements UserStorage {
         User firstUser = users.get(firstUserId);
         User secondUser = users.get(secondUserId);
         if (firstUser == null || secondUser == null) {
-            return null;
+            return Collections.emptyList();
         }
-        List<User> firstUserFriends = firstUser.getFriendIds().stream()
+        firstUser.getFriendIds().retainAll(secondUser.getFriendIds());
+        return firstUser.getFriendIds().stream()
                 .map(users::get)
                 .collect(toList());
-        List<User> secondUserFriends = secondUser.getFriendIds().stream()
-                .map(users::get)
-                .collect(toList());
-        firstUserFriends.retainAll(secondUserFriends);
-        return firstUserFriends;
     }
 }

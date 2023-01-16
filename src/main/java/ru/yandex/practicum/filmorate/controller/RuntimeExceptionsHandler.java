@@ -59,18 +59,6 @@ public class RuntimeExceptionsHandler {
     }
 
     @ExceptionHandler
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public Map<String, String> handleNotExistingUser(final MpaNotFoundException e) {
-        return Map.of(ERROR, e.getMessage());
-    }
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public Map<String, String> handleNotExistingUser(final GenreNotFoundException e) {
-        return Map.of(ERROR, e.getMessage());
-    }
-
-    @ExceptionHandler
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public Map<String, String> handleRuntimeException(final RuntimeException e) {
         log.warn(e.getMessage());

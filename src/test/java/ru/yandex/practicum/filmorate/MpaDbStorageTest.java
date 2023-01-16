@@ -9,7 +9,7 @@ import org.springframework.test.context.jdbc.Sql;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.storage.mpa.MpaDbStorage;
 
-import java.util.List;
+import java.util.Collection;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -25,7 +25,7 @@ class MpaDbStorageTest {
 
     @Test
     void findAllTest() {
-        List<Mpa> mpas = mpaDbStorage.findAll();
+        Collection<Mpa> mpas = mpaDbStorage.findAll();
 
         assertThat(mpas).hasSize(EXPECTED_MPA_COUNT);
     }

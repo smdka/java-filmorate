@@ -24,7 +24,7 @@ create table if not exists PUBLIC.FILM_GENRE
 (
     FILM_ID  INTEGER references FILMS on update cascade on delete cascade,
     GENRE_ID INTEGER references GENRES on update cascade on delete cascade,
-    UNIQUE (FILM_ID, GENRE_ID)
+    PRIMARY KEY (FILM_ID, GENRE_ID)
 );
 
 create table if not exists PUBLIC.USERS
@@ -39,13 +39,13 @@ create table if not exists PUBLIC.USERS
 create table if not exists PUBLIC.FILM_LIKES
 (
     FILM_ID          INTEGER references FILMS on update cascade on delete cascade,
-    LIKED_BY_USER_ID INTEGER references USERS on update cascade on delete cascade
---     UNIQUE (FILM_ID, LIKED_BY_USER_ID)
+    LIKED_BY_USER_ID INTEGER references USERS on update cascade on delete cascade,
+    PRIMARY KEY (FILM_ID, LIKED_BY_USER_ID)
 );
 
 create table if not exists PUBLIC.USER_FRIENDS
 (
     USER_ID   INTEGER references USERS on update cascade on delete cascade,
     FRIEND_ID INTEGER references USERS on update cascade on delete cascade,
-    UNIQUE (USER_ID, FRIEND_ID)
+    PRIMARY KEY (USER_ID, FRIEND_ID)
 );

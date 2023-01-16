@@ -54,20 +54,18 @@ public class FilmService {
         log.debug("Фильм с id = {} успешно удален", id);
     }
 
-    public boolean addLikeToFilm(int filmId, int userId) {
+    public void addLikeToFilm(int filmId, int userId) {
         if (filmStorage.addLike(filmId, userId)) {
             log.debug("Лайк от пользователя с id = {} успешно добавлен в фильм с id = {}", userId, filmId);
-            return true;
         }
-        return false;
+        log.debug("Не удалось добавить лайк от пользователя с id = {} в фильм с id = {}", userId, filmId);
     }
 
-    public boolean deleteLikeFromFilm(int filmId, int userId) {
+    public void deleteLikeFromFilm(int filmId, int userId) {
         if (filmStorage.deleteLike(filmId, userId)) {
             log.debug("Лайк от пользователя с id = {} успешно удален из фильма с id = {}", userId, filmId);
-            return true;
         }
-        return false;
+        log.debug("Не удалось удалить лайк от пользователя с id = {} в фильм с id = {}", userId, filmId);
     }
 
     public Collection<Film> getTopNMostPopular(int n) {

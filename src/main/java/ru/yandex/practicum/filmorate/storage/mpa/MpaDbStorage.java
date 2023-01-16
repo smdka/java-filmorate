@@ -7,6 +7,7 @@ import ru.yandex.practicum.filmorate.model.Mpa;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -16,7 +17,7 @@ public class MpaDbStorage implements MpaStorage {
     private final JdbcTemplate jdbcTemplate;
 
     @Override
-    public List<Mpa> findAll() {
+    public Collection<Mpa> findAll() {
         return jdbcTemplate.query("SELECT * FROM MPA", this::mapRowToMpa);
     }
 
