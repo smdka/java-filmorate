@@ -9,93 +9,69 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
 import java.util.Collection;
-import java.util.Comparator;
 
 @Service
 @Slf4j
 public class FilmService {
-    private final FilmStorage storage;
-    private int id;
+    private static final String FILM_NOT_EXISTS_MSG = "Фильм с id = %d не существует";
+    private final FilmStorage filmStorage;
 
     @Autowired
-    public FilmService(@Qualifier("filmDbStorage") FilmStorage storage) {
-        this.storage = storage;
-        this.id = 0;
+    public FilmService(@Qualifier("filmDbStorage") FilmStorage filmStorage) {
+        this.filmStorage = filmStorage;
     }
 
     public Film add(Film film) {
-        film.setId(++id);
-        storage.add(film);
-        log.info("Фильм {} успешно добавлен и ему присвоен id = {}", film.getTitle(), film.getId());
-        return film;
+        Film f = filmStorage.save(film);
+        log.info("Фильм {} успешно добавлен и ему присвоен id = {}", f.getName(), f.getId());
+        return f;
     }
 
     public Film update(Film newFilm) {
-        int filmId = newFilm.getId();
-        if (!storage.update(newFilm)) {
-            throwFilmNotFoundException(filmId);
-        }
-        log.debug("Фильм с id = {} успешно обновлен", filmId);
-        return newFilm;
+        int id = newFilm.getId();
+        Film updatedFilm = filmStorage.update(newFilm)
+                .orElseThrow(() -> new FilmNotFoundException(String.format(FILM_NOT_EXISTS_MSG, id)));
+        log.debug("Фильм с id = {} успешно обновлен", id);
+        return updatedFilm;
     }
 
-    public Film getFilmById(int filmId) {
-        Film film = storage.getFilmById(filmId).orElseThrow();
-        checkFilmIsNull(filmId, film);
-
-        log.debug("Фильм с id = {} успешно отправлен", film.getId());
+    public Film getFilmById(int id) {
+        Film film = filmStorage.findById(id)
+                .orElseThrow(() -> new FilmNotFoundException(String.format(FILM_NOT_EXISTS_MSG, id)));
+        log.debug("Фильм с id = {} успешно отправлен", id);
         return film;
-    }
-
-    private static void throwFilmNotFoundException(int filmId) {
-        log.warn("Фильм с id = {} не существует", filmId);
-        throw new FilmNotFoundException(String.format("Фильм с id = %d не существует", filmId));
     }
 
     public Collection<Film> getAllFilms() {
         log.debug("Список всех фильмов успешно отправлен");
-        return storage.findAll();
+        return filmStorage.findAll();
     }
 
-    public void deleteFilmById(int filmId) {
-        if (!storage.delete(filmId)) {
-            throwFilmNotFoundException(filmId);
+    public void deleteFilmById(int id) {
+        if (!filmStorage.deleteById(id)) {
+            throw new FilmNotFoundException(String.format(FILM_NOT_EXISTS_MSG, id));
         }
-        log.debug("Фильм с id = {} успешно удален", filmId);
+        log.debug("Фильм с id = {} успешно удален", id);
     }
 
-    public Film addLikeToFilm(int filmId, int userId) {
-        Film film = storage.getFilmById(filmId).orElseThrow();
-        checkFilmIsNull(filmId, film);
-
-        film.addLikeFromUser(userId);
-        updateFilmAndLog(userId, film);
-        return film;
-    }
-
-    private static void checkFilmIsNull(int filmId, Film film) {
-        if (film == null) {
-            throwFilmNotFoundException(filmId);
+    public boolean addLikeToFilm(int filmId, int userId) {
+        if (filmStorage.addLike(filmId, userId)) {
+            log.debug("Лайк от пользователя с id = {} успешно добавлен в фильм с id = {}", userId, filmId);
+            return true;
         }
+        return false;
     }
 
-    private void updateFilmAndLog(int userId, Film film) {
-        storage.update(film);
-        log.debug("Лайк от пользователя с id = {} успешно добавлен в фильм с id = {}", userId, film.getId());
+    public boolean deleteLikeFromFilm(int filmId, int userId) {
+        if (filmStorage.deleteLike(filmId, userId)) {
+            log.debug("Лайк от пользователя с id = {} успешно удален из фильма с id = {}", userId, filmId);
+            return true;
+        }
+        return false;
     }
 
-    public Film deleteLikeFromFilm(int filmId, int userId) {
-        Film film = storage.getFilmById(filmId).orElseThrow();
-        checkFilmIsNull(filmId, film);
-
-        film.deleteLikeFromUser(userId);
-        updateFilmAndLog(userId, film);
-        return film;
-    }
-
-    public Collection<Film> getTopNFilmsByLikes(int n) {
-        Comparator<Film> byLikes = Comparator.comparingInt(Film::getLikesCount).reversed();
+    public Collection<Film> getTopNMostPopular(int n) {
         log.debug("Топ {} фильмов успешно отправлен", n);
-        return storage.getTopN(n, byLikes);
+        return filmStorage.findTopNMostPopular(n);
     }
 }

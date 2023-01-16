@@ -4,17 +4,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.MpaNotFoundException;
 import ru.yandex.practicum.filmorate.model.Mpa;
-import ru.yandex.practicum.filmorate.storage.mpa.MpaDbStorage;
+import ru.yandex.practicum.filmorate.storage.mpa.MpaStorage;
 
 import java.util.Collection;
-import java.util.function.Supplier;
 
 @Service
 @Slf4j
 public class MpaService {
-    private final MpaDbStorage storage;
+    private final MpaStorage storage;
 
-    public MpaService(MpaDbStorage storage) {
+    public MpaService(MpaStorage storage) {
         this.storage = storage;
     }
 
@@ -24,15 +23,9 @@ public class MpaService {
     }
 
     public Mpa getMpaById(int id) {
-        Mpa mpa = storage.findById(id).orElseThrow(mpaNotFoundException(id));
-        log.debug("Рейтинг с id = {} успешно отправлен", mpa.getId());
+        Mpa mpa = storage.findById(id)
+                .orElseThrow(() -> new MpaNotFoundException(String.format("Рейтинг с id = %d не существует", id)));
+        log.debug("Рейтинг с id = {} успешно отправлен", id);
         return mpa;
-    }
-
-    private Supplier<MpaNotFoundException> mpaNotFoundException(int id) {
-        return () -> {
-            log.warn("Рейтинг с id = {} не существует", id);
-            return new MpaNotFoundException(String.format("Рейтинг с id = %d не существует", id));
-        };
     }
 }

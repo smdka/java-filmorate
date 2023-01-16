@@ -11,6 +11,7 @@ import ru.yandex.practicum.filmorate.storage.user.UserDdStorage;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -102,5 +103,36 @@ class UserDbStorageTest {
         updatedUser = userDdStorage.update(user);
 
         assertThat(updatedUser).isNotPresent();
+    }
+
+    @Test
+    void testGetFriendsById() {
+        userDdStorage.addFriend(1, 2);
+        Collection<User> friends = userDdStorage.findFriendsById(1);
+
+        assertThat(friends).hasSize(1);
+
+        userDdStorage.removeFriend(1, 2);
+        friends = userDdStorage.findFriendsById(1);
+
+        assertThat(friends).isEmpty();
+    }
+
+    @Test
+    void testAddFriend() {
+        boolean isAdded = userDdStorage.addFriend(WRONG_ID, 2);
+        assertThat(isAdded).isFalse();
+
+        isAdded = userDdStorage.addFriend(1, WRONG_ID);
+        assertThat(isAdded).isFalse();
+    }
+
+    @Test
+    void testRemoveFriend() {
+        boolean isRemoved = userDdStorage.addFriend(WRONG_ID, 2);
+        assertThat(isRemoved).isFalse();
+
+        isRemoved = userDdStorage.addFriend(1, WRONG_ID);
+        assertThat(isRemoved).isFalse();
     }
 }

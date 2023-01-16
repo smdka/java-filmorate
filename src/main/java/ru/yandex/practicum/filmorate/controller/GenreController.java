@@ -29,7 +29,7 @@ public class GenreController {
 
     @GetMapping("/{id}")
     public Genre getMpaById(@PathVariable int id) {
-        log.debug("Получен запрос GET /genres/" + id);
+        log.debug("Получен запрос GET /genres/{}", id);
         return service.getGenreById(id);
     }
 }
