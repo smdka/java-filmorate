@@ -20,7 +20,6 @@ public class GenreController {
         this.service = service;
     }
 
-
     @GetMapping
     public Collection<Genre> findAll() {
         log.debug("Получен запрос GET /genres");

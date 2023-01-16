@@ -51,11 +51,11 @@ public class UsersController {
     @PostMapping
     public User add(@Valid @RequestBody User user, BindingResult bindingResult) {
         log.debug("Получен запрос POST /users/");
-        checkForErrors(bindingResult);
+        ifHasErrorsThrow(bindingResult);
         return userService.add(user);
     }
 
-    private static void checkForErrors(BindingResult bindingResult) {
+    private void ifHasErrorsThrow(BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             for (FieldError e : bindingResult.getFieldErrors()) {
                 log.warn("Не пройдена валидация пользователя: {} = {}", e.getField(), e.getRejectedValue());
@@ -67,24 +67,26 @@ public class UsersController {
     @PutMapping
     public User update(@Valid @RequestBody User newUser, BindingResult bindingResult) {
         log.debug("Получен запрос PUT /users/");
-        checkForErrors(bindingResult);
+        ifHasErrorsThrow(bindingResult);
         return userService.update(newUser);
     }
 
     @PutMapping("/{userId}/friends/{friendId}")
     public void addFriend(@PathVariable int userId, @PathVariable int friendId) {
-        if (friendId <= 0) {
-            throw new UserNotFoundException(String.format("Пользователь с id = %d не существует", friendId));
-        }
+        ifNegativeThrow(friendId);
         log.debug("Получен запрос PUT /users/{}/friends/{}", userId, friendId);
         userService.sendFriendRequest(userId, friendId);
     }
 
-    @DeleteMapping("/{userId}/friends/{friendId}")
-    public void deleteFriend(@PathVariable int userId, @PathVariable int friendId) {
+    private void ifNegativeThrow(int friendId) {
         if (friendId <= 0) {
             throw new UserNotFoundException(String.format("Пользователь с id = %d не существует", friendId));
         }
+    }
+
+    @DeleteMapping("/{userId}/friends/{friendId}")
+    public void deleteFriend(@PathVariable int userId, @PathVariable int friendId) {
+        ifNegativeThrow(friendId);
         log.debug("Получен запрос DELETE /users/{}/friends/{}", userId, friendId);
         userService.deleteFriend(userId, friendId);
     }

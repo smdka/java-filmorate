@@ -1,7 +1,6 @@
 package ru.yandex.practicum.filmorate.service;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
@@ -16,16 +15,15 @@ public class UserService {
     private static final String USER_NOT_EXISTS_MSG = "Пользователь с id = %d не существует";
     private final UserStorage storage;
 
-    @Autowired
     public UserService(@Qualifier("userDdStorage") UserStorage storage) {
         this.storage = storage;
     }
 
     public User add(User user) {
         useLoginIfNameIsEmpty(user);
-        User u = storage.save(user);
-        log.info("Пользователь {} успешно добавлен и ему присвоен id = {}", u.getName(), u.getId());
-        return u;
+        User savedUser = storage.save(user);
+        log.info("Пользователь {} успешно добавлен и ему присвоен id = {}", savedUser.getName(), savedUser.getId());
+        return savedUser;
     }
 
     public User update(User newUser) {

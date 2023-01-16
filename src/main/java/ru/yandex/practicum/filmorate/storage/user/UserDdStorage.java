@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
-import org.springframework.stereotype.Repository;
+import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.sql.*;
@@ -14,7 +14,7 @@ import java.util.*;
 
 import static java.util.stream.Collectors.toSet;
 
-@Repository
+@Component
 @RequiredArgsConstructor
 public class UserDdStorage implements UserStorage {
     private static final String FIND_ALL =
@@ -131,8 +131,8 @@ public class UserDdStorage implements UserStorage {
     @Override
     public Collection<User> findCommonFriendsByIds(int firstUserId, int secondUserId) {
         String sql = FIND_ALL +
-                    "INNER JOIN USER_FRIENDS U on USERS.ID = U.FRIEND_ID " +
-                    "INNER JOIN USER_FRIENDS F on USERS.ID = F.FRIEND_ID " +
+                    "JOIN USER_FRIENDS U on USERS.ID = U.FRIEND_ID " +
+                    "JOIN USER_FRIENDS F on USERS.ID = F.FRIEND_ID " +
                     "WHERE U.USER_ID = ? AND F.USER_ID = ? " +
                     "GROUP BY USERS.ID";
         return jdbcTemplate.query(sql, this::mapRowToUser, firstUserId, secondUserId);

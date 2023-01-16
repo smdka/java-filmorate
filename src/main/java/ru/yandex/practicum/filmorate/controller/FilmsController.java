@@ -45,11 +45,11 @@ public class FilmsController {
     @PostMapping
     public Film add(@Valid @RequestBody Film film, BindingResult bindingResult) {
         log.debug("Получен запрос POST /films");
-        checkForErrors(bindingResult);
+        ifHasErrorsThrow(bindingResult);
         return filmService.add(film);
     }
 
-    private static void checkForErrors(BindingResult bindingResult) {
+    private void ifHasErrorsThrow(BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             for (FieldError e : bindingResult.getFieldErrors()) {
                 log.warn("Не пройдена валидация фильма: {} = {}", e.getField(), e.getRejectedValue());
@@ -61,7 +61,7 @@ public class FilmsController {
     @PutMapping
     public Film update(@Valid @RequestBody Film newFilm, BindingResult bindingResult) {
         log.debug("Получен запрос PUT /films");
-        checkForErrors(bindingResult);
+        ifHasErrorsThrow(bindingResult);
         return filmService.update(newFilm);
     }
 

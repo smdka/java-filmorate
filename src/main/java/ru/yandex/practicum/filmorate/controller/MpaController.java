@@ -16,7 +16,6 @@ import java.util.Collection;
 public class MpaController {
     private final MpaService service;
 
-
     public MpaController(MpaService service) {
         this.service = service;
     }
