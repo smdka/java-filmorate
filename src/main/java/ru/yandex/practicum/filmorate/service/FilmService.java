@@ -30,14 +30,16 @@ public class FilmService {
     public Film update(Film newFilm) {
         int id = newFilm.getId();
         Film updatedFilm = filmStorage.update(newFilm)
-                .orElseThrow(() -> new FilmNotFoundException(String.format(FILM_NOT_EXISTS_MSG, id)));
+                .orElseThrow(() ->
+                        new FilmNotFoundException(String.format(FILM_NOT_EXISTS_MSG, id)));
         log.debug("Фильм с id = {} успешно обновлен", id);
         return updatedFilm;
     }
 
     public Film getFilmById(int id) {
         Film film = filmStorage.findById(id)
-                .orElseThrow(() -> new FilmNotFoundException(String.format(FILM_NOT_EXISTS_MSG, id)));
+                .orElseThrow(() ->
+                        new FilmNotFoundException(String.format(FILM_NOT_EXISTS_MSG, id)));
         log.debug("Фильм с id = {} успешно отправлен", id);
         return film;
     }

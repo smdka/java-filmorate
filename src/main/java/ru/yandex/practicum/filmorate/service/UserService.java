@@ -51,15 +51,11 @@ public class UserService {
     }
 
     public User getUserById(int id) {
-        User user = getUserOrElseThrow(id);
-        log.debug("Пользователь с id = {} успешно отправлен", id);
-        return user;
-    }
-
-    private User getUserOrElseThrow(int id) {
-        return storage.findById(id)
+        User user = storage.findById(id)
                 .orElseThrow(() ->
                         new UserNotFoundException(String.format(USER_NOT_EXISTS_MSG, id)));
+        log.debug("Пользователь с id = {} успешно отправлен", id);
+        return user;
     }
 
     public Collection<User> getAllUsers() {
@@ -74,24 +70,22 @@ public class UserService {
         log.debug("Пользователь с id = {} успешно удален", id);
     }
 
-    public boolean sendFriendRequest(int fromUserId, int toUserId) {
+    public void sendFriendRequest(int fromUserId, int toUserId) {
         if (storage.addFriend(fromUserId, toUserId)) {
             log.debug("Пользователь с id = {} теперь в списке друзей пользователя с id = {}", toUserId, fromUserId);
-            return true;
+            return;
         }
         log.debug("Не удалось добавить пользователя с id = {} в список друзей пользователя с id = {}",
                   toUserId, fromUserId);
-        return false;
     }
 
-    public boolean deleteFriend(int userId, int friendId) {
+    public void deleteFriend(int userId, int friendId) {
         if (storage.removeFriend(userId, friendId)) {
             log.debug("Пользователь с id = {} удален из друзей пользователя с id = {}", friendId, userId);
-            return true;
+            return;
         }
         log.debug("Не удалось удалить пользователя с id = {} из списка друзей пользователя с id = {}",
                 friendId, userId);
-        return false;
     }
 
     public List<User> getCommonFriends(int  userId, int friendId) {
