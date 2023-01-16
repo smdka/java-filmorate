@@ -53,9 +53,9 @@ class FilmDbStorageTest {
 
         assertThat(isDeleted).isTrue();
 
-        List<Film> Films = new ArrayList<>(filmDdStorage.findAll());
+        List<Film> films = new ArrayList<>(filmDdStorage.findAll());
 
-        assertThat(Films).hasSize(EXPECTED_FILMS_COUNT - 1);
+        assertThat(films).hasSize(EXPECTED_FILMS_COUNT - 1);
 
         isDeleted = filmDdStorage.deleteById(WRONG_ID);
 
@@ -77,9 +77,9 @@ class FilmDbStorageTest {
                 .ignoringFields("id")
                 .isEqualTo(film);
 
-        List<Film> Films = new ArrayList<>(filmDdStorage.findAll());
+        List<Film> films = new ArrayList<>(filmDdStorage.findAll());
 
-        assertThat(Films).hasSize(EXPECTED_FILMS_COUNT + 1);
+        assertThat(films).hasSize(EXPECTED_FILMS_COUNT + 1);
     }
 
     @Test

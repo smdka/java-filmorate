@@ -18,7 +18,8 @@ import static java.util.stream.Collectors.toSet;
 @RequiredArgsConstructor
 public class UserDdStorage implements UserStorage {
     private static final String FIND_ALL =
-            "SELECT USERS.*, ARRAY_AGG(UF.FRIEND_ID) AS FRIENDS_IDS " +
+            "SELECT USERS.*, " +
+                   "ARRAY_AGG(UF.FRIEND_ID) AS FRIENDS_IDS " +
             "FROM USERS " +
             "LEFT JOIN USER_FRIENDS UF on USERS.ID = UF.USER_ID ";
     private final JdbcTemplate jdbcTemplate;

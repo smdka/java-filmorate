@@ -101,21 +101,6 @@ public class FilmDbStorage implements FilmStorage {
         return film;
     }
 
-    private void saveLikes(Film film) {
-        jdbcTemplate.update("DELETE FROM FILM_LIKES WHERE FILM_ID = ?", film.getId());
-
-        Set<Integer> whoLikedUserIds = film.getWhoLikedUserIds();
-
-        String sql = "INSERT INTO FILM_LIKES (FILM_ID, LIKED_BY_USER_ID) VALUES (?, ?)";
-        int filmId = film.getId();
-
-        if (!whoLikedUserIds.isEmpty()) {
-            for (int id : whoLikedUserIds) {
-                jdbcTemplate.update(sql, filmId, id);
-            }
-        }
-    }
-
     private void saveGenres(Film film) {
         jdbcTemplate.update("DELETE FROM FILM_GENRE WHERE FILM_ID = ?", film.getId());
 
@@ -147,6 +132,21 @@ public class FilmDbStorage implements FilmStorage {
         saveGenres(film);
         saveLikes(film);
         return Optional.of(film);
+    }
+
+    private void saveLikes(Film film) {
+        jdbcTemplate.update("DELETE FROM FILM_LIKES WHERE FILM_ID = ?", film.getId());
+
+        Set<Integer> whoLikedUserIds = film.getWhoLikedUserIds();
+
+        String sql = "INSERT INTO FILM_LIKES (FILM_ID, LIKED_BY_USER_ID) VALUES (?, ?)";
+        int filmId = film.getId();
+
+        if (!whoLikedUserIds.isEmpty()) {
+            for (int id : whoLikedUserIds) {
+                jdbcTemplate.update(sql, filmId, id);
+            }
+        }
     }
 
     @Override

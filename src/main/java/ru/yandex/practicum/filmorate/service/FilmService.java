@@ -22,9 +22,9 @@ public class FilmService {
     }
 
     public Film add(Film film) {
-        Film f = filmStorage.save(film);
-        log.info("Фильм {} успешно добавлен и ему присвоен id = {}", f.getName(), f.getId());
-        return f;
+        Film savedFilm = filmStorage.save(film);
+        log.info("Фильм {} успешно добавлен и ему присвоен id = {}", savedFilm.getName(), savedFilm.getId());
+        return savedFilm;
     }
 
     public Film update(Film newFilm) {
@@ -59,6 +59,7 @@ public class FilmService {
     public void addLikeToFilm(int filmId, int userId) {
         if (filmStorage.addLike(filmId, userId)) {
             log.debug("Лайк от пользователя с id = {} успешно добавлен в фильм с id = {}", userId, filmId);
+            return;
         }
         log.debug("Не удалось добавить лайк от пользователя с id = {} в фильм с id = {}", userId, filmId);
     }
@@ -66,6 +67,7 @@ public class FilmService {
     public void deleteLikeFromFilm(int filmId, int userId) {
         if (filmStorage.deleteLike(filmId, userId)) {
             log.debug("Лайк от пользователя с id = {} успешно удален из фильма с id = {}", userId, filmId);
+            return;
         }
         log.debug("Не удалось удалить лайк от пользователя с id = {} в фильм с id = {}", userId, filmId);
     }
