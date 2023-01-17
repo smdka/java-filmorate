@@ -16,11 +16,11 @@ import java.util.*;
 @Slf4j
 @RestController
 @RequestMapping("/films")
-public class FilmController {
+public class FilmsController {
     private final FilmService filmService;
 
     @Autowired
-    public FilmController(FilmService filmService) {
+    public FilmsController(FilmService filmService) {
         this.filmService = filmService;
     }
 
@@ -32,27 +32,27 @@ public class FilmController {
 
     @GetMapping("/{id}")
     public Film getFilm(@PathVariable int id) {
-        log.debug("Получен запрос GET /films/" + id);
+        log.debug("Получен запрос GET /films/{}", id);
         return filmService.getFilmById(id);
     }
 
     @GetMapping("/popular")
     public Collection<Film> getMostPopularFilms(@RequestParam(defaultValue = "10") int count) {
-        log.debug("Получен запрос GET /films/popular/" + count);
-        return filmService.getTopNFilmsByLikes(count);
+        log.debug("Получен запрос GET /films/popular/{}", count);
+        return filmService.getTopNMostPopular(count);
     }
 
     @PostMapping
     public Film add(@Valid @RequestBody Film film, BindingResult bindingResult) {
         log.debug("Получен запрос POST /films");
-        checkForErrors(bindingResult);
+        ifHasErrorsThrow(bindingResult);
         return filmService.add(film);
     }
 
-    private static void checkForErrors(BindingResult bindingResult) {
+    private void ifHasErrorsThrow(BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             for (FieldError e : bindingResult.getFieldErrors()) {
-                log.warn("Не пройдена валидация фильма: " + e.getField() + " = " + e.getRejectedValue());
+                log.warn("Не пройдена валидация фильма: {} = {}", e.getField(), e.getRejectedValue());
             }
             throw new ValidationException(bindingResult.getFieldErrors().toString());
         }
@@ -61,28 +61,27 @@ public class FilmController {
     @PutMapping
     public Film update(@Valid @RequestBody Film newFilm, BindingResult bindingResult) {
         log.debug("Получен запрос PUT /films");
-        checkForErrors(bindingResult);
+        ifHasErrorsThrow(bindingResult);
         return filmService.update(newFilm);
     }
 
-    @PutMapping("/{id}/like/{userId}")
-    public Film addLikeToFilm(@PathVariable int id, @PathVariable int userId) {
-        log.debug("Получен запрос PUT /films/" + id + "/like/" + userId);
-        checkUserIdIsNegative(userId);
-        return filmService.addLikeToFilm(id, userId);
+    @PutMapping("/{filmId}/like/{userId}")
+    public void addLikeToFilm(@PathVariable int filmId, @PathVariable int userId) {
+        log.debug("Получен запрос PUT /films/{}/like/{}", filmId, userId);
+        ifNegativeThrow(userId);
+        filmService.addLikeToFilm(filmId, userId);
     }
 
-    static void checkUserIdIsNegative(int userId) {
+    private void ifNegativeThrow(int userId) {
         if (userId <= 0) {
-            log.warn("Пользователь с id = {} не существует", userId);
             throw new UserNotFoundException("Пользователь с id = " + userId + " не существует");
         }
     }
 
-    @DeleteMapping("/{id}/like/{userId}")
-    public Film deleteLikeFromFilm(@PathVariable int id, @PathVariable int userId) {
-        log.debug("Получен запрос DELETE /films/" + id + "/like/" + userId);
-        checkUserIdIsNegative(userId);
-        return filmService.deleteLikeFromFilm(id, userId);
+    @DeleteMapping("/{filmId}/like/{userId}")
+    public void deleteLikeFromFilm(@PathVariable int filmId, @PathVariable int userId) {
+        log.debug("Получен запрос DELETE /films/{}/like/{}", filmId, userId);
+        ifNegativeThrow(userId);
+        filmService.deleteLikeFromFilm(filmId, userId);
     }
 }

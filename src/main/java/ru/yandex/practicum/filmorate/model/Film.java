@@ -1,25 +1,28 @@
 package ru.yandex.practicum.filmorate.model;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import ru.yandex.practicum.filmorate.validation.MinDate;
 
 import javax.validation.constraints.*;
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class Film {
     public static final int MAX_DESCRIPTION_SIZE = 200;
     public static final String CINEMA_BIRTHDAY = "28.12.1895";
     private int id;
-    private final Set<Integer> whoLikedUserIds = new HashSet<>();
+    private Set<Integer> whoLikedUserIds = new HashSet<>();
 
     @NotBlank(message = "Имя фильма обязательно")
     private String name;
 
     @Size(max = MAX_DESCRIPTION_SIZE,
-            message = "Описание фильма не может быть больше" + MAX_DESCRIPTION_SIZE + "символов")
+          message = "Описание фильма не может быть больше" + MAX_DESCRIPTION_SIZE + "символов")
     private String description;
 
     @NotNull(message = "Дата релиза обязательна")
@@ -28,6 +31,8 @@ public class Film {
 
     @Positive(message = "Продолжительность фильма должна быть больше 0")
     private int duration;
+    private Mpa mpa;
+    private SortedSet<Genre> genres = new TreeSet<>(Comparator.comparing(Genre::getId));
 
     public void addLikeFromUser(int userId) {
         whoLikedUserIds.add(userId);
@@ -41,7 +46,11 @@ public class Film {
         return whoLikedUserIds.size();
     }
 
+    public SortedSet<Genre> getGenres() {
+        return Collections.unmodifiableSortedSet(genres);
+    }
+
     public Set<Integer> getWhoLikedUserIds() {
-        return new HashSet<>(whoLikedUserIds);
+        return Collections.unmodifiableSet(whoLikedUserIds);
     }
 }

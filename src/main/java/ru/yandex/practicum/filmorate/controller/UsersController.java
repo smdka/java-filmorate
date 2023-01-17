@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
@@ -15,11 +16,11 @@ import java.util.*;
 @Slf4j
 @RestController
 @RequestMapping("/users")
-public class UserController {
+public class UsersController {
     private final UserService userService;
 
     @Autowired
-    public UserController(UserService userService) {
+    public UsersController(UserService userService) {
         this.userService = userService;
     }
 
@@ -37,27 +38,27 @@ public class UserController {
 
     @GetMapping("/{id}/friends")
     public List<User> getFriends(@PathVariable int id) {
-        log.debug("Получен запрос GET /users/" + id + "/friends");
-        return userService.getFriends(id);
+        log.debug("Получен запрос GET /users/{}/friends", id);
+        return userService.getFriendsById(id);
     }
 
     @GetMapping("/{id}/friends/common/{otherId}")
     public List<User> getCommonFriends(@PathVariable int id, @PathVariable int otherId) {
-        log.debug("Получен запрос GET /users/" + id + "/friends/common/" + otherId);
+        log.debug("Получен запрос GET /users/{}/friends/common/{}", id, otherId);
         return userService.getCommonFriends(id, otherId);
     }
 
     @PostMapping
     public User add(@Valid @RequestBody User user, BindingResult bindingResult) {
         log.debug("Получен запрос POST /users/");
-        checkForErrors(bindingResult);
+        ifHasErrorsThrow(bindingResult);
         return userService.add(user);
     }
 
-    private static void checkForErrors(BindingResult bindingResult) {
+    private void ifHasErrorsThrow(BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             for (FieldError e : bindingResult.getFieldErrors()) {
-                log.warn("Не пройдена валидация пользователя: " + e.getField() + " = " + e.getRejectedValue());
+                log.warn("Не пройдена валидация пользователя: {} = {}", e.getField(), e.getRejectedValue());
             }
             throw new ValidationException(bindingResult.getFieldErrors().toString());
         }
@@ -66,19 +67,27 @@ public class UserController {
     @PutMapping
     public User update(@Valid @RequestBody User newUser, BindingResult bindingResult) {
         log.debug("Получен запрос PUT /users/");
-        checkForErrors(bindingResult);
+        ifHasErrorsThrow(bindingResult);
         return userService.update(newUser);
     }
 
-    @PutMapping("/{id}/friends/{friendId}")
-    public Map<User, User> addFriend(@PathVariable int id, @PathVariable int friendId) {
-        log.debug("Получен запрос PUT /users/" + id + "/friends/" + friendId);
-        return userService.addFriendsToEachOther(id, friendId);
+    @PutMapping("/{userId}/friends/{friendId}")
+    public void addFriend(@PathVariable int userId, @PathVariable int friendId) {
+        ifNegativeThrow(friendId);
+        log.debug("Получен запрос PUT /users/{}/friends/{}", userId, friendId);
+        userService.sendFriendRequest(userId, friendId);
     }
 
-    @DeleteMapping("/{id}/friends/{friendId}")
-    public User deleteFriend(@PathVariable int id, @PathVariable int friendId) {
-        log.debug("Получен запрос DELETE /users/" + id + "/friends/" + friendId);
-        return userService.deleteFriend(id, friendId);
+    private void ifNegativeThrow(int friendId) {
+        if (friendId <= 0) {
+            throw new UserNotFoundException(String.format("Пользователь с id = %d не существует", friendId));
+        }
+    }
+
+    @DeleteMapping("/{userId}/friends/{friendId}")
+    public void deleteFriend(@PathVariable int userId, @PathVariable int friendId) {
+        ifNegativeThrow(friendId);
+        log.debug("Получен запрос DELETE /users/{}/friends/{}", userId, friendId);
+        userService.deleteFriend(userId, friendId);
     }
 }

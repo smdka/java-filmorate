@@ -21,30 +21,57 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public void add(Film film) {
+    public Film save(Film film) {
         films.put(film.getId(), film);
+        return film;
     }
 
     @Override
-    public boolean update(Film film) {
-        return films.replace(film.getId(), film) != null;
+    public Optional<Film> update(Film film) {
+        return films.replace(film.getId(), film) == null ?
+                Optional.empty() :
+                Optional.of(film);
     }
 
     @Override
-    public boolean delete(int filmId) {
+    public boolean deleteById(int filmId) {
         return films.remove(filmId) != null;
     }
 
     @Override
-    public List<Film> getTopN(int n, Comparator<Film> comparator) {
+    public Optional<Film> findById(int id) {
+        Film film = films.get(id);
+        return film == null ?
+                Optional.empty() :
+                Optional.of(film);
+    }
+
+    @Override
+    public Collection<Film> findTopNMostPopular(int n) {
+        Comparator<Film> byLikesDesc = Comparator.comparingInt(Film::getId).reversed();
         return films.values().stream()
-                .sorted(comparator)
+                .sorted(byLikesDesc)
                 .limit(n)
                 .collect(toList());
     }
 
     @Override
-    public Film getFilmById(int id) {
-        return films.get(id);
+    public boolean addLike(int filmId, int userId) {
+        Film film = films.get(filmId);
+        if (film == null) {
+            return false;
+        }
+        film.addLikeFromUser(userId);
+        return true;
+    }
+
+    @Override
+    public boolean deleteLike(int filmId, int userId) {
+        Film film = films.get(filmId);
+        if (film == null) {
+            return false;
+        }
+        film.deleteLikeFromUser(userId);
+        return true;
     }
 }
