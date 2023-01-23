@@ -5,6 +5,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.sql.*;
@@ -14,7 +15,7 @@ import java.util.*;
 
 import static java.util.stream.Collectors.toSet;
 
-@Component
+@Repository
 @RequiredArgsConstructor
 public class UserDdStorage implements UserStorage {
     private static final String FIND_ALL =
