@@ -16,12 +16,12 @@ public class Review {
     private String content;
 
     @NotNull
-    private Boolean isPositive;
+    private boolean isPositive;
 
     @NotNull
-    private Integer userId;
+    private int userId;
 
     @NotNull
-    private Integer filmId;
+    private int filmId;
     private int useful;
 }
