@@ -12,10 +12,11 @@ import javax.validation.constraints.NotNull;
 @AllArgsConstructor
 public class Review {
     private int reviewId;
+
     private String content;
 
-    @NotNull
     @JsonProperty("isPositive")
+    @NotNull
     private boolean isPositive;
 
     @NotNull

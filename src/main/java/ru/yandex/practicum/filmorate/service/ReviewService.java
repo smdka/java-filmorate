@@ -3,9 +3,13 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.exception.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ReviewNotFoundException;
+import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
 import ru.yandex.practicum.filmorate.model.Review;
+import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.review.ReviewStorage;
+import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.util.Collection;
 
@@ -14,7 +18,14 @@ import java.util.Collection;
 @RequiredArgsConstructor
 public class ReviewService {
     private static final String REVIEW_NOT_EXISTS_MSG = "Отзыв с id = %d не существует";
+    private static final String USER_NOT_EXISTS_MSG = "Пользователь с id = %d не существует";
+    private static final String FILM_NOT_EXISTS_MSG = "Фильм с id = %d не существует";
+
+
     private final ReviewStorage reviewStorage;
+    private final UserStorage userStorage;
+    private final FilmStorage filmStorage;
+
     public Review getReviewById(int id) {
         Review review = reviewStorage.findById(id)
                 .orElseThrow(() ->
@@ -25,6 +36,14 @@ public class ReviewService {
 
 
     public Review add(Review review) {
+        int userId = review.getUserId();
+        userStorage.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException(String.format(USER_NOT_EXISTS_MSG, userId)));
+
+        int filmId = review.getFilmId();
+        filmStorage.findById(filmId)
+                .orElseThrow(() -> new FilmNotFoundException(String.format(FILM_NOT_EXISTS_MSG, filmId)));
+
         Review savedReview = reviewStorage.save(review);
         log.info("Отзыв о фильме с id = {} успешно добавлен и ему присвоен id = {}",
                 savedReview.getFilmId(), savedReview.getReviewId());
