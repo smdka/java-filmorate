@@ -16,5 +16,5 @@ public interface FilmStorage {
     boolean addLike(int filmId, int userId);
     boolean deleteLike(int filmId, int userId);
 
-    List<Film> getFilmsByDirector (int directorId, String sortBy);
+    Optional<List<Film>> getFilmsByDirector (int directorId, String sortBy);
 }
