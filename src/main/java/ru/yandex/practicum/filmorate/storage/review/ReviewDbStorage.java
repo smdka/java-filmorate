@@ -60,7 +60,7 @@ public class ReviewDbStorage implements ReviewStorage {
         jdbcTemplate.update(connection -> {
             PreparedStatement stmt = connection.prepareStatement(sql, new String[] {"ID"});
             stmt.setString(1, review.getContent());
-            stmt.setBoolean(2, review.isPositive());
+            stmt.setBoolean(2, review.getIsPositive());
             stmt.setInt(3, review.getUseful());
             stmt.setInt(4, review.getUserId());
             stmt.setInt(5, review.getFilmId());
@@ -78,7 +78,7 @@ public class ReviewDbStorage implements ReviewStorage {
                      "CONTENT = ?, IS_POSITIVE = ?, USEFUL = ?, USER_ID = ?, FILM_ID = ? " +
                      "WHERE ID = ?";
         if (jdbcTemplate.update(sql, review.getContent(),
-                review.isPositive(),
+                review.getIsPositive(),
                 review.getUseful(),
                 review.getUserId(),
                 review.getFilmId(),
