@@ -53,17 +53,16 @@ public class ReviewDbStorage implements ReviewStorage {
 
     @Override
     public Review save(Review review) {
-        String sql = "INSERT INTO REVIEWS (CONTENT, IS_POSITIVE, USEFUL, USER_ID, FILM_ID) " +
-                     "VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO REVIEWS (CONTENT, IS_POSITIVE, USER_ID, FILM_ID) " +
+                     "VALUES (?, ?, ?, ?)";
         KeyHolder keyHolder = new GeneratedKeyHolder();
 
         jdbcTemplate.update(connection -> {
             PreparedStatement stmt = connection.prepareStatement(sql, new String[] {"ID"});
             stmt.setString(1, review.getContent());
             stmt.setBoolean(2, review.getIsPositive());
-            stmt.setInt(3, review.getUseful());
-            stmt.setInt(4, review.getUserId());
-            stmt.setInt(5, review.getFilmId());
+            stmt.setInt(3, review.getUserId());
+            stmt.setInt(4, review.getFilmId());
             return stmt;
         }, keyHolder);
 
@@ -83,10 +82,6 @@ public class ReviewDbStorage implements ReviewStorage {
             return Optional.empty();
         }
 
-//Тест обновления фильма в Postman пытается обновить поля userId, filmId и useful на другие значения
-//(не знаю опечатка это или нет) В связи с этим вернуть обратно review не получится,
-//так как тест в ответе требует не те значения userId, filmId и useful,
-//которые сам же и направляет. Поэтому возвращается отзыв с id, взятым из обновленного отзыва.
         sql = FIND_ALL +
              "WHERE ID = ?";
         return Optional.of(jdbcTemplate.query(sql, this::mapRowToReview, review.getReviewId()).get(0));
