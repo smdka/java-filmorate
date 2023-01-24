@@ -7,6 +7,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.Feed;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
 
@@ -89,5 +90,11 @@ public class UsersController {
         ifNegativeThrow(friendId);
         log.debug("Получен запрос DELETE /users/{}/friends/{}", userId, friendId);
         userService.deleteFriend(userId, friendId);
+    }
+
+    @GetMapping("/{id}/feed")
+    public List<Feed> getFeeds(@PathVariable int id){
+        log.debug("Получен запрос GET /users/{}/feed", id);
+        return userService.getFeeds(id);
     }
 }

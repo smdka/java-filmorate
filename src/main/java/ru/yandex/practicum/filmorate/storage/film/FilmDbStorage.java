@@ -12,6 +12,7 @@ import ru.yandex.practicum.filmorate.model.Mpa;
 import java.sql.*;
 import java.sql.Date;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 
 import static java.util.stream.Collectors.*;
@@ -30,6 +31,9 @@ public class FilmDbStorage implements FilmStorage {
             "LEFT JOIN FILM_GENRE FG on FILMS.ID = FG.FILM_ID " +
             "LEFT JOIN GENRES G on G.ID = FG.GENRE_ID " +
             "LEFT JOIN FILM_LIKES FL on FILMS.ID = FL.FILM_ID ";
+    private static final String ADD_FEED = "INSERT INTO USER_FEEDS " +
+            "(USER_ID, TIME_STAMP, EVENT_TYPE, OPERATION, ENTITY_ID) " +
+            "VALUES (?, ?, ?, ?, ?)";
     private final JdbcTemplate jdbcTemplate;
 
     @Override
@@ -177,6 +181,8 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public boolean addLike(int filmId, int userId) {
         String sql = "MERGE INTO FILM_LIKES(FILM_ID, LIKED_BY_USER_ID) VALUES (?, ?)";
+        jdbcTemplate.update(ADD_FEED,
+                userId, LocalDateTime.now(), "LIKE", "ADD", filmId);
         return jdbcTemplate.update(sql, filmId, userId) > 0;
     }
 
@@ -184,6 +190,8 @@ public class FilmDbStorage implements FilmStorage {
     public boolean deleteLike(int filmId, int userId) {
         String sql = "DELETE FROM FILM_LIKES " +
                      "WHERE FILM_ID = ? AND LIKED_BY_USER_ID = ?";
+        jdbcTemplate.update(ADD_FEED,
+                userId, LocalDateTime.now(), "LIKE", "REMOVE", filmId);
         return jdbcTemplate.update(sql, filmId, userId) > 0;
     }
 }

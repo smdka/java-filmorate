@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
+import ru.yandex.practicum.filmorate.model.Feed;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
@@ -95,6 +96,11 @@ public class UserService {
     public List<User> getFriendsById(int id) {
         log.debug("Список друзей для пользователя с id = {} отправлен", id);
         return (List<User>) storage.findFriendsById(id);
+    }
+
+    public List<Feed> getFeeds(int id) {
+        log.debug("Лента новостей для пользователя с id = {} отправлен", id);
+        return storage.getFeeds(id);
     }
 }
 
