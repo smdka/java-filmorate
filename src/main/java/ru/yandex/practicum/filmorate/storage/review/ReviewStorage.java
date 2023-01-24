@@ -6,6 +6,8 @@ import java.util.Collection;
 import java.util.Optional;
 
 public interface ReviewStorage {
+    Collection<Review> findAll();
+
     Optional<Review> findById(int id);
 
     Review save(Review review);

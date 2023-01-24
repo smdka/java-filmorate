@@ -27,6 +27,11 @@ public class ReviewDbStorage implements ReviewStorage {
     private final JdbcTemplate jdbcTemplate;
 
     @Override
+    public Collection<Review> findAll() {
+        return jdbcTemplate.query(FIND_ALL, this::mapRowToReview);
+    }
+
+    @Override
     public Optional<Review> findById(int id) {
         String sql = FIND_ALL +
                     "WHERE ID = ?";
@@ -144,7 +149,7 @@ public class ReviewDbStorage implements ReviewStorage {
         } else {
             String sql = FIND_ALL +
                         "WHERE FILM_ID = ? " +
-                        "ORDER BY USEFUL " +
+                        "ORDER BY USEFUL DESC " +
                         "LIMIT ?";
             return jdbcTemplate.query(sql, this::mapRowToReview, filmId, n);
         }
