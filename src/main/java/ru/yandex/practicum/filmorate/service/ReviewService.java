@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ReviewNotFoundException;
@@ -15,16 +16,23 @@ import java.util.Collection;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class ReviewService {
     private static final String REVIEW_NOT_EXISTS_MSG = "Отзыв с id = %d не существует";
     private static final String USER_NOT_EXISTS_MSG = "Пользователь с id = %d не существует";
     private static final String FILM_NOT_EXISTS_MSG = "Фильм с id = %d не существует";
 
-
     private final ReviewStorage reviewStorage;
     private final UserStorage userStorage;
     private final FilmStorage filmStorage;
+
+    public ReviewService(ReviewStorage reviewStorage,
+                         @Qualifier("userDdStorage") UserStorage userStorage,
+                         @Qualifier("filmDbStorage") FilmStorage filmStorage)
+    {
+        this.reviewStorage = reviewStorage;
+        this.userStorage = userStorage;
+        this.filmStorage = filmStorage;
+    }
 
     public Review getReviewById(int id) {
         Review review = reviewStorage.findById(id)
