@@ -19,9 +19,9 @@ public class Review {
     private Boolean isPositive;
 
     @NotNull
-    private int userId;
+    private Integer userId;
 
     @NotNull
-    private int filmId;
+    private Integer filmId;
     private int useful;
 }
