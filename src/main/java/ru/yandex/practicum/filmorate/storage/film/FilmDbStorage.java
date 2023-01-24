@@ -205,6 +205,9 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public List<Film> getFilmsByDirector (int directorId, String sortBy) {
+        String insert = "";
+        if(sortBy.contains("year")) {insert = "YEARS";}
+        if (sortBy.contains("likes")) {insert = "LIKES DESC";}
         String sql = FIND_ALL +
                 "LEFT JOIN (SELECT DIRECTORS.*, " +
                 "F.ID AS FILM_ID," +
@@ -218,7 +221,7 @@ public class FilmDbStorage implements FilmStorage {
                 "GROUP BY FD.FILM_ID) AS DF " +
                 "WHERE FILMS.ID = DF.FILM_ID " +
                 "GROUP BY FILMS.ID " +
-                "ORDER BY " + sortBy + " DESC";
+                "ORDER BY " + insert;
         return jdbcTemplate.query(sql, this::mapRowToFilm, directorId);
     }
 

@@ -25,10 +25,12 @@ public class DirectorDbStorage implements DirectorStorage {
     }
 
     @Override
-    public Director findById(int id) {
+    public Optional<Director> findById(int id) {
         String sql = "SELECT * FROM DIRECTORS WHERE ID = ?";
         List<Director> results = jdbcTemplate.query(sql, this::mapRowToDirector, id);
-        return results.get(0);
+        return results.isEmpty() ?
+                Optional.empty() :
+                Optional.of(results.get(0));
     }
     @Override
     public Director addDirector(Director director){
@@ -54,17 +56,19 @@ public class DirectorDbStorage implements DirectorStorage {
     }
 
     @Override
-    public Director update (Director director) {
+    public Optional<Director> update (Director director) {
         String sql = "UPDATE DIRECTORS " +
                 "SET NAME = ?" +
                 "WHERE ID = ?";
-        System.out.println(director.getId());
-        System.out.println(director.getName());
+        if(
         jdbcTemplate.update(sql,
                 director.getName(),
-                director.getId());
+                director.getId()) == 0)
+        {
+            return Optional.empty();
+        };
 
-        return director;
+        return Optional.of(director);
     }
 
     private Director mapRowToDirector(ResultSet rs, int i) throws SQLException {
