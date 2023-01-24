@@ -50,7 +50,7 @@ class ReviewDbStorageTest {
     void saveTest() {
         Review review = new Review();
         review.setContent("Review 4");
-        review.setUseful(NO_FILM_ID);
+        review.setUseful(0);
         review.setFilmId(3);
         review.setUserId(2);
         review.setPositive(true);
@@ -72,7 +72,7 @@ class ReviewDbStorageTest {
         Review review = new Review();
         review.setReviewId(1);
         review.setContent("Updated review");
-        review.setUseful(NO_FILM_ID);
+        review.setUseful(0);
         review.setFilmId(1);
         review.setUserId(1);
         review.setPositive(true);

@@ -26,7 +26,7 @@ public class ReviewsController {
     }
 
     @PostMapping
-    public Review add(@Valid @RequestBody Review review, BindingResult bindingResult) {
+    public Review add(@RequestBody Review review, BindingResult bindingResult) {
         log.debug("Получен запрос POST /reviews");
         ifHasErrorsThrow(bindingResult);
         return reviewService.add(review);
