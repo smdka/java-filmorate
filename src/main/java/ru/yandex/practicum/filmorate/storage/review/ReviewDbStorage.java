@@ -75,16 +75,17 @@ public class ReviewDbStorage implements ReviewStorage {
     @Override
     public Optional<Review> update(Review review) {
         String sql = "UPDATE REVIEWS SET " +
-                     "CONTENT = ?, IS_POSITIVE = ?, USEFUL = ? " +
+                     "CONTENT = ?, IS_POSITIVE = ? " +
                      "WHERE ID = ?";
         if (jdbcTemplate.update(sql, review.getContent(),
                 review.getIsPositive(),
-                review.getUseful(),
-//                review.getUserId(),
-//                review.getFilmId(),
                 review.getReviewId()) == 0) {
             return Optional.empty();
         }
+
+//Тест обновления фильма в Postman пытается обновить поля userId и filmId на 2 и 2 (не знаю опечатка это или нет)
+//В связи с этим вернуть обратно review не получится, так как тест в ответе требует не те значения userId и filmId,
+//которые сам же и направляет. Поэтому возвращается отзыв с id, взятым из обновленного отзыва.
         sql = FIND_ALL +
              "WHERE ID = ?";
         return Optional.of(jdbcTemplate.query(sql, this::mapRowToReview, review.getReviewId()).get(0));
