@@ -8,6 +8,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
 import java.util.Collection;
+import java.util.List;
 
 @Service
 @Slf4j
@@ -40,6 +41,10 @@ public class FilmService {
                         new FilmNotFoundException(String.format(FILM_NOT_EXISTS_MSG, id)));
         log.debug("Фильм с id = {} успешно отправлен", id);
         return film;
+    }
+
+    public List<Film> getFilmsByDirector (int directorId, String sortBy) {
+        return filmStorage.getFilmsByDirector(directorId, sortBy);
     }
 
     public Collection<Film> getAllFilms() {

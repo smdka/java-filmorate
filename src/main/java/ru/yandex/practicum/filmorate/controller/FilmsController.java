@@ -42,6 +42,13 @@ public class FilmsController {
         return filmService.getTopNMostPopular(count);
     }
 
+    @GetMapping("/director/{directorId}")
+    public List<Film> getFilmsByDirector(@PathVariable int directorId, @RequestParam String sortBy) {
+        log.debug("получен запрос GET /films/director/{directorId}?sortBy=[year,likes]");
+        System.out.println(sortBy);
+        return filmService.getFilmsByDirector(directorId, sortBy);
+    }
+
     @PostMapping
     public Film add(@Valid @RequestBody Film film, BindingResult bindingResult) {
         log.debug("Получен запрос POST /films");
