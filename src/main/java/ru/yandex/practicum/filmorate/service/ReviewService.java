@@ -1,6 +1,5 @@
 package ru.yandex.practicum.filmorate.service;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
@@ -44,18 +43,24 @@ public class ReviewService {
 
 
     public Review add(Review review) {
-        int userId = review.getUserId();
-        userStorage.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException(String.format(USER_NOT_EXISTS_MSG, userId)));
+        ifUserNotExistsThrow(review.getUserId());
 
-        int filmId = review.getFilmId();
-        filmStorage.findById(filmId)
-                .orElseThrow(() -> new FilmNotFoundException(String.format(FILM_NOT_EXISTS_MSG, filmId)));
+        ifFilmNotExistsThrow(review.getFilmId());
 
         Review savedReview = reviewStorage.save(review);
         log.info("Отзыв о фильме с id = {} успешно добавлен и ему присвоен id = {}",
                 savedReview.getFilmId(), savedReview.getReviewId());
         return savedReview;
+    }
+
+    private void ifFilmNotExistsThrow(int filmId) {
+        filmStorage.findById(filmId)
+                .orElseThrow(() -> new FilmNotFoundException(String.format(FILM_NOT_EXISTS_MSG, filmId)));
+    }
+
+    private void ifUserNotExistsThrow(int userId) {
+        userStorage.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException(String.format(USER_NOT_EXISTS_MSG, userId)));
     }
 
 
@@ -82,6 +87,7 @@ public class ReviewService {
     }
 
     public void addLikeToReview(int reviewId, int userId) {
+        ifUserNotExistsThrow(userId);
         if (reviewStorage.addLike(reviewId, userId)) {
             log.debug("Лайк от пользователя с id = {} успешно добавлен в отзыв с id = {}", userId, reviewId);
             return;
@@ -90,6 +96,7 @@ public class ReviewService {
     }
 
     public void addDislikeToReview(int reviewId, int userId) {
+        ifUserNotExistsThrow(userId);
         if (reviewStorage.addDislike(reviewId, userId)) {
             log.debug("Дизлайк от пользователя с id = {} успешно добавлен в отзыв с id = {}", userId, reviewId);
             return;
@@ -99,6 +106,7 @@ public class ReviewService {
 
 
     public void deleteLikeFromReview(int reviewId, int userId) {
+        ifUserNotExistsThrow(userId);
         if (reviewStorage.deleteLike(reviewId, userId)) {
             log.debug("Лайк от пользователя с id = {} успешно удален из отзыва с id = {}", userId, reviewId);
             return;
@@ -107,6 +115,7 @@ public class ReviewService {
     }
 
     public void deleteDislikeFromReview(int reviewId, int userId) {
+        ifUserNotExistsThrow(userId);
         if (reviewStorage.deleteDislike(reviewId, userId)) {
             log.debug("Дизлайк от пользователя с id = {} успешно удален из отзыва с id = {}", userId, reviewId);
             return;

@@ -13,6 +13,7 @@ import javax.validation.constraints.NotNull;
 public class Review {
     private int reviewId;
 
+    @NotNull
     private String content;
 
     @JsonProperty("isPositive")
