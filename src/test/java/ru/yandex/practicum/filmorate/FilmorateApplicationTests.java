@@ -18,8 +18,8 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -97,5 +97,29 @@ class FilmorateApplicationTests {
         assertThat(userJson).isNotEmpty();
         actualUser = mapper.readValue(userJson, User.class);
         assertThat(user.getLogin()).isEqualTo(actualUser.getName());
+    }
+
+    @Test
+    void userWithWrongIdCantBeDeleted() throws Exception {
+        final int WRONG_ID = 9999;
+
+        MvcResult result = this.mockMvc.perform(delete("/users/" + WRONG_ID))
+                       .andExpect(MockMvcResultMatchers.status().isNotFound())
+                .andReturn();
+
+        String actual = result.getResponse().getContentAsString(StandardCharsets.UTF_8);
+        assertEquals("{\"error\":\"Пользователь с id = " + WRONG_ID + " не существует\"}", actual);
+    }
+
+    @Test
+    void filmWithWrongIdCantBeDeleted() throws Exception {
+        final int WRONG_ID = 9999;
+
+        MvcResult result = this.mockMvc.perform(delete("/films/" + WRONG_ID))
+                .andExpect(MockMvcResultMatchers.status().isNotFound())
+                .andReturn();
+
+        String actual = result.getResponse().getContentAsString(StandardCharsets.UTF_8);
+        assertEquals("{\"error\":\"Фильм с id = " + WRONG_ID + " не существует\"}", actual);
     }
 }

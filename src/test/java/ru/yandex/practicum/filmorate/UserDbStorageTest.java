@@ -117,4 +117,17 @@ class UserDbStorageTest {
 
         assertThat(friends).isEmpty();
     }
+
+    @Test
+    void deletedUserShouldBeRemovedFromFriends() {
+        userDdStorage.addFriend(1, 2);
+        Collection<User> friends = userDdStorage.findFriendsById(1);
+
+        assertThat(friends).hasSize(1);
+
+        userDdStorage.deleteById(2);
+        friends = userDdStorage.findFriendsById(1);
+
+        assertThat(friends).isEmpty();
+    }
 }
