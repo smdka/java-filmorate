@@ -75,11 +75,11 @@ public class ReviewDbStorage implements ReviewStorage {
     @Override
     public Optional<Review> update(Review review) {
         String sql = "UPDATE REVIEWS SET " +
-                     "CONTENT = ?, IS_POSITIVE = ? " +
+                     "CONTENT = ?, IS_POSITIVE = ?, USEFUL = ? " +
                      "WHERE ID = ?";
         if (jdbcTemplate.update(sql, review.getContent(),
                 review.getIsPositive(),
-//                review.getUseful(),
+                review.getUseful(),
 //                review.getUserId(),
 //                review.getFilmId(),
                 review.getReviewId()) == 0) {
