@@ -17,12 +17,12 @@ public class Review {
 
     @JsonProperty("isPositive")
     @NotNull
-    private boolean isPositive;
+    private Boolean isPositive;
 
     @NotNull
-    private int userId;
+    private Integer userId;
 
     @NotNull
-    private int filmId;
+    private Integer filmId;
     private int useful;
 }
