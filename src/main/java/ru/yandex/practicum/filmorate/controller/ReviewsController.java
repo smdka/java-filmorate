@@ -3,7 +3,6 @@ package ru.yandex.practicum.filmorate.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Review;
@@ -34,9 +33,6 @@ public class ReviewsController {
 
     private void ifHasErrorsThrow(BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
-            for (FieldError e : bindingResult.getFieldErrors()) {
-                log.warn("Не пройдена валидация отзыва: {} = {}", e.getField(), e.getRejectedValue());
-            }
             throw new ValidationException(bindingResult.getFieldErrors().toString());
         }
     }
