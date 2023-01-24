@@ -53,7 +53,7 @@ class ReviewDbStorageTest {
         review.setUseful(0);
         review.setFilmId(3);
         review.setUserId(2);
-        review.setPositive(true);
+        review.setIsPositive(true);
 
         Review savedReview = reviewDbStorage.save(review);
 
@@ -75,7 +75,7 @@ class ReviewDbStorageTest {
         review.setUseful(0);
         review.setFilmId(1);
         review.setUserId(1);
-        review.setPositive(true);
+        review.setIsPositive(true);
 
         reviewDbStorage.update(review);
         Optional<Review> updatedReview = reviewDbStorage.findById(1);
