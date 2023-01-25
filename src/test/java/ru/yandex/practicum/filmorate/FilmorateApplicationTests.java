@@ -27,6 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @AutoConfigureTestDatabase
 class FilmorateApplicationTests {
+    private static final int WRONG_ID = 9999;
 
     @Autowired
     private FilmsController filmController;
@@ -101,8 +102,6 @@ class FilmorateApplicationTests {
 
     @Test
     void userWithWrongIdCantBeDeleted() throws Exception {
-        final int WRONG_ID = 9999;
-
         MvcResult result = this.mockMvc.perform(delete("/users/" + WRONG_ID))
                        .andExpect(MockMvcResultMatchers.status().isNotFound())
                 .andReturn();
@@ -113,8 +112,6 @@ class FilmorateApplicationTests {
 
     @Test
     void filmWithWrongIdCantBeDeleted() throws Exception {
-        final int WRONG_ID = 9999;
-
         MvcResult result = this.mockMvc.perform(delete("/films/" + WRONG_ID))
                 .andExpect(MockMvcResultMatchers.status().isNotFound())
                 .andReturn();
