@@ -10,7 +10,6 @@ import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @Slf4j
