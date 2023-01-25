@@ -28,20 +28,20 @@ public class ReviewDbStorage implements ReviewStorage {
 
     @Override
     public Collection<Review> findAll() {
-        return jdbcTemplate.query(FIND_ALL, this::mapRowToReview);
+        return jdbcTemplate.query(FIND_ALL, (resultSet, rowNum) -> mapRowToReview(resultSet));
     }
 
     @Override
     public Optional<Review> findById(int id) {
         String sql = FIND_ALL +
                     "WHERE ID = ?";
-        List<Review> results = jdbcTemplate.query(sql, this::mapRowToReview, id);
+        List<Review> results = jdbcTemplate.query(sql, (resultSet, rowNum) -> mapRowToReview(resultSet), id);
         return results.isEmpty() ?
                 Optional.empty() :
                 Optional.of(results.get(0));
     }
 
-    private Review mapRowToReview(ResultSet resultSet, int rowNum) throws SQLException {
+    private Review mapRowToReview(ResultSet resultSet) throws SQLException {
         int id = resultSet.getInt("ID");
         String content = resultSet.getString("CONTENT");
         boolean isPositive = resultSet.getBoolean("IS_POSITIVE");
@@ -89,7 +89,7 @@ public class ReviewDbStorage implements ReviewStorage {
 //которые сам же и направляет. Поэтому возвращается отзыв с id, взятым из обновленного отзыва.
         sql = FIND_ALL +
              "WHERE ID = ?";
-        return Optional.of(jdbcTemplate.query(sql, this::mapRowToReview, review.getReviewId()).get(0));
+        return Optional.of(jdbcTemplate.query(sql, (resultSet, rowNum) -> mapRowToReview(resultSet), review.getReviewId()).get(0));
     }
 
     @Override
@@ -149,13 +149,13 @@ public class ReviewDbStorage implements ReviewStorage {
             String sql = FIND_ALL +
                         "ORDER BY USEFUL DESC " +
                         "LIMIT ?";
-            return jdbcTemplate.query(sql, this::mapRowToReview, n);
+            return jdbcTemplate.query(sql, (resultSet, rowNum) -> mapRowToReview(resultSet), n);
         } else {
             String sql = FIND_ALL +
                         "WHERE FILM_ID = ? " +
                         "ORDER BY USEFUL DESC " +
                         "LIMIT ?";
-            return jdbcTemplate.query(sql, this::mapRowToReview, filmId, n);
+            return jdbcTemplate.query(sql, (resultSet, rowNum) -> mapRowToReview(resultSet), filmId, n);
         }
     }
 }

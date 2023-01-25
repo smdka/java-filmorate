@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.User;
 
@@ -29,10 +28,10 @@ public class UserDdStorage implements UserStorage {
     public Collection<User> findAll() {
         String sql = FIND_ALL +
                     "GROUP BY USERS.ID";
-        return jdbcTemplate.query(sql, this::mapRowToUser);
+        return jdbcTemplate.query(sql, (rs, rowNum) -> mapRowToUser(rs));
     }
 
-    private User mapRowToUser(ResultSet rs, int rowNum) throws SQLException {
+    private User mapRowToUser(ResultSet rs) throws SQLException {
         int id = rs.getInt("ID");
         String email = rs.getString("EMAIL");
         String login = rs.getString("LOGIN");
@@ -100,7 +99,7 @@ public class UserDdStorage implements UserStorage {
         String sql = FIND_ALL +
                     "WHERE USERS.ID = ? " +
                     "GROUP BY USERS.ID";
-        List<User> results = jdbcTemplate.query(sql, this::mapRowToUser, id);
+        List<User> results = jdbcTemplate.query(sql, (rs, rowNum) -> mapRowToUser(rs), id);
         return results.isEmpty() ?
                 Optional.empty() :
                 Optional.of(results.get(0));
@@ -112,7 +111,7 @@ public class UserDdStorage implements UserStorage {
                     "INNER JOIN USER_FRIENDS U on USERS.ID = U.FRIEND_ID " +
                     "WHERE U.USER_ID = ? " +
                     "GROUP BY USERS.ID";
-        return jdbcTemplate.query(sql, this::mapRowToUser, id);
+        return jdbcTemplate.query(sql, (rs, rowNum) -> mapRowToUser(rs), id);
     }
 
     @Override
@@ -136,6 +135,6 @@ public class UserDdStorage implements UserStorage {
                     "JOIN USER_FRIENDS F on USERS.ID = F.FRIEND_ID " +
                     "WHERE U.USER_ID = ? AND F.USER_ID = ? " +
                     "GROUP BY USERS.ID";
-        return jdbcTemplate.query(sql, this::mapRowToUser, firstUserId, secondUserId);
+        return jdbcTemplate.query(sql, (rs, rowNum) -> mapRowToUser(rs), firstUserId, secondUserId);
     }
 }

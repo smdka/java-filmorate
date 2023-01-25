@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
@@ -37,10 +36,10 @@ public class FilmDbStorage implements FilmStorage {
     public Collection<Film> findAll() {
         String sql = FIND_ALL +
                     "GROUP BY FILMS.ID";
-        return jdbcTemplate.query(sql, this::mapRowToFilm);
+        return jdbcTemplate.query(sql, (rs, rowNum) -> mapRowToFilm(rs));
     }
 
-    private Film mapRowToFilm(ResultSet rs, int rowNum) throws SQLException {
+    private Film mapRowToFilm(ResultSet rs) throws SQLException {
         int id = rs.getInt("ID");
         String name  = rs.getString("NAME");
         String description = rs.getString("DESCRIPTION");
@@ -160,7 +159,7 @@ public class FilmDbStorage implements FilmStorage {
         String sql = FIND_ALL +
                     "WHERE FILMS.ID = ? " +
                     "GROUP BY FILMS.ID";
-        List<Film> results = jdbcTemplate.query(sql, this::mapRowToFilm, id);
+        List<Film> results = jdbcTemplate.query(sql, (rs, rowNum) -> mapRowToFilm(rs), id);
         return results.isEmpty() ?
                 Optional.empty() :
                 Optional.of(results.get(0));
@@ -172,7 +171,7 @@ public class FilmDbStorage implements FilmStorage {
                     "GROUP BY FILMS.ID " +
                     "ORDER BY COUNT(DISTINCT FL.LIKED_BY_USER_ID) DESC " +
                     "LIMIT ?";
-        return jdbcTemplate.query(sql, this::mapRowToFilm, n);
+        return jdbcTemplate.query(sql, (rs, rowNum) -> mapRowToFilm(rs), n);
     }
 
     @Override
