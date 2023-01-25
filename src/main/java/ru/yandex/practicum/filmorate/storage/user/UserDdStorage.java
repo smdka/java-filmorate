@@ -10,6 +10,7 @@ import ru.yandex.practicum.filmorate.model.User;
 
 import java.sql.*;
 import java.sql.Date;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -124,7 +125,7 @@ public class UserDdStorage implements UserStorage {
         String sql = "MERGE INTO USER_FRIENDS(USER_ID, FRIEND_ID) " +
                      "VALUES (?, ?)";
         jdbcTemplate.update(ADD_FEED,
-                userId, LocalDateTime.now(), "FRIEND", "ADD", friendId);
+                userId, Instant.now().toEpochMilli(), "FRIEND", "ADD", friendId);
         return jdbcTemplate.update(sql, userId, friendId) > 0;
     }
 
@@ -133,7 +134,7 @@ public class UserDdStorage implements UserStorage {
         String sql = "DELETE FROM USER_FRIENDS " +
                      "WHERE USER_ID = ? AND FRIEND_ID = ?";
         jdbcTemplate.update(ADD_FEED,
-                userId, LocalDateTime.now(), "FRIEND", "REMOVE", friendId);
+                userId, Instant.now().toEpochMilli(), "FRIEND", "REMOVE", friendId);
         return jdbcTemplate.update(sql, userId, friendId) > 0;
     }
 
@@ -149,15 +150,16 @@ public class UserDdStorage implements UserStorage {
 
     @Override
     public List<Feed> getFeeds(int id) {
-        String sql = "SELECT * FROM USER_FEEDS WHERE USER_ID = ?";
-        return jdbcTemplate.query(sql, this::mapRowToFeed, id);
+        //String sql = "SELECT * FROM USER_FEEDS WHERE USER_ID = ?";
+        String sql = "SELECT * FROM USER_FEEDS WHERE USER_ID IN (SELECT FRIEND_ID FROM USER_FRIENDS WHERE USER_ID = ? GROUP BY FRIEND_ID) OR USER_ID = ?";
+        return jdbcTemplate.query(sql, this::mapRowToFeed, id, id);
     }
 
     private Feed mapRowToFeed(ResultSet rs, int rowNum) throws SQLException {
         return Feed.builder()
                 .eventId(rs.getInt("EVENT_ID"))
                 .userId(rs.getInt("USER_ID"))
-                .timeStamp(rs.getTimestamp("TIME_STAMP").toLocalDateTime())
+                .timeStamp(rs.getLong("TIME_STAMP"))
                 .eventType(rs.getString("EVENT_TYPE"))
                 .operation(rs.getString("OPERATION"))
                 .entityId(rs.getInt("ENTITY_ID"))

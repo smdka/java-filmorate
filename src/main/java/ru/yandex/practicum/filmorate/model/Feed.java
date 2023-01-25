@@ -19,7 +19,7 @@ public class Feed {
     @Positive
     private int userId;
     @NotBlank
-    private LocalDateTime timeStamp;
+    private long timeStamp;
     @NotBlank
     private String eventType;
     @NotBlank
