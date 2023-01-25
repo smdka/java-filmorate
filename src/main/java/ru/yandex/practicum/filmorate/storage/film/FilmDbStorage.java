@@ -1,6 +1,8 @@
 package ru.yandex.practicum.filmorate.storage.film;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataAccessException;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
@@ -8,7 +10,10 @@ import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
+import ru.yandex.practicum.filmorate.utilities.ItemToItemCollaborativeFilter;
+import ru.yandex.practicum.filmorate.utilities.SqlArrayConverter;
 
+import javax.print.attribute.IntegerSyntax;
 import java.sql.*;
 import java.sql.Date;
 import java.time.LocalDate;
@@ -186,4 +191,94 @@ public class FilmDbStorage implements FilmStorage {
                      "WHERE FILM_ID = ? AND LIKED_BY_USER_ID = ?";
         return jdbcTemplate.update(sql, filmId, userId) > 0;
     }
+
+    @Override
+    public Collection<Film> getRecommendations(int userId) {
+        return getRecommendationsAdvancedAlgorithm(userId);
+    }
+
+    private Collection<Film> getRecommendationsAdvancedAlgorithm (int userId) {
+        try {
+            String sql1 =
+                    "SELECT fl.film_id film_ids, " +
+                            "ARRAY_AGG(fl.liked_by_user_id) user_ids, " +
+                            "ARRAY_AGG(fl.liked_by_user_id/fl.liked_by_user_id) rates " +
+                    "FROM FILM_LIKES AS FL " +
+                    "GROUP BY FL.film_id";
+            Map<Integer, Map<Integer, Optional<Double>>> matrix = jdbcTemplate.query(sql1, this::makeMatrixForRecommendations);
+            List<Integer> recommendations = ItemToItemCollaborativeFilter.getRecommendationsForUser(matrix, userId, Optional.empty());
+            //second query for recommended films
+            if (!recommendations.isEmpty()) {
+                StringBuilder stringBuilder = new StringBuilder();
+                stringBuilder.append("(");
+                for (Integer film_id : recommendations) {
+                    stringBuilder.append(film_id + ", ");
+                }
+                String sql2 = FIND_ALL +
+                        "WHERE FILMS.ID IN " +
+                        stringBuilder.substring(0, stringBuilder.length() - 2) +
+                        ")";
+                return jdbcTemplate.query(sql2, this::mapRowToFilm);
+            } else {
+                return List.of();
+            }
+        } catch (Exception exp) {
+            return List.of();
+        }
+    }
+
+    private Map<Integer, Map<Integer, Optional<Double>>> makeMatrixForRecommendations (ResultSet rs) throws SQLException, DataAccessException {
+        try {
+            SqlArrayConverter converter = new SqlArrayConverter();
+            Map<Integer, Map<Integer, Optional<Double>>> data = new HashMap<>();
+            Set<Integer> allUsers = new HashSet<>();
+            while (rs.next()) {
+                data.put(rs.getInt("film_ids"), new HashMap<>());
+                List<Integer> user_ids = converter.convert(rs.getArray("user_ids"));
+                List<Integer> rates = converter.convert(rs.getArray("rates"));
+                allUsers.addAll(user_ids);
+                for (int i = 0; i < user_ids.size(); i++) {
+                    if (user_ids.get(i) == null || rates.get(i) == null) {
+                        data.get(rs.getInt("film_ids")).put(user_ids.get(i), Optional.empty());
+                    } else {
+                        Integer rate = rates.get(i);
+                        data.get(rs.getInt("film_ids")).put(user_ids.get(i), Optional.of(rate.doubleValue()));
+                    }
+                }
+            }
+            for (Integer itemId : data.keySet()) {
+                for (Integer userId : allUsers) {
+                    Optional<Double> value = data.get(itemId).getOrDefault(userId, Optional.empty());
+                    data.get(itemId).put(userId, value);
+                }
+            }
+            return data;
+        } catch (EmptyResultDataAccessException exp) {
+            return Map.of();
+        }
+    }
+
+    private Collection<Film> getRecommendationsNaiveAlgorithm(int userId) {
+        String sql =
+            FIND_ALL +
+            "WHERE FILMS.FILM_ID IN (SELECT fl1.film_id " +
+                                    "FROM FILM_LIKES AS fl1 " +
+                                    "WHERE fl1.liked_by_user_id = (SELECT fl2.liked_by_user_id " +
+                                                                  "FROM FILM_LIKES AS fl2 " +
+                                                                  "WHERE fl2.film_id IN (SELECT fl3.film_id " +
+                                                                                        "FROM FILM_LIKES AS fl3 " +
+                                                                                        "WHERE fl3.liked_by_user_id = ?) " +
+                                                                    "AND fl2.liked_by_user_id != ?" +
+                                                                    "ORDER BY COUNT (fl2.film_id) " +
+                                                                    "GROUP BY fl2.liked_by_user_id " +
+                                                                    "LIMIT 1" +
+                                                                ") " +
+                                    "AND fl1.film_id NOT IN (SELECT fl4.film_id " +
+                                                           "FROM FILM_LIKES AS fl4 " +
+                                                           "WHERE fl4.liked_by_user_id = ?)" +
+                ")";
+        return jdbcTemplate.query(sql, this::mapRowToFilm, userId, userId, userId);
+    }
+
+
 }

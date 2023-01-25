@@ -6,17 +6,21 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.util.Collection;
+import java.util.List;
 
 @Service
 @Slf4j
 public class FilmService {
     private static final String FILM_NOT_EXISTS_MSG = "Фильм с id = %d не существует";
     private final FilmStorage filmStorage;
+    private final UserStorage userStorage;
 
-    public FilmService(@Qualifier("filmDbStorage") FilmStorage filmStorage) {
+    public FilmService(@Qualifier("filmDbStorage") FilmStorage filmStorage, @Qualifier("userDdStorage") UserStorage userStorage) {
         this.filmStorage = filmStorage;
+        this.userStorage = userStorage;
     }
 
     public Film add(Film film) {
@@ -73,5 +77,10 @@ public class FilmService {
     public Collection<Film> getTopNMostPopular(int n) {
         log.debug("Топ {} фильмов успешно отправлен", n);
         return filmStorage.findTopNMostPopular(n);
+    }
+
+    public List<Film> getRecommendations(int userId) {
+        log.debug("Список рекомендаций успешно выдан пользователю с id {}", userId);
+        return (List<Film>) filmStorage.getRecommendations(userId);
     }
 }
