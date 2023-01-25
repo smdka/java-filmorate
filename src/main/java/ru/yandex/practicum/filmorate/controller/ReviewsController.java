@@ -28,9 +28,6 @@ public class ReviewsController {
     public Review add(@Valid @RequestBody Review review, BindingResult bindingResult) {
         log.debug("Получен запрос POST /reviews");
         ifHasErrorsThrow(bindingResult);
-        if (review.getUseful() != 0) {
-            throw new ValidationException("Поле useful должно равняться 0");
-        }
         return reviewService.add(review);
     }
 
