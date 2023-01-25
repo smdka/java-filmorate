@@ -94,7 +94,7 @@ public class UserService {
     }
 
     public List<User> getFriendsById(int id) {
-        if (!storage.findById(id).isPresent()) {
+        if (storage.findById(id).isEmpty()) {
             throw new UserNotFoundException(String.format(USER_NOT_EXISTS_MSG, id));
         }
         log.debug("Список друзей для пользователя с id = {} отправлен", id);

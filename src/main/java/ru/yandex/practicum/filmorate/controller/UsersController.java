@@ -93,7 +93,7 @@ public class UsersController {
     }
 
     @DeleteMapping("/{userId}")
-    public void deleteUser(@PathVariable int userId) {
+    public void delete(@PathVariable int userId) {
         log.debug("Получен запрос DELETE /users/{}", userId);
         ifNegativeThrow(userId);
         userService.deleteUserById(userId);
