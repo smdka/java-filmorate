@@ -9,12 +9,12 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
 
-import java.sql.*;
 import java.sql.Date;
+import java.sql.*;
 import java.time.LocalDate;
 import java.util.*;
 
-import static java.util.stream.Collectors.*;
+import static java.util.stream.Collectors.toSet;
 
 @Component
 @RequiredArgsConstructor
@@ -166,12 +166,26 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
-    public Collection<Film> findTopNMostPopular(int n) {
-        String sql = FIND_ALL +
-                    "GROUP BY FILMS.ID " +
-                    "ORDER BY COUNT(DISTINCT FL.LIKED_BY_USER_ID) DESC " +
-                    "LIMIT ?";
-        return jdbcTemplate.query(sql, this::mapRowToFilm, n);
+    public Collection<Film> findTopNMostPopular(int limit, Optional<Integer> genreId, Optional<Integer> year) {
+        String sql;
+        String yearSql = "WHERE EXTRACT(YEAR from CAST(RELEASE_DATE as date)) = ? ";
+        String groupBySql = "GROUP BY FILMS.ID ";
+        String genreIdSql = "HAVING ARRAY_CONTAINS(GENRE_IDS, ?) ";
+        String limitSql = "ORDER BY COUNT(DISTINCT FL.LIKED_BY_USER_ID) DESC " +
+                          "LIMIT ?";
+
+        if (genreId.isPresent() && year.isPresent()) {
+            sql = FIND_ALL + yearSql + groupBySql + genreIdSql + limitSql;
+            return jdbcTemplate.query(sql, this::mapRowToFilm, year.get(), genreId.get(), limit);
+        } else if (genreId.isPresent()) {
+            sql = FIND_ALL + groupBySql + genreIdSql + limitSql;
+            return jdbcTemplate.query(sql, this::mapRowToFilm, genreId.get(), limit);
+        } else if (year.isPresent()) {
+            sql = FIND_ALL + yearSql + groupBySql + limitSql;
+            return jdbcTemplate.query(sql, this::mapRowToFilm, year.get(), limit);
+        }
+        sql = FIND_ALL + groupBySql + limitSql;
+        return jdbcTemplate.query(sql, this::mapRowToFilm, limit);
     }
 
     @Override

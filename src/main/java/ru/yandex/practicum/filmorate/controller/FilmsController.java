@@ -11,7 +11,8 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
 import javax.validation.Valid;
-import java.util.*;
+import java.util.Collection;
+import java.util.Optional;
 
 @Slf4j
 @RestController
@@ -37,9 +38,18 @@ public class FilmsController {
     }
 
     @GetMapping("/popular")
-    public Collection<Film> getMostPopularFilms(@RequestParam(defaultValue = "10") int count) {
-        log.debug("Получен запрос GET /films/popular/{}", count);
-        return filmService.getTopNMostPopular(count);
+    public Collection<Film> getMostPopularFilms(@RequestParam(defaultValue = "10", name = "count", required = false) int limit,
+                                                @RequestParam(name = "genreId", required = false) Optional<Integer> genreId,
+                                                @RequestParam(name = "year", required = false) Optional<Integer> year) {
+        String request = "Получен запрос GET /films/popular/count=" + limit;
+        if (genreId.isPresent()) {
+            request += "&genreId=" + genreId;
+        }
+        if (year.isPresent()) {
+            request += "&year=" + year;
+        }
+        log.debug(request);
+        return filmService.getTopNMostPopular(limit, genreId, year);
     }
 
     @PostMapping

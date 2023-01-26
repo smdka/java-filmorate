@@ -8,6 +8,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
 import java.util.Collection;
+import java.util.Optional;
 
 @Service
 @Slf4j
@@ -70,8 +71,8 @@ public class FilmService {
         log.debug("Не удалось удалить лайк от пользователя с id = {} в фильм с id = {}", userId, filmId);
     }
 
-    public Collection<Film> getTopNMostPopular(int n) {
-        log.debug("Топ {} фильмов успешно отправлен", n);
-        return filmStorage.findTopNMostPopular(n);
+    public Collection<Film> getTopNMostPopular(int limit, Optional<Integer> genreId, Optional<Integer> year) {
+        log.debug("Топ {} фильмов успешно отправлен", limit);
+        return filmStorage.findTopNMostPopular(limit, genreId, year);
     }
 }
