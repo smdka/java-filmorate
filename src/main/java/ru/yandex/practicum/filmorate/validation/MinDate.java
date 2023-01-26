@@ -10,8 +10,8 @@ import java.lang.annotation.*;
 @Constraint(validatedBy = DateValidator.class)
 
 public @interface MinDate {
-    public String date();
-    public String message() default "Дата не должна быть раньше указанной";
-    public Class<?>[] groups() default {};
-    public Class<? extends Payload>[] payload() default {};
+    String date();
+    String message() default "Дата не должна быть раньше указанной";
+    Class<?>[] groups() default {};
+    Class<? extends Payload>[] payload() default {};
 }

@@ -4,19 +4,19 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
 
-import java.sql.Date;
 import java.sql.*;
+import java.sql.Date;
 import java.time.LocalDate;
 import java.util.*;
 
 import static java.util.stream.Collectors.toSet;
 
-@Component
+@Repository
 @RequiredArgsConstructor
 public class FilmDbStorage implements FilmStorage {
     private static final String FIND_ALL =
@@ -36,10 +36,10 @@ public class FilmDbStorage implements FilmStorage {
     public Collection<Film> findAll() {
         String sql = FIND_ALL +
                     "GROUP BY FILMS.ID";
-        return jdbcTemplate.query(sql, this::mapRowToFilm);
+        return jdbcTemplate.query(sql, (rs, rowNum) -> mapRowToFilm(rs));
     }
 
-    private Film mapRowToFilm(ResultSet rs, int rowNum) throws SQLException {
+    private Film mapRowToFilm(ResultSet rs) throws SQLException {
         int id = rs.getInt("ID");
         String name  = rs.getString("NAME");
         String description = rs.getString("DESCRIPTION");
@@ -150,8 +150,8 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
-    public boolean deleteById(int filmId) {
-        return jdbcTemplate.update("DELETE FROM FILMS WHERE ID = ?", filmId) > 0;
+    public boolean deleteById(int id) {
+        return jdbcTemplate.update("DELETE FROM FILMS WHERE ID = ?", id) > 0;
     }
 
     @Override
@@ -159,7 +159,7 @@ public class FilmDbStorage implements FilmStorage {
         String sql = FIND_ALL +
                     "WHERE FILMS.ID = ? " +
                     "GROUP BY FILMS.ID";
-        List<Film> results = jdbcTemplate.query(sql, this::mapRowToFilm, id);
+        List<Film> results = jdbcTemplate.query(sql, (rs, rowNum) -> mapRowToFilm(rs), id);
         return results.isEmpty() ?
                 Optional.empty() :
                 Optional.of(results.get(0));
