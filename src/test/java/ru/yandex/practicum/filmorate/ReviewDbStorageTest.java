@@ -23,7 +23,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class ReviewDbStorageTest {
     private static final int WRONG_ID = 9999;
     private static final int EXPECTED_REVIEWS_COUNT = 3;
-    private static final int NO_FILM_ID = 0;
     private final ReviewDbStorage reviewDbStorage;
 
     @Test
@@ -159,7 +158,7 @@ class ReviewDbStorageTest {
     @Test
     void findTopNMostUsefulReviewsByFilmIdTest() {
         List<Review> reviews = new ArrayList<>(
-                reviewDbStorage.findTopNMostUsefulReviewsByFilmId(NO_FILM_ID, EXPECTED_REVIEWS_COUNT));
+                reviewDbStorage.findTopNMostUsefulReviewsByFilmId(EXPECTED_REVIEWS_COUNT));
 
         assertThat(reviews).hasSize(EXPECTED_REVIEWS_COUNT);
         assertThat(reviews.get(0))
