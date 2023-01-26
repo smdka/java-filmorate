@@ -10,7 +10,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
 import javax.validation.Valid;
-import java.util.*;
+import java.util.Collection;
 
 @Slf4j
 @RestController
@@ -79,5 +79,12 @@ public class FilmsController {
         log.debug("Получен запрос DELETE /films/{}/like/{}", filmId, userId);
         ifNegativeThrow(userId);
         filmService.deleteLikeFromFilm(filmId, userId);
+    }
+
+    @DeleteMapping("/{filmId}")
+    public void delete(@PathVariable int filmId) {
+        log.debug("Получен запрос DELETE /films/{}", filmId);
+        ifNegativeThrow(filmId);
+        filmService.deleteFilmById(filmId);
     }
 }
