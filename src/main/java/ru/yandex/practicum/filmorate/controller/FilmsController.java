@@ -43,9 +43,8 @@ public class FilmsController {
     }
 
     @GetMapping("/director/{directorId}")
-    public List<Film> getFilmsByDirector(@PathVariable int directorId, @RequestParam String sortBy) {
-        log.debug("получен запрос GET /films/director/{directorId}?sortBy=[year,likes]");
-        System.out.println(sortBy);
+    public Collection<Film> getFilmsByDirector(@PathVariable int directorId, @RequestParam String sortBy) {
+        log.debug("получен запрос GET /films/director/{directorId}?sortBy={}", sortBy );
         return filmService.getFilmsByDirector(directorId, sortBy);
     }
 

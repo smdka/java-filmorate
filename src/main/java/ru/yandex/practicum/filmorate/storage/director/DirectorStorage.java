@@ -9,11 +9,11 @@ import java.util.List;
 import java.util.Optional;
 
 public interface DirectorStorage {
-    Collection<Director> getAll();
+    Collection<Director> findAll();
 
     Optional<Director> findById(int id);
 
-    Director addDirector(Director director);
+    Director save(Director director);
 
     boolean deleteById(int id);
 

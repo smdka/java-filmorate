@@ -7,10 +7,13 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.jdbc.Sql;
 import ru.yandex.practicum.filmorate.model.Director;
+import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.storage.director.DirectorDbStorage;
 
-import java.util.Collection;
-import java.util.Optional;
+import java.time.LocalDate;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -25,7 +28,7 @@ class DirectorDbStorageTest {
 
     @Test
     void findAllTest() {
-        Collection<Director> directors = directorDbStorage.getAll();
+        Collection<Director> directors = directorDbStorage.findAll();
 
         assertThat(directors).hasSize(EXPECTED_DIRECTOR_COUNT);
     }
@@ -42,5 +45,56 @@ class DirectorDbStorageTest {
 
         assertThat(optionalDirector)
                 .isNotPresent();
+    }
+
+    @Test
+    void saveDirectorTest() {
+        Director director = new Director();
+        director.setName("Tarantino");
+
+        Director savedDirector = directorDbStorage.save(director);
+
+        assertThat(savedDirector).usingRecursiveComparison()
+                .ignoringFields("id")
+                .isEqualTo(director);
+
+        List<Director> directors = new ArrayList<>(directorDbStorage.findAll());
+
+        assertThat(directors).hasSize(EXPECTED_DIRECTOR_COUNT + 1);
+    }
+
+    @Test
+    void deleteById() {
+        boolean isDeleted = directorDbStorage.deleteById(1);
+
+        assertThat(isDeleted).isTrue();
+
+        List<Director> directors = new ArrayList<>(directorDbStorage.findAll());
+
+        assertThat(directors).hasSize(EXPECTED_DIRECTOR_COUNT - 1);
+
+        isDeleted = directorDbStorage.deleteById(WRONG_ID);
+
+        assertThat(isDeleted).isFalse();
+    }
+
+    @Test
+    void update() {
+        Director director = new Director();
+        director.setId(1);
+        director.setName("Spielberg");
+
+        directorDbStorage.update(director);
+        Optional<Director> updatedFilm = directorDbStorage.findById(1);
+
+        assertThat(updatedFilm)
+                .isPresent()
+                .isEqualTo(Optional.of(director));
+
+        director.setId(WRONG_ID);
+
+        updatedFilm = directorDbStorage.update(director);
+
+        assertThat(updatedFilm).isNotPresent();
     }
 }

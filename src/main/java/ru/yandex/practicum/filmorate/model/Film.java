@@ -58,18 +58,4 @@ public class Film {
         return Collections.unmodifiableSet(whoLikedUserIds);
     }
 
-    @Override
-    public String toString() {
-        return "Film{" +
-                "id=" + id +
-                ", whoLikedUserIds=" + whoLikedUserIds +
-                ", name='" + name + '\'' +
-                ", description='" + description + '\'' +
-                ", releaseDate=" + releaseDate +
-                ", duration=" + duration +
-                ", mpa=" + mpa +
-                ", directors=" + directors +
-                ", genres=" + genres +
-                '}';
-    }
 }

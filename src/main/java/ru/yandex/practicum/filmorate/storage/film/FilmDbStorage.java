@@ -113,7 +113,7 @@ public class FilmDbStorage implements FilmStorage {
             preparedStatement.setLong(4, film.getDuration());
             return preparedStatement;
         }, keyHolder);
-        Integer filmId = keyHolder.getKey().intValue();
+        int filmId = keyHolder.getKey().intValue();
         film.setId(filmId);
 
         saveGenres(film);
@@ -203,10 +203,8 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
-    public Optional<List<Film>> getFilmsByDirector (int directorId, String sortBy) {
-        String insert = "";
-        if(sortBy.contains("year")) {insert = "YEARS";}
-        if (sortBy.contains("likes")) {insert = "LIKES DESC";}
+    public Collection<Film> getFilmsByDirector (int directorId, String sortBy) {
+        String insert = requestParamValidator(sortBy);
         String sql = FIND_ALL +
                 "LEFT JOIN (SELECT DIRECTORS.*, " +
                 "F.ID AS FILM_ID," +
@@ -222,10 +220,7 @@ public class FilmDbStorage implements FilmStorage {
                 "GROUP BY FILMS.ID " +
                 "ORDER BY " + insert;
 
-                if(jdbcTemplate.query(sql, this::mapRowToFilm, directorId).isEmpty()) {
-                    return Optional.empty();
-                }
-        return Optional.of(jdbcTemplate.query(sql, this::mapRowToFilm, directorId));
+        return jdbcTemplate.query(sql, this::mapRowToFilm, directorId);
     }
 
     @Override
@@ -248,5 +243,16 @@ public class FilmDbStorage implements FilmStorage {
         String sql = "DELETE FROM FILM_LIKES " +
                 "WHERE FILM_ID = ? AND LIKED_BY_USER_ID = ?";
         return jdbcTemplate.update(sql, filmId, userId) > 0;
+    }
+
+    private String requestParamValidator(String sortBy) {
+        String insert = "";
+        if(sortBy.equals("year")) {
+            return insert = "YEARS";
+        } else if (sortBy.equals("likes")) {
+            return insert = "LIKES";
+        } else{
+            throw new RuntimeException("Для сортировки по годам введите year, по рейтингу likes");
+        }
     }
 }

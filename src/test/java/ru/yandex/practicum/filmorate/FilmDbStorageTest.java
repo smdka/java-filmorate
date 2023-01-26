@@ -139,4 +139,13 @@ class FilmDbStorageTest {
 
         assertThat(filmDdStorage.deleteLike(WRONG_ID, 2)).isFalse();
     }
+
+    @Test
+    void getFilmsByDirectorTest() {
+        List<Film> filmListSortByYear = new ArrayList<>(filmDdStorage.getFilmsByDirector(2, "year"));
+        assertEquals("Terminator", filmListSortByYear.get(0).getName());
+
+        List<Film> filmListSortByLikes = new ArrayList<>(filmDdStorage.getFilmsByDirector(2, "likes"));
+        assertEquals("Snatch", filmListSortByLikes.get(0).getName());
+    }
 }

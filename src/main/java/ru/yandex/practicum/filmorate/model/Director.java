@@ -11,7 +11,7 @@ import javax.validation.constraints.NotBlank;
 @NoArgsConstructor
 public class Director implements Comparable<Director> {
     private int id;
-    @NotBlank(message = "Имя фильма обязательно")
+    @NotBlank(message = "Имя режиссера обязательно")
     private String name;
 
     @Override

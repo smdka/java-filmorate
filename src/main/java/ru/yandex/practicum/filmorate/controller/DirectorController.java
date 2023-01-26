@@ -19,7 +19,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/directors")
 public class DirectorController {
-    DirectorService directorService;
+    private final DirectorService directorService;
 
     @Autowired
     public DirectorController(DirectorService directorService) {
@@ -27,9 +27,9 @@ public class DirectorController {
     }
 
     @GetMapping
-    public List<Director> getAll() {
+    public Collection<Director> getAll() {
         log.debug("Получен запрос GET /directors");
-        return directorService.getAll();
+        return directorService.getAllDirectors();
     }
 
     @GetMapping("/{id}")
@@ -40,23 +40,25 @@ public class DirectorController {
     @PostMapping
     public Director addDirector(@Valid @RequestBody Director director, BindingResult bindingResult) {
         ifHasErrorsThrow(bindingResult);
+        log.debug("Получен запрос GET /directors");
         return directorService.addDirector(director);
     }
 
     @DeleteMapping("/{id}")
     public void deleteDirector(@PathVariable int id) {
+        log.debug("Получен запрос DELETE /directors/{id}");
         directorService.deleteById(id);
     }
 
     @PutMapping
     public Director update(@Valid @RequestBody Director director) {
+        log.debug("Получен запрос PUT /directors");
         return directorService.update(director);
     }
 
     private void ifHasErrorsThrow(BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             for (FieldError e : bindingResult.getFieldErrors()) {
-                log.warn("Не пройдена валидация режиссера: {} = {}", e.getField(), e.getRejectedValue());
             }
             throw new ValidationException(bindingResult.getFieldErrors().toString());
         }

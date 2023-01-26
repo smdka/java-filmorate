@@ -20,7 +20,7 @@ public class DirectorDbStorage implements DirectorStorage {
     private final JdbcTemplate jdbcTemplate;
 
     @Override
-    public List<Director> getAll() {
+    public Collection<Director> findAll() {
         return jdbcTemplate.query("SELECT * FROM DIRECTORS", this::mapRowToDirector);
     }
 
@@ -33,17 +33,17 @@ public class DirectorDbStorage implements DirectorStorage {
                 Optional.of(results.get(0));
     }
     @Override
-    public Director addDirector(Director director){
+    public Director save(Director director){
+        KeyHolder keyHolder = new GeneratedKeyHolder();
         String sql = "INSERT INTO DIRECTORS (NAME)" +
                 "VALUES (?)";
-        KeyHolder keyHolder = new GeneratedKeyHolder();
 
         jdbcTemplate.update(connection -> {
             PreparedStatement stmt = connection.prepareStatement(sql, new String[] {"ID"});
             stmt.setString(1, director.getName());
             return stmt;
         }, keyHolder);
-                int directorId = keyHolder.getKey().intValue();
+        int directorId = keyHolder.getKey().intValue();
         director.setId(directorId);
         return director;
     }
