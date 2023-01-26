@@ -25,4 +25,6 @@ public interface ReviewStorage {
     boolean deleteDislike(int reviewId, int userId);
 
     Collection<Review> findTopNMostUsefulReviewsByFilmId(int filmId, int n);
+
+    Collection<Review> findTopNMostUsefulReviewsByFilmId(int n);
 }

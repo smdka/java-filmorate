@@ -82,8 +82,14 @@ public class ReviewService {
     }
 
     public Collection<Review> getReviewsByFilmId(int filmId, int n) {
-        log.debug("Топ-{} отзывов фильма с id = {} успешно отправлен", n, filmId);
-        return reviewStorage.findTopNMostUsefulReviewsByFilmId(filmId, n);
+        if (filmId > 0) {
+            log.debug("Топ-{} отзывов фильма с id = {} успешно отправлен", n, filmId);
+            return reviewStorage.findTopNMostUsefulReviewsByFilmId(filmId, n);
+        } else if (filmId == 0){
+            log.debug("Топ-{} отзывов успешно отправлен", n);
+            return reviewStorage.findTopNMostUsefulReviewsByFilmId(n);
+        }
+        throw new FilmNotFoundException(String.format(FILM_NOT_EXISTS_MSG, filmId));
     }
 
     public void addLikeToReview(int reviewId, int userId) {

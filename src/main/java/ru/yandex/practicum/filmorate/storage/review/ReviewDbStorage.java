@@ -140,17 +140,18 @@ public class ReviewDbStorage implements ReviewStorage {
 
     @Override
     public Collection<Review> findTopNMostUsefulReviewsByFilmId(int filmId, int n) {
-        if (filmId == 0) {
-            String sql = FIND_ALL +
-                        "ORDER BY USEFUL DESC " +
-                        "LIMIT ?";
-            return jdbcTemplate.query(sql, (resultSet, rowNum) -> mapRowToReview(resultSet), n);
-        } else {
-            String sql = FIND_ALL +
-                        "WHERE FILM_ID = ? " +
-                        "ORDER BY USEFUL DESC " +
-                        "LIMIT ?";
-            return jdbcTemplate.query(sql, (resultSet, rowNum) -> mapRowToReview(resultSet), filmId, n);
-        }
+        String sql = FIND_ALL +
+                    "WHERE FILM_ID = ? " +
+                    "ORDER BY USEFUL DESC " +
+                    "LIMIT ?";
+        return jdbcTemplate.query(sql, (resultSet, rowNum) -> mapRowToReview(resultSet), filmId, n);
+    }
+
+    @Override
+    public Collection<Review> findTopNMostUsefulReviewsByFilmId(int n) {
+        String sql = FIND_ALL +
+                    "ORDER BY USEFUL DESC " +
+                    "LIMIT ?";
+        return jdbcTemplate.query(sql, (resultSet, rowNum) -> mapRowToReview(resultSet), n);
     }
 }
