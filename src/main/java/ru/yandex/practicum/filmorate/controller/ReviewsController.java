@@ -19,7 +19,7 @@ public class ReviewsController {
     private final ReviewService reviewService;
 
     @GetMapping("/{id}")
-    public Review getReview(@PathVariable int id) {
+    public Review get(@PathVariable int id) {
         log.debug("Получен запрос GET /reviews/{}", id);
         return reviewService.getReviewById(id);
     }
@@ -45,7 +45,7 @@ public class ReviewsController {
     }
 
     @DeleteMapping("/{id}")
-    public void deleteReview(@PathVariable int id) {
+    public void delete(@PathVariable int id) {
         log.debug("Получен запрос DELETE /reviews/{}", id);
         reviewService.deleteReviewById(id);
     }
