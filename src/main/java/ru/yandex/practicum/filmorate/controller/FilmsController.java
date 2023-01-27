@@ -11,7 +11,9 @@ import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.storage.film.SortBy;
 
 import javax.validation.Valid;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Objects;
 
 @Slf4j
 @RestController
@@ -40,6 +42,12 @@ public class FilmsController {
     public Collection<Film> getMostPopularFilms(@RequestParam(defaultValue = "10") int count) {
         log.debug("Получен запрос GET /films/popular/{}", count);
         return filmService.getTopNMostPopular(count);
+    }
+
+    @GetMapping("/common")
+    public Collection<Film> getCommonFilms(@RequestParam int userId, @RequestParam int friendId) {
+        log.debug("Получен запрос GET /films/common?userId={}&friendId={}", userId, friendId);
+        return filmService.getCommonFilms(userId, friendId);
     }
 
     @GetMapping("/director/{directorId}")

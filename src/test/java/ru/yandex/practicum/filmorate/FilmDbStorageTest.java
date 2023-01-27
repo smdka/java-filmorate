@@ -141,6 +141,28 @@ class FilmDbStorageTest {
     }
 
     @Test
+    void testFindCommonFilms() {
+        Collection<Film> commonFilms = filmDdStorage.findCommonFilms(1, 3);
+
+        assertThat(commonFilms).hasSize(2);
+
+        assertThat(commonFilms)
+                .anyMatch(film -> film.getId() == 3)
+                .anyMatch(film -> film.getId() == 2);
+    }
+
+    @Test
+    void commonFilmsWithWrongUserIdShouldBeEmpty() {
+        Collection<Film> commonFilms = filmDdStorage.findCommonFilms(WRONG_ID, 3);
+
+        assertThat(commonFilms).isEmpty();
+
+        commonFilms = filmDdStorage.findCommonFilms(1, WRONG_ID);
+
+        assertThat(commonFilms).isEmpty();
+    }
+
+    @Test
     void getFilmsByDirectorTest() {
         List<Film> filmListSortByYear = new ArrayList<>(filmDdStorage.getFilmsByDirector(2, "year"));
         assertEquals("Terminator", filmListSortByYear.get(0).getName());

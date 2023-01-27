@@ -42,10 +42,10 @@ public class FilmDbStorage implements FilmStorage {
     public Collection<Film> findAll() {
         String sql = FIND_ALL +
                 "GROUP BY FILMS.ID";
-        return jdbcTemplate.query(sql, this::mapRowToFilm);
+        return jdbcTemplate.query(sql, (rs, rowNum) -> mapRowToFilm(rs));
     }
 
-    private Film mapRowToFilm(ResultSet rs, int rowNum) throws SQLException {
+    private Film mapRowToFilm(ResultSet rs) throws SQLException {
         int id = rs.getInt("ID");
         String name  = rs.getString("NAME");
         String description = rs.getString("DESCRIPTION");
@@ -73,21 +73,6 @@ public class FilmDbStorage implements FilmStorage {
         return result;
     }
 
-    private SortedSet<Director> getSetOfDirector(ResultSet row) throws SQLException {
-        Array idsArr = row.getArray("DIRECTOR_IDS");
-        Array namesArr = row.getArray("DIRECTOR_NAMES");
-        Object[] idsArrValues = (Object[]) idsArr.getArray();
-        if (idsArrValues[0] == null) {
-            return Collections.emptySortedSet();
-        }
-        Object[] namesArrValues = (Object[]) namesArr.getArray();
-        SortedSet<Director> result = new TreeSet<>();
-        for (int i = 0; i < idsArrValues.length; i++) {
-            result.add(new Director((Integer) idsArrValues[i], (String) namesArrValues[i]));
-        }
-        return result;
-    }
-
     private Set<Integer> getSetOfLikes(ResultSet rs) throws SQLException {
         Array likesArray = rs.getArray("LIKES");
         Object[] values = (Object[]) likesArray.getArray();
@@ -104,14 +89,14 @@ public class FilmDbStorage implements FilmStorage {
         KeyHolder keyHolder = new GeneratedKeyHolder();
         String SQL_ADD_FILM = "INSERT INTO FILMS (NAME, DESCRIPTION, RELEASE_DATE, DURATION, MPA_ID) " +
                 "VALUES (?, ?, ?, ?, ?)";
-        jdbcTemplate.update(con -> {
-            PreparedStatement preparedStatement = con.prepareStatement(SQL_ADD_FILM, new String[]{"ID"});
-            preparedStatement.setString(1, film.getName());
-            preparedStatement.setString(2, film.getDescription());
-            preparedStatement.setDate(3, Date.valueOf(film.getReleaseDate()));
-            preparedStatement.setInt(5, film.getMpa().getId());
-            preparedStatement.setLong(4, film.getDuration());
-            return preparedStatement;
+        jdbcTemplate.update(connection -> {
+            PreparedStatement stm = connection.prepareStatement(SQL_ADD_FILM, new String[]{"ID"});
+            stm.setString(1, film.getName());
+            stm.setString(2, film.getDescription());
+            stm.setDate(3, Date.valueOf(film.getReleaseDate()));
+            stm.setInt(5, film.getMpa().getId());
+            stm.setLong(4, film.getDuration());
+            return stm;
         }, keyHolder);
         int filmId = keyHolder.getKey().intValue();
         film.setId(filmId);
@@ -131,19 +116,6 @@ public class FilmDbStorage implements FilmStorage {
         if (!genres.isEmpty()) {
             for (Genre genre : genres) {
                 jdbcTemplate.update(sql, filmId, genre.getId());
-            }
-        }
-    }
-
-    private void saveDirectors(Film film) {
-        jdbcTemplate.update("DELETE FROM FILM_DIRECTOR WHERE FILM_ID = ?", film.getId());
-        SortedSet<Director> directors  = film.getDirectors();
-        int filmId = film.getId();
-        String sql = "INSERT INTO FILM_DIRECTOR(DIRECTOR_ID, FILM_ID) VALUES (?,?) ";
-
-        if (!directors.isEmpty()) {
-            for (Director director : directors) {
-                jdbcTemplate.update(sql, director.getId(), filmId);
             }
         }
     }
@@ -196,20 +168,10 @@ public class FilmDbStorage implements FilmStorage {
         String sql = FIND_ALL +
                 "WHERE FILMS.ID = ? " +
                 "GROUP BY FILMS.ID";
-        List<Film> results = jdbcTemplate.query(sql, this::mapRowToFilm, id);
+        List<Film> results = jdbcTemplate.query(sql, (rs, rowNum) -> mapRowToFilm(rs), id);
         return results.isEmpty() ?
                 Optional.empty() :
                 Optional.of(results.get(0));
-    }
-
-    @Override
-    public Collection<Film> getFilmsByDirector (int directorId, String sortBy) {
-        String sql = FIND_ALL +
-                "WHERE DIRECTOR_ID = ? " +
-                "GROUP BY FILMS.ID " +
-                "ORDER BY " + requestParamSQLMap(sortBy);
-
-        return jdbcTemplate.query(sql, this::mapRowToFilm, directorId);
     }
 
     @Override
@@ -218,7 +180,7 @@ public class FilmDbStorage implements FilmStorage {
                 "GROUP BY FILMS.ID " +
                 "ORDER BY COUNT(DISTINCT FL.LIKED_BY_USER_ID) DESC " +
                 "LIMIT ?";
-        return jdbcTemplate.query(sql, this::mapRowToFilm, n);
+        return jdbcTemplate.query(sql, (rs, rowNum) -> mapRowToFilm(rs), n);
     }
 
     @Override
@@ -232,6 +194,54 @@ public class FilmDbStorage implements FilmStorage {
         String sql = "DELETE FROM FILM_LIKES " +
                 "WHERE FILM_ID = ? AND LIKED_BY_USER_ID = ?";
         return jdbcTemplate.update(sql, filmId, userId) > 0;
+    }
+    @Override
+    public Collection<Film> findCommonFilms(int userId, int friendId) {
+        String sql = FIND_ALL +
+                "JOIN FILM_LIKES F on FILMS.ID = F.FILM_ID " +
+                "JOIN FILM_LIKES L on FILMS.ID = L.FILM_ID " +
+                "WHERE F.LIKED_BY_USER_ID = ? AND L.LIKED_BY_USER_ID = ? " +
+                "GROUP BY FILMS.ID " +
+                "ORDER BY COUNT(DISTINCT FL.LIKED_BY_USER_ID) DESC";
+        return jdbcTemplate.query(sql, (rs, rowNum) -> mapRowToFilm(rs), userId, friendId);
+    }
+
+    @Override
+    public Collection<Film> getFilmsByDirector (int directorId, String sortBy) {
+        String sql = FIND_ALL +
+                "WHERE DIRECTOR_ID = ? " +
+                "GROUP BY FILMS.ID " +
+                "ORDER BY " + requestParamSQLMap(sortBy);
+
+        return jdbcTemplate.query(sql, (rs, rowNum) -> mapRowToFilm(rs), directorId);
+    }
+
+    private void saveDirectors(Film film) {
+        jdbcTemplate.update("DELETE FROM FILM_DIRECTOR WHERE FILM_ID = ?", film.getId());
+        SortedSet<Director> directors  = film.getDirectors();
+        int filmId = film.getId();
+        String sql = "INSERT INTO FILM_DIRECTOR(DIRECTOR_ID, FILM_ID) VALUES (?,?) ";
+
+        if (!directors.isEmpty()) {
+            for (Director director : directors) {
+                jdbcTemplate.update(sql, director.getId(), filmId);
+            }
+        }
+    }
+
+    private SortedSet<Director> getSetOfDirector(ResultSet row) throws SQLException {
+        Array idsArr = row.getArray("DIRECTOR_IDS");
+        Array namesArr = row.getArray("DIRECTOR_NAMES");
+        Object[] idsArrValues = (Object[]) idsArr.getArray();
+        if (idsArrValues[0] == null) {
+            return Collections.emptySortedSet();
+        }
+        Object[] namesArrValues = (Object[]) namesArr.getArray();
+        SortedSet<Director> result = new TreeSet<>();
+        for (int i = 0; i < idsArrValues.length; i++) {
+            result.add(new Director((Integer) idsArrValues[i], (String) namesArrValues[i]));
+        }
+        return result;
     }
 
     private String requestParamSQLMap(String sortBy) {

@@ -5,9 +5,11 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.DirectorNotFoundException;
 import ru.yandex.practicum.filmorate.exception.FilmNotFoundException;
+import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.director.DirectorStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.util.Collection;
 
@@ -15,11 +17,16 @@ import java.util.Collection;
 @Slf4j
 public class FilmService {
     private static final String FILM_NOT_EXISTS_MSG = "Фильм с id = %d не существует";
+    private static final String USER_NOT_EXISTS_MSG = "Пользователь с id = %d не существует";
     private final FilmStorage filmStorage;
+    private final UserStorage userStorage;
     private final DirectorStorage directorStorage;
 
-    public FilmService(@Qualifier("filmDbStorage") FilmStorage filmStorage, DirectorStorage directorStorage) {
+    public FilmService(@Qualifier("filmDbStorage") FilmStorage filmStorage,
+                       @Qualifier("userDdStorage") UserStorage userStorage,
+                       DirectorStorage directorStorage) {
         this.filmStorage = filmStorage;
+        this.userStorage =  userStorage;
         this.directorStorage = directorStorage;
     }
 
@@ -86,5 +93,13 @@ public class FilmService {
     public Collection<Film> getTopNMostPopular(int n) {
         log.debug("Топ {} фильмов успешно отправлен", n);
         return filmStorage.findTopNMostPopular(n);
+    }
+
+    public Collection<Film> getCommonFilms(int userId, int friendId) {  if (userStorage.findById(userId).isEmpty()) {
+        throw new UserNotFoundException(String.format(USER_NOT_EXISTS_MSG, userId));
+    } else if (userStorage.findById(friendId).isEmpty()) {
+        throw new UserNotFoundException(String.format(USER_NOT_EXISTS_MSG, friendId));
+    }
+        return filmStorage.findCommonFilms(userId, friendId);
     }
 }
