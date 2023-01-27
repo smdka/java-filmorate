@@ -82,6 +82,7 @@ CREATE TABLE  IF NOT EXISTS PUBLIC.DIRECTORS
 
 CREATE TABLE IF NOT EXISTS PUBLIC.FILM_DIRECTOR
 (
-    DIRECTOR_ID  INTEGER references DIRECTORS on update cascade on delete cascade,
-    FILM_ID INTEGER references FILMS on update cascade on delete cascade,
+    DIRECTOR_ID INTEGER references DIRECTORS on update cascade on delete cascade,
+    FILM_ID     INTEGER references FILMS on update cascade on delete cascade,
     PRIMARY KEY (DIRECTOR_ID, FILM_ID)
+);
