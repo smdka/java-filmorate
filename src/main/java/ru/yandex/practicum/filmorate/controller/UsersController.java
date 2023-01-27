@@ -55,7 +55,7 @@ public class UsersController {
     @GetMapping("/{id}/recommendations")
     public List<Film> getRecommendations(@PathVariable int id) {
         log.debug("Получен запрос GET /users/{}/recommendations", id);
-        return filmService.getRecommendations(id);
+        return userService.getRecommendations(id);
     }
 
 
@@ -102,5 +102,11 @@ public class UsersController {
         userService.deleteFriend(userId, friendId);
     }
 
+    @DeleteMapping("/{userId}")
+    public void delete(@PathVariable int userId) {
+        log.debug("Получен запрос DELETE /users/{}", userId);
+        ifNegativeThrow(userId);
+        userService.deleteUserById(userId);
+    }
 
 }
