@@ -17,8 +17,11 @@ public class UserService {
     private static final String USER_NOT_EXISTS_MSG = "Пользователь с id = %d не существует";
     private final UserStorage storage;
 
-    public UserService(@Qualifier("userDdStorage") UserStorage storage) {
+    private final FilmStorage filmStorage;
+
+    public UserService(@Qualifier("userDdStorage") UserStorage storage, @Qualifier("filmDbStorage") FilmStorage filmStorage) {
         this.storage = storage;
+        this.filmStorage = filmStorage;
     }
 
     public User add(User user) {
@@ -97,6 +100,11 @@ public class UserService {
     public List<User> getFriendsById(int id) {
         log.debug("Список друзей для пользователя с id = {} отправлен", id);
         return (List<User>) storage.findFriendsById(id);
+    }
+
+    public List<Film> getRecommendations(int userId) {
+        log.debug("Список рекомендаций успешно выдан пользователю с id {}", userId);
+        return (List<Film>) filmStorage.getRecommendations(userId);
     }
 }
 

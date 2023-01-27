@@ -79,8 +79,4 @@ public class FilmService {
         return filmStorage.findTopNMostPopular(n);
     }
 
-    public List<Film> getRecommendations(int userId) {
-        log.debug("Список рекомендаций успешно выдан пользователю с id {}", userId);
-        return (List<Film>) filmStorage.getRecommendations(userId);
-    }
 }
