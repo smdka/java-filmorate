@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.utilities;
+package ru.yandex.practicum.filmorate.utilities.sql;
 
 import java.sql.Array;
 import java.sql.ResultSet;

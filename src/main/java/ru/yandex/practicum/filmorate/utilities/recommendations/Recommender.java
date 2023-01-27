@@ -1,32 +1,32 @@
-package ru.yandex.practicum.filmorate.utilities;
+package ru.yandex.practicum.filmorate.utilities.recommendations;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
-import static java.lang.Math.random;
-import static java.lang.Math.rint;
-
-public class ItemToItemCollaborativeFilter {
+public class Recommender {
     private static final Boolean TREAT_EMPTY_AS_ZEROS = true; // when rates != 1, false needed
     private static final Integer HOW_MANY_SIMILAR_ITEMS_TO_ANALYZE = 2; //internal, subject for test
 
-    public static void main(String[] args) {
-        Matrix testMatrix = generateTestMatrix();
-        Integer userId = 5;
-        List<Integer> recommendations = getRecommendationsForUser(testMatrix, userId, Optional.empty());
+    private final Matrix matrix;
+    private final Matrix preparedMatrix;
+    private final Matrix similarities;
+
+    public Recommender(Matrix matrix) {
+        this.matrix = matrix;
+        this.preparedMatrix = prepareMatrix();
+        this.similarities = findSimilarities();
     }
 
-    public static List<Integer> getRecommendationsForUser(Matrix matrix, Integer userId, Optional<Integer> limit) {
+    public List<Integer> getRecommendations(Integer userId, Optional<Integer> limit) {
         if (matrix == null ||
-                userId == null ||
-                matrix.isEmpty() ||
-                Collections.max(matrix.getRowIndexes()) < 2 ||
-                Collections.max(matrix.getColumnIndexes()) < 2 ||
-                matrix.getColumn(userId) == null)
+            userId == null ||
+            matrix.isEmpty() ||
+            Collections.max(matrix.getRowIndexes()) < 2 ||
+            Collections.max(matrix.getColumnIndexes()) < 2 ||
+            matrix.getColumn(userId) == null)
         {
             return List.of();
         }
-        List<Integer> recommendations = getRecommendationsInternal(matrix, userId);
+        List<Integer> recommendations = getRecommendationsInternal(userId);
         if (limit.isEmpty()) {
             return recommendations;
         } else {
@@ -34,11 +34,9 @@ public class ItemToItemCollaborativeFilter {
         }
     }
 
-    private static List<Integer> getRecommendationsInternal(Matrix matrix, Integer userId) {
-        Matrix matrixForSimilarities = prepareMatrix(matrix);
-        Matrix similarities = findSimilarities(matrixForSimilarities);
+    private List<Integer> getRecommendationsInternal(Integer userId) {
         if (!similarities.isEmpty()) {
-            Map<Integer, Double> absentRatings = findAbsentRatings(matrix, similarities, userId);
+            Map<Integer, Double> absentRatings = findAbsentRatings(userId);
             return absentRatings.entrySet().stream()
                     .sorted((e1, e2) -> e2.getValue().compareTo(e1.getValue()))
                     .collect(ArrayList::new,
@@ -49,11 +47,11 @@ public class ItemToItemCollaborativeFilter {
         }
     }
 
-    private static Map<Integer, Double> findAbsentRatings(Matrix matrix, Matrix similarities, Integer userId) {
+    private Map<Integer, Double> findAbsentRatings(Integer userId) {
         Map<Integer, Double> absentRatings = new HashMap<>();
         for (Integer itemId : matrix.getRowIndexes()) {
             if (matrix.getValue(itemId, userId).isEmpty()) {
-                Map<Integer, Double> mostSimilarPresentItems = getMostSimilarPresentItems(matrix, similarities, itemId, userId);
+                Map<Integer, Double> mostSimilarPresentItems = getMostSimilarPresentItems(itemId, userId);
                 Double absentRatingSum = mostSimilarPresentItems.keySet().stream()
                         .map(aDouble -> matrix.getValue(aDouble, userId).get() * mostSimilarPresentItems.get(aDouble))
                         .mapToDouble(e->e)
@@ -66,7 +64,7 @@ public class ItemToItemCollaborativeFilter {
         return absentRatings;
     }
 
-    private static Map<Integer, Double> getMostSimilarPresentItems(Matrix matrix, Matrix similarities, Integer itemId, Integer userId) {
+    private Map<Integer, Double> getMostSimilarPresentItems(Integer itemId, Integer userId) {
         Map<Integer, Double> presentItemsMap = similarities.getRow(itemId).entrySet().stream()
                 .collect(
                         HashMap::new,
@@ -90,7 +88,7 @@ public class ItemToItemCollaborativeFilter {
         return result;
     }
 
-    private static Matrix prepareMatrix(Matrix matrix) {
+    private Matrix prepareMatrix() {
         Matrix preparedMatrix = new Matrix();
 
         for (Integer rowI : matrix.getRowIndexes()) {
@@ -115,7 +113,7 @@ public class ItemToItemCollaborativeFilter {
     }
 
 
-    private static Matrix findSimilarities(Matrix preparedMatrix) {
+    private Matrix findSimilarities() {
         Matrix similarities = new Matrix();
         for (Integer rowI : preparedMatrix.getRowIndexes()) {
             for (Integer rowI2 : preparedMatrix.getRowIndexes()) {
@@ -132,7 +130,7 @@ public class ItemToItemCollaborativeFilter {
         return similarities;
     }
 
-    private static Map<Integer, Double> simplifyVector (Map<Integer, Optional<Double>> vector) {
+    private Map<Integer, Double> simplifyVector (Map<Integer, Optional<Double>> vector) {
         return vector.entrySet().stream()
                 .collect(
                         HashMap::new,
@@ -148,7 +146,7 @@ public class ItemToItemCollaborativeFilter {
     }
 
 
-    private static Double findAverageValue(Map<Integer, Optional<Double>> map) {
+    private Double findAverageValue(Map<Integer, Optional<Double>> map) {
         return map.values().stream()
                 .map(e -> {
                     if (e.isEmpty() && TREAT_EMPTY_AS_ZEROS) {
@@ -163,7 +161,7 @@ public class ItemToItemCollaborativeFilter {
     }
 
     //function accepts two vectors with non-null non-empty equal keys and double values
-    private static Double findCosineSimilarity(Map<Integer, Double> vector1, Map<Integer, Double> vector2) {
+    private Double findCosineSimilarity(Map<Integer, Double> vector1, Map<Integer, Double> vector2) {
         if (vector1 == null || vector2 == null) {
             return null;
         }
@@ -182,17 +180,16 @@ public class ItemToItemCollaborativeFilter {
         return scalarProductOfVectors / (lenOfVector1 * lenOfVector2);
     }
 
-    private static Double findVectorLength(Map<Integer, Double> vector) {
+    private Double findVectorLength(Map<Integer, Double> vector) {
         return Math.sqrt(vector.values().stream().map(e->Math.pow(e,2)).mapToDouble(e->e).sum());
     }
 
-    private static Double findScalarProductOfVectors(Map<Integer, Double> vector1, Map<Integer, Double> vector2) {
+    private Double findScalarProductOfVectors(Map<Integer, Double> vector1, Map<Integer, Double> vector2) {
         return vector1.entrySet().stream()
                 .map(e->e.getValue()*vector2.get(e.getKey()))
                 .mapToDouble(e->e)
                 .sum();
     }
-
 
 
     public static Matrix generateTestMatrix() {
@@ -234,6 +231,4 @@ public class ItemToItemCollaborativeFilter {
         testMatrix.writeValue(6, 11, Optional.of((double) 4));
         return testMatrix;
     }
-
-
 }
