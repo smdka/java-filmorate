@@ -9,9 +9,9 @@ import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
-import ru.yandex.practicum.filmorate.utilities.ItemToItemCollaborativeFilter;
-import ru.yandex.practicum.filmorate.utilities.Matrix;
-import ru.yandex.practicum.filmorate.utilities.SqlArrayConverter;
+import ru.yandex.practicum.filmorate.utilities.recommendations.Recommender;
+import ru.yandex.practicum.filmorate.utilities.recommendations.Matrix;
+import ru.yandex.practicum.filmorate.utilities.sql.SqlArrayConverter;
 
 import java.sql.*;
 import java.sql.Date;
@@ -201,7 +201,8 @@ public class FilmDbStorage implements FilmStorage {
                         "FROM FILM_LIKES AS FL " +
                         "GROUP BY FL.film_id";
         Matrix matrix = jdbcTemplate.query(sql1, this::makeMatrixForRecommendations);
-        List<Integer> recommendations = ItemToItemCollaborativeFilter.getRecommendationsForUser(matrix, userId, Optional.empty());
+        Recommender recommender = new Recommender(matrix);
+        List<Integer> recommendations = recommender.getRecommendations(userId, Optional.empty());
         //second query for recommended films if necessary
         if (!recommendations.isEmpty()) {
             StringBuilder stringBuilder = new StringBuilder();
