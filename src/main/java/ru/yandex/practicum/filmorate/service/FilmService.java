@@ -47,10 +47,10 @@ public class FilmService {
     }
 
     public Collection<Film> getFilmsByDirector (int directorId, String sortBy) {
-            Collection<Film> filmList = filmStorage.getFilmsByDirector(directorId, sortBy);
             directorStorage.findById(directorId)
                 .orElseThrow(() ->
                         new DirectorNotFoundException(String.format("Режиссер %d не найден", directorId)));
+            Collection<Film> filmList = filmStorage.getFilmsByDirector(directorId, sortBy);
             log.debug("Список всех фильмов режиссера {} успешно отправлен", directorId);
             return filmList;
     }
