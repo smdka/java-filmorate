@@ -207,15 +207,15 @@ public class FilmDbStorage implements FilmStorage {
         if (!recommendations.isEmpty()) {
             StringBuilder stringBuilder = new StringBuilder();
             stringBuilder.append("(");
-            for (Integer film_id : recommendations) {
-                stringBuilder.append(film_id + ", ");
+            for (Integer filmId : recommendations) {
+                stringBuilder.append(filmId).append(", ");
             }
             String sql2 = FIND_ALL +
                     "WHERE FILMS.ID IN " +
                     stringBuilder.substring(0, stringBuilder.length() - 2) + ") GROUP BY FILMS.ID";
             return jdbcTemplate.query(sql2, (rs, rowNum) -> mapRowToFilm(rs));
         } else {
-            return List.of();
+            return Collections.emptyList();
         }
     }
 
@@ -224,10 +224,10 @@ public class FilmDbStorage implements FilmStorage {
         try {
             SqlArrayConverter converter = new SqlArrayConverter();
             while (rs.next()) {
-                List<Integer> user_ids = converter.convert(rs.getArray("user_ids"));
+                List<Integer> userIds = converter.convert(rs.getArray("user_ids"));
                 List<Integer> rates = converter.convert(rs.getArray("rates"));
-                for (int i = 0; i < user_ids.size(); i++) {
-                    data.writeValue(rs.getInt("film_ids"), user_ids.get(i), Optional.of(rates.get(i).doubleValue()));
+                for (int i = 0; i < userIds.size(); i++) {
+                    data.writeValue(rs.getInt("film_ids"), userIds.get(i), Optional.of(rates.get(i).doubleValue()));
                 }
             }
             return data;

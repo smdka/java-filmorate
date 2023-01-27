@@ -35,11 +35,7 @@ public class Matrix {
     public List<Integer> getColumnIndexes() {return new ArrayList<>(columns.keySet());}
 
     public boolean isEmpty(){
-        if (rows.isEmpty() && columns.isEmpty()) {
-            return true;
-        } else {
-            return false;
-        }
+        return rows.isEmpty() && columns.isEmpty();
     }
 
     private void expand() {

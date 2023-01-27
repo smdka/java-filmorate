@@ -24,7 +24,7 @@ public class Recommender {
             Collections.max(matrix.getColumnIndexes()) < 2 ||
             matrix.getColumn(userId) == null)
         {
-            return List.of();
+            return Collections.emptyList();
         }
         List<Integer> recommendations = getRecommendationsInternal(userId);
         if (limit.isEmpty()) {
@@ -43,7 +43,7 @@ public class Recommender {
                             (list, e) -> list.add(e.getKey()),
                             ArrayList::addAll);
         } else {
-            return List.of();
+            return Collections.emptyList();
         }
     }
 
