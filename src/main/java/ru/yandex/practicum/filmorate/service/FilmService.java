@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.DirectorNotFoundException;
 import ru.yandex.practicum.filmorate.exception.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.storage.director.DirectorStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
 import java.util.Collection;
@@ -15,9 +16,11 @@ import java.util.Collection;
 public class FilmService {
     private static final String FILM_NOT_EXISTS_MSG = "Фильм с id = %d не существует";
     private final FilmStorage filmStorage;
+    private final DirectorStorage directorStorage;
 
-    public FilmService(@Qualifier("filmDbStorage") FilmStorage filmStorage) {
+    public FilmService(@Qualifier("filmDbStorage") FilmStorage filmStorage, DirectorStorage directorStorage) {
         this.filmStorage = filmStorage;
+        this.directorStorage = directorStorage;
     }
 
     public Film add(Film film) {
@@ -45,9 +48,9 @@ public class FilmService {
 
     public Collection<Film> getFilmsByDirector (int directorId, String sortBy) {
             Collection<Film> filmList = filmStorage.getFilmsByDirector(directorId, sortBy);
-            if(filmList.isEmpty()) {
-                throw new DirectorNotFoundException(String.format("Режиссер %d не найден", directorId));
-            }
+            directorStorage.findById(directorId)
+                .orElseThrow(() ->
+                        new DirectorNotFoundException(String.format("Режиссер %d не найден", directorId)));
             log.debug("Список всех фильмов режиссера {} успешно отправлен", directorId);
             return filmList;
     }

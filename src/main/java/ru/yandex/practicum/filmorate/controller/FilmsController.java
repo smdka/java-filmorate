@@ -9,6 +9,7 @@ import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.storage.film.SortBy;
 
 import javax.validation.Valid;
 import java.util.*;
@@ -44,6 +45,10 @@ public class FilmsController {
 
     @GetMapping("/director/{directorId}")
     public Collection<Film> getFilmsByDirector(@PathVariable int directorId, @RequestParam String sortBy) {
+            boolean present = Arrays.stream(SortBy.values()).anyMatch(x -> Objects.equals(x.toString(), sortBy));
+        if(!present){
+            throw new RuntimeException("неверный запрос параметра сортировки");
+        }
         log.debug("получен запрос GET /films/director/{directorId}?sortBy={}", sortBy );
         return filmService.getFilmsByDirector(directorId, sortBy);
     }

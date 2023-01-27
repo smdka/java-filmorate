@@ -23,7 +23,7 @@ public class FilmDbStorage implements FilmStorage {
     private static final String FIND_ALL =
             "SELECT FILMS.*, " +
                     "MPA.NAME AS MPA_NAME, " +
-                    "YEAR(RELEASE_DATE) AS YEAR_RELEASE, " +
+                    "YEAR(RELEASE_DATE) AS RELEASE_YEAR, " +
                     "ARRAY_AGG(FG.GENRE_ID) AS GENRE_IDS, " +
                     "ARRAY_AGG(G.NAME) AS GENRE_NAMES, " +
                     "ARRAY_AGG(FL.LIKED_BY_USER_ID) AS LIKES," +
@@ -204,7 +204,6 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public Collection<Film> getFilmsByDirector (int directorId, String sortBy) {
-        String insert = requestParamValidator(sortBy);
         String sql = FIND_ALL +
                 "LEFT JOIN (SELECT DIRECTORS.*, " +
                 "F.ID AS FILM_ID," +
@@ -218,7 +217,7 @@ public class FilmDbStorage implements FilmStorage {
                 "GROUP BY FD.FILM_ID) AS DF " +
                 "WHERE FILMS.ID = DF.FILM_ID " +
                 "GROUP BY FILMS.ID " +
-                "ORDER BY " + insert;
+                "ORDER BY " + requestParamValidator(sortBy);
 
         return jdbcTemplate.query(sql, this::mapRowToFilm, directorId);
     }
@@ -246,13 +245,10 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     private String requestParamValidator(String sortBy) {
-        String insert = "";
-        if(sortBy.equals("year")) {
-            return insert = "YEARS";
-        } else if (sortBy.equals("likes")) {
-            return insert = "LIKES";
-        } else{
-            throw new RuntimeException("Для сортировки по годам введите year, по рейтингу likes");
+        if(sortBy.equals(SortBy.year.toString())) {
+            return "YEARS";
+        } else {
+            return "LIKES";
         }
     }
 }
