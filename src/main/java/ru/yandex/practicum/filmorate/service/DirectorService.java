@@ -46,7 +46,7 @@ public class DirectorService {
     public Director update (Director director) {
         Director dir = directorDbStorage.update(director)
                 .orElseThrow(() ->
-                        new DirectorNotFoundException(String.format("Режиссер не найден", director.getId())));
+                        new DirectorNotFoundException(String.format("Режиссер {} не найден", director.getId())));
         log.debug("Режиссер {} обновлен", dir.getId());
         return dir;
     }
