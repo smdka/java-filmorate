@@ -15,30 +15,30 @@ public class InMemoryFilmStorage  {
         this.films = new HashMap<>();
     }
 
-    
+
     public Collection<Film> findAll() {
         return films.values();
     }
 
-    
+
     public Film save(Film film) {
         films.put(film.getId(), film);
         return film;
     }
 
-    
+
     public Optional<Film> update(Film film) {
         return films.replace(film.getId(), film) == null ?
                 Optional.empty() :
                 Optional.of(film);
     }
 
-    
+
     public boolean deleteById(int filmId) {
         return films.remove(filmId) != null;
     }
 
-    
+
     public Optional<Film> findById(int id) {
         Film film = films.get(id);
         return film == null ?
@@ -46,7 +46,7 @@ public class InMemoryFilmStorage  {
                 Optional.of(film);
     }
 
-    
+
     public Collection<Film> findTopNMostPopular(int n) {
         Comparator<Film> byLikesDesc = Comparator.comparingInt(Film::getId).reversed();
         return films.values().stream()
@@ -55,7 +55,7 @@ public class InMemoryFilmStorage  {
                 .collect(toList());
     }
 
-    
+
     public boolean addLike(int filmId, int userId) {
         Film film = films.get(filmId);
         if (film == null) {
@@ -65,7 +65,7 @@ public class InMemoryFilmStorage  {
         return true;
     }
 
-    
+
     public boolean deleteLike(int filmId, int userId) {
         Film film = films.get(filmId);
         if (film == null) {
@@ -73,5 +73,12 @@ public class InMemoryFilmStorage  {
         }
         film.deleteLikeFromUser(userId);
         return true;
+    }
+
+    public Collection<Film> findCommonFilms(int userId, int friendId) {
+        return films.values().stream()
+                .filter(film -> film.getWhoLikedUserIds().contains(userId) &&
+                        film.getWhoLikedUserIds().contains(friendId)).sorted(Comparator.comparingInt(Film::getId).reversed())
+                .collect(toList());
     }
 }

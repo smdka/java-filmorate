@@ -46,21 +46,29 @@ public class RuntimeExceptionsHandler {
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public Map<String, String> handleNotExistingUser(final MpaNotFoundException e) {
+    public Map<String, String> handleNotExistingMpa(final MpaNotFoundException e) {
         log.warn(e.getMessage());
         return Map.of(ERROR, e.getMessage());
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.NOT_FOUND)
+<<<<<<< HEAD
     public Map<String, String> handleNotExistingDirector(final DirectorNotFoundException e) {
+=======
+    public Map<String, String> handleNotExistingGenre(final GenreNotFoundException e) {
+>>>>>>> develop
         log.warn(e.getMessage());
         return Map.of(ERROR, e.getMessage());
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.NOT_FOUND)
+<<<<<<< HEAD
     public Map<String, String> handleNotExistingUser(final GenreNotFoundException e) {
+=======
+    public Map<String, String> handleNotExistingReview(final ReviewNotFoundException e) {
+>>>>>>> develop
         log.warn(e.getMessage());
         return Map.of(ERROR, e.getMessage());
     }

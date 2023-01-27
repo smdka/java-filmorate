@@ -163,7 +163,7 @@ public class FilmDbStorage implements FilmStorage {
                         film.getId()) == 0)
         {
             return Optional.empty();
-    }
+        }
 
         saveGenres(film);
         saveLikes(film);
