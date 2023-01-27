@@ -213,7 +213,7 @@ public class FilmDbStorage implements FilmStorage {
             String sql2 = FIND_ALL +
                     "WHERE FILMS.ID IN " +
                     stringBuilder.substring(0, stringBuilder.length() - 2) + ") GROUP BY FILMS.ID";
-            return jdbcTemplate.query(sql2, this::mapRowToFilm);
+            return jdbcTemplate.query(sql2, (rs, rowNum) -> mapRowToFilm(rs));
         } else {
             return List.of();
         }
