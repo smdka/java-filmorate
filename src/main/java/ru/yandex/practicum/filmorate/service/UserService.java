@@ -9,7 +9,8 @@ import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
 
 @Service
 @Slf4j
@@ -98,6 +99,9 @@ public class UserService {
     }
 
     public List<User> getFriendsById(int id) {
+        if (storage.findById(id).isEmpty()) {
+            throw new UserNotFoundException(String.format(USER_NOT_EXISTS_MSG, id));
+        }
         log.debug("Список друзей для пользователя с id = {} отправлен", id);
         return (List<User>) storage.findFriendsById(id);
     }

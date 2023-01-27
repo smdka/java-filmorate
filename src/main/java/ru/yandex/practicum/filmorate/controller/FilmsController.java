@@ -3,7 +3,6 @@ package ru.yandex.practicum.filmorate.controller;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
@@ -11,7 +10,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
 import javax.validation.Valid;
-import java.util.*;
+import java.util.Collection;
 
 @Slf4j
 @RestController
@@ -51,9 +50,6 @@ public class FilmsController {
 
     private void ifHasErrorsThrow(BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
-            for (FieldError e : bindingResult.getFieldErrors()) {
-                log.warn("Не пройдена валидация фильма: {} = {}", e.getField(), e.getRejectedValue());
-            }
             throw new ValidationException(bindingResult.getFieldErrors().toString());
         }
     }
@@ -83,5 +79,12 @@ public class FilmsController {
         log.debug("Получен запрос DELETE /films/{}/like/{}", filmId, userId);
         ifNegativeThrow(userId);
         filmService.deleteLikeFromFilm(filmId, userId);
+    }
+
+    @DeleteMapping("/{filmId}")
+    public void delete(@PathVariable int filmId) {
+        log.debug("Получен запрос DELETE /films/{}", filmId);
+        ifNegativeThrow(filmId);
+        filmService.deleteFilmById(filmId);
     }
 }
