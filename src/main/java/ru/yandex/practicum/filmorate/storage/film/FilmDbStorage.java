@@ -205,19 +205,9 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public Collection<Film> getFilmsByDirector (int directorId, String sortBy) {
         String sql = FIND_ALL +
-                "LEFT JOIN (SELECT DIRECTORS.*, " +
-                "F.ID AS FILM_ID," +
-                "YEAR(F.RELEASE_DATE) AS YEARS, " +
-                "COUNT(FL.FILM_ID) AS LIKES " +
-                "FROM DIRECTORS " +
-                "LEFT JOIN FILM_DIRECTOR FD on DIRECTORS.ID = FD.DIRECTOR_ID " +
-                "LEFT JOIN FILMS F on F.ID = FD.FILM_ID " +
-                "LEFT JOIN FILM_LIKES FL on F.ID = FL.FILM_ID " +
-                "WHERE DIRECTORS.ID = ? " +
-                "GROUP BY FD.FILM_ID) AS DF " +
-                "WHERE FILMS.ID = DF.FILM_ID " +
+                "WHERE DIRECTOR_ID = ? " +
                 "GROUP BY FILMS.ID " +
-                "ORDER BY " + requestParamValidator(sortBy);
+                "ORDER BY " + requestParamSQLMap(sortBy);
 
         return jdbcTemplate.query(sql, this::mapRowToFilm, directorId);
     }
@@ -244,9 +234,9 @@ public class FilmDbStorage implements FilmStorage {
         return jdbcTemplate.update(sql, filmId, userId) > 0;
     }
 
-    private String requestParamValidator(String sortBy) {
+    private String requestParamSQLMap(String sortBy) {
         if(sortBy.equals(SortBy.year.toString())) {
-            return "YEARS";
+            return "RELEASE_YEAR";
         } else {
             return "LIKES";
         }
