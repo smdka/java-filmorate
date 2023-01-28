@@ -158,7 +158,7 @@ public class UserDdStorage implements UserStorage {
         return Feed.builder()
                 .eventId(rs.getInt("EVENT_ID"))
                 .userId(rs.getInt("USER_ID"))
-                .timeStamp(rs.getLong("TIME_STAMP"))
+                .timestamp(rs.getLong("TIME_STAMP"))
                 .eventType(rs.getString("EVENT_TYPE"))
                 .operation(rs.getString("OPERATION"))
                 .entityId(rs.getInt("ENTITY_ID"))
