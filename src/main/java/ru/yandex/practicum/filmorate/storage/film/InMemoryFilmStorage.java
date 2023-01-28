@@ -1,44 +1,44 @@
 package ru.yandex.practicum.filmorate.storage.film;
 
-import org.springframework.stereotype.Repository;
+import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.util.*;
 
 import static java.util.stream.Collectors.*;
 
-@Repository
-public class InMemoryFilmStorage implements FilmStorage {
+@Component
+public class InMemoryFilmStorage  {
     private final Map<Integer, Film> films;
 
     public InMemoryFilmStorage() {
         this.films = new HashMap<>();
     }
 
-    @Override
+
     public Collection<Film> findAll() {
         return films.values();
     }
 
-    @Override
+
     public Film save(Film film) {
         films.put(film.getId(), film);
         return film;
     }
 
-    @Override
+
     public Optional<Film> update(Film film) {
         return films.replace(film.getId(), film) == null ?
                 Optional.empty() :
                 Optional.of(film);
     }
 
-    @Override
+
     public boolean deleteById(int filmId) {
         return films.remove(filmId) != null;
     }
 
-    @Override
+
     public Optional<Film> findById(int id) {
         Film film = films.get(id);
         return film == null ?
@@ -46,7 +46,7 @@ public class InMemoryFilmStorage implements FilmStorage {
                 Optional.of(film);
     }
 
-    @Override
+
     public Collection<Film> findTopNMostPopular(int n) {
         Comparator<Film> byLikesDesc = Comparator.comparingInt(Film::getId).reversed();
         return films.values().stream()
@@ -55,7 +55,7 @@ public class InMemoryFilmStorage implements FilmStorage {
                 .collect(toList());
     }
 
-    @Override
+
     public boolean addLike(int filmId, int userId) {
         Film film = films.get(filmId);
         if (film == null) {
@@ -65,7 +65,7 @@ public class InMemoryFilmStorage implements FilmStorage {
         return true;
     }
 
-    @Override
+
     public boolean deleteLike(int filmId, int userId) {
         Film film = films.get(filmId);
         if (film == null) {
@@ -73,5 +73,12 @@ public class InMemoryFilmStorage implements FilmStorage {
         }
         film.deleteLikeFromUser(userId);
         return true;
+    }
+
+    public Collection<Film> findCommonFilms(int userId, int friendId) {
+        return films.values().stream()
+                .filter(film -> film.getWhoLikedUserIds().contains(userId) &&
+                        film.getWhoLikedUserIds().contains(friendId)).sorted(Comparator.comparingInt(Film::getId).reversed())
+                .collect(toList());
     }
 }
