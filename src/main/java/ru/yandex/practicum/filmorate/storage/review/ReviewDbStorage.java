@@ -73,7 +73,7 @@ public class ReviewDbStorage implements ReviewStorage {
         int reviewId = keyHolder.getKey().intValue();
         review.setReviewId(reviewId);
         jdbcTemplate.update(ADD_FEED,
-                review.getUserId(), Instant.now().toEpochMilli(), "REVIEW", "ADD", review.getFilmId());
+                review.getUserId(), Instant.now().toEpochMilli(), "REVIEW", "ADD", review.getReviewId());
         return review;
     }
 
