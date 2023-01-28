@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.storage.film;
 
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.util.*;
@@ -81,5 +82,25 @@ public class InMemoryFilmStorage implements FilmStorage {
                                 film.getWhoLikedUserIds().contains(friendId))
                 .sorted(Comparator.comparingInt(Film::getLikesCount).reversed())
                 .collect(toList());
+    }
+
+    @Override
+    public Collection<Film> getFilmsByDirector(int directorId, String sortBy) {
+        SortedSet<Director> directors;
+        Collection<Film> result;
+        if (sortBy.equals("year")) {
+            result = new TreeSet<>(Comparator.comparingInt(film -> film.getReleaseDate().getYear()));
+        } else if (sortBy.equals("likes")) {
+            result = new TreeSet<>(Comparator.comparingInt(Film::getLikesCount).reversed());
+        } else {
+            return Collections.emptySortedSet();
+        }
+        for (Film film : films.values()) {
+            directors = film.getDirectors();
+            if (directors.stream().anyMatch(director -> director.getId() == directorId)) {
+                result.add(film);
+            }
+        }
+        return result;
     }
 }

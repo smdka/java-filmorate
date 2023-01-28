@@ -101,6 +101,7 @@ public class FilmService {
         } else if (userStorage.findById(friendId).isEmpty()) {
             throw new UserNotFoundException(String.format(USER_NOT_EXISTS_MSG, friendId));
         }
+        log.debug("Список общих фильмов пользователя с id = {} и его друга с id = {} отправлен", userId, friendId);
         return filmStorage.findCommonFilms(userId, friendId);
     }
 }
