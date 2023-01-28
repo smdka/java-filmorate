@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.storage.review;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
@@ -97,10 +98,13 @@ public class ReviewDbStorage implements ReviewStorage {
 
     @Override
     public boolean deleteById(int id) {
-        String sql = "SELECT FILM_ID FROM REVIEWS WHERE ID = ?";
-        Integer filmId = jdbcTemplate.queryForObject(sql, Integer.class, id);
-        jdbcTemplate.update(ADD_FEED,
-                id, Instant.now().toEpochMilli(), "REVIEW", "REMOVE", filmId);
+        try {
+            Integer filmId = jdbcTemplate.queryForObject("SELECT FILM_ID FROM REVIEWS WHERE ID = ?", Integer.class, id);
+            jdbcTemplate.update(ADD_FEED,
+                    id, Instant.now().toEpochMilli(), "REVIEW", "REMOVE", filmId);
+        } catch (EmptyResultDataAccessException e) {
+            return false;
+        }
         return jdbcTemplate.update("DELETE FROM REVIEWS WHERE ID = ?", id) > 0;
     }
 
