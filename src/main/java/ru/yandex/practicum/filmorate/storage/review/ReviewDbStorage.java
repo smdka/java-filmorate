@@ -10,6 +10,7 @@ import ru.yandex.practicum.filmorate.model.Review;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -24,6 +25,9 @@ public class ReviewDbStorage implements ReviewStorage {
                                                   "SET USEFUL = USEFUL - 1 " +
                                                   "WHERE ID = ?";
     private static final String FIND_ALL = "SELECT * FROM REVIEWS ";
+    private static final String ADD_FEED = "INSERT INTO USER_FEEDS " +
+            "(USER_ID, TIME_STAMP, EVENT_TYPE, OPERATION, ENTITY_ID) " +
+            "VALUES (?, ?, ?, ?, ?)";
     private final JdbcTemplate jdbcTemplate;
 
     @Override
@@ -68,6 +72,8 @@ public class ReviewDbStorage implements ReviewStorage {
 
         int reviewId = keyHolder.getKey().intValue();
         review.setReviewId(reviewId);
+        jdbcTemplate.update(ADD_FEED,
+                review.getUserId(), Instant.now().toEpochMilli(), "REVIEW", "ADD", review.getFilmId());
         return review;
     }
 
@@ -81,14 +87,20 @@ public class ReviewDbStorage implements ReviewStorage {
                 review.getReviewId()) == 0) {
             return Optional.empty();
         }
-
         sql = FIND_ALL +
              "WHERE ID = ?";
-        return Optional.of(jdbcTemplate.query(sql, (resultSet, rowNum) -> mapRowToReview(resultSet), review.getReviewId()).get(0));
+        Review updatedReview = jdbcTemplate.query(sql, (resultSet, rowNum) -> mapRowToReview(resultSet), review.getReviewId()).get(0);
+        jdbcTemplate.update(ADD_FEED,
+                updatedReview.getReviewId(), Instant.now().toEpochMilli(), "REVIEW", "UPDATE", updatedReview.getFilmId());
+        return Optional.of(updatedReview);
     }
 
     @Override
     public boolean deleteById(int id) {
+        String sql = "SELECT FILM_ID FROM REVIEWS WHERE ID = ?";
+        Integer filmId = jdbcTemplate.queryForObject(sql, Integer.class, id);
+        jdbcTemplate.update(ADD_FEED,
+                id, Instant.now().toEpochMilli(), "REVIEW", "REMOVE", filmId);
         return jdbcTemplate.update("DELETE FROM REVIEWS WHERE ID = ?", id) > 0;
     }
 
