@@ -74,4 +74,11 @@ public class InMemoryFilmStorage implements FilmStorage {
         film.deleteLikeFromUser(userId);
         return true;
     }
+
+
+    ////////////////////для ревью/////////////////////
+    @Override
+    public List<Film> searchFilm(String query, String by) {
+        return null;
+    }
 }

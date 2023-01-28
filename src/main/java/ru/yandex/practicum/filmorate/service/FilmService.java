@@ -8,6 +8,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
 import java.util.Collection;
+import java.util.List;
 
 @Service
 @Slf4j
@@ -73,5 +74,11 @@ public class FilmService {
     public Collection<Film> getTopNMostPopular(int n) {
         log.debug("Топ {} фильмов успешно отправлен", n);
         return filmStorage.findTopNMostPopular(n);
+    }
+
+    // TODO для метод для ревью
+
+    public List<Film> searchFilm(String query, String by) {
+        return filmStorage.searchFilm(query, by);
     }
 }

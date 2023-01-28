@@ -84,4 +84,18 @@ public class FilmsController {
         ifNegativeThrow(userId);
         filmService.deleteLikeFromFilm(filmId, userId);
     }
+
+    // TODO для метод для ревью
+
+    @GetMapping("/search")
+    public List<Film> searchFilm(@RequestParam String query, @RequestParam String by) {
+        if (query == null || by == null) {
+            throw new ValidationException("Не корректный запрос на поиск");
+        }
+        log.debug("Получен запрос GEt /films/search?query= {} &by=by {}", query , by);
+        List<Film> filmsForReturn = filmService.searchFilm(query, by);
+        return filmsForReturn;
+    }
+
+
 }
