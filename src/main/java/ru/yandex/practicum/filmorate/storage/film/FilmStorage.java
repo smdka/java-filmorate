@@ -15,4 +15,5 @@ public interface FilmStorage {
     boolean addLike(int filmId, int userId);
     boolean deleteLike(int filmId, int userId);
     Collection<Film> findCommonFilms(int userId, int friendId);
+    Collection<Film> getFilmsByDirector (int directorId, String sortBy);
 }

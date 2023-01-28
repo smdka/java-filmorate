@@ -48,9 +48,8 @@ public class InMemoryFilmStorage implements FilmStorage {
 
     @Override
     public Collection<Film> findTopNMostPopular(int n) {
-        Comparator<Film> byLikesDesc = Comparator.comparingInt(Film::getId).reversed();
         return films.values().stream()
-                .sorted(byLikesDesc)
+                .sorted(Comparator.comparingInt(Film::getLikesCount).reversed())
                 .limit(n)
                 .collect(toList());
     }
@@ -80,7 +79,7 @@ public class InMemoryFilmStorage implements FilmStorage {
         return films.values().stream()
                 .filter(film -> film.getWhoLikedUserIds().contains(userId) &&
                                 film.getWhoLikedUserIds().contains(friendId))
-                .sorted(Comparator.comparingInt(Film::getId).reversed())
+                .sorted(Comparator.comparingInt(Film::getLikesCount).reversed())
                 .collect(toList());
     }
 }
