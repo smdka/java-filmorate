@@ -47,7 +47,7 @@ public class FilmDbStorage implements FilmStorage {
 
     private Film mapRowToFilm(ResultSet rs) throws SQLException {
         int id = rs.getInt("ID");
-        String name  = rs.getString("NAME");
+        String name = rs.getString("NAME");
         String description = rs.getString("DESCRIPTION");
         LocalDate releaseDate = rs.getDate("RELEASE_DATE").toLocalDate();
         int duration = rs.getInt("DURATION");
@@ -132,8 +132,7 @@ public class FilmDbStorage implements FilmStorage {
                         Date.valueOf(film.getReleaseDate()),
                         film.getDuration(),
                         film.getMpa().getId(),
-                        film.getId()) == 0)
-        {
+                        film.getId()) == 0) {
             return Optional.empty();
         }
 
@@ -199,16 +198,16 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public Collection<Film> findCommonFilms(int userId, int friendId) {
         String sql = FIND_ALL +
-                    "JOIN FILM_LIKES F on FILMS.ID = F.FILM_ID " +
-                    "JOIN FILM_LIKES L on FILMS.ID = L.FILM_ID " +
-                    "WHERE F.LIKED_BY_USER_ID = ? AND L.LIKED_BY_USER_ID = ? " +
-                    "GROUP BY FILMS.ID " +
-                    "ORDER BY COUNT(DISTINCT FL.LIKED_BY_USER_ID) DESC";
+                "JOIN FILM_LIKES F on FILMS.ID = F.FILM_ID " +
+                "JOIN FILM_LIKES L on FILMS.ID = L.FILM_ID " +
+                "WHERE F.LIKED_BY_USER_ID = ? AND L.LIKED_BY_USER_ID = ? " +
+                "GROUP BY FILMS.ID " +
+                "ORDER BY COUNT(DISTINCT FL.LIKED_BY_USER_ID) DESC";
         return jdbcTemplate.query(sql, (rs, rowNum) -> mapRowToFilm(rs), userId, friendId);
     }
 
     @Override
-    public Collection<Film> getFilmsByDirector (int directorId, String sortBy) {
+    public Collection<Film> getFilmsByDirector(int directorId, String sortBy) {
         String sql = FIND_ALL +
                 "WHERE DIRECTOR_ID = ? " +
                 "GROUP BY FILMS.ID " +
@@ -219,7 +218,7 @@ public class FilmDbStorage implements FilmStorage {
 
     private void saveDirectors(Film film) {
         jdbcTemplate.update("DELETE FROM FILM_DIRECTOR WHERE FILM_ID = ?", film.getId());
-        SortedSet<Director> directors  = film.getDirectors();
+        SortedSet<Director> directors = film.getDirectors();
         int filmId = film.getId();
         String sql = "INSERT INTO FILM_DIRECTOR(DIRECTOR_ID, FILM_ID) VALUES (?,?) ";
 
@@ -246,74 +245,50 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
-    public List<Film> searchFilm(String query, String by) {   // TODO для метод для ревью
+    public List<Film> searchFilm(String query, String by) {
         String byLow = "%" + query.toLowerCase() + "%";
         String search = "SELECT FILMS.*, " +
                 "MPA.NAME AS MPA_NAME, " +
+                "YEAR(RELEASE_DATE) AS RELEASE_YEAR, " +
                 "ARRAY_AGG(FG.GENRE_ID) AS GENRE_IDS, " +
                 "ARRAY_AGG(G.NAME) AS GENRE_NAMES, " +
-                "ARRAY_AGG(FD. DIRECTOR_ID) AS DIRECTOR_IDS, " +  //
-                "ARRAY_AGG (D.NAME) AS DIRECTOR_NAMES, " +      //
+                "ARRAY_AGG(FL.LIKED_BY_USER_ID) AS LIKES," +
+                "ARRAY_AGG(FD. DIRECTOR_ID) AS DIRECTOR_IDS, " +
+                "ARRAY_AGG (D.NAME) AS DIRECTOR_NAMES, " +
                 "ARRAY_AGG(FL.LIKED_BY_USER_ID) AS WHO_LIKED_IDS, " +
                 "FROM films " +
                 "LEFT JOIN MPA on FILMS.MPA_ID = MPA.ID " +
                 "LEFT JOIN FILM_GENRE FG on FILMS.ID = FG.FILM_ID " +
-                "LEFT JOIN FILM_DIRECTOR FD on FILMS.ID = FD.FILM_ID " +   //
+                "LEFT JOIN FILM_DIRECTOR FD on FILMS.ID = FD.FILM_ID " +
                 "LEFT JOIN GENRES G on G.ID = FG.GENRE_ID " +
-                "LEFT JOIN DIRECTORS D on D.ID = FD.DIRECTOR_ID " +   //
+                "LEFT JOIN DIRECTORS D on D.ID = FD.DIRECTOR_ID " +
                 "LEFT JOIN FILM_LIKES FL on FILMS.ID = FL.FILM_ID ";
 
-        String groupBy = " GROUP BY films.ID ";
+        String groupBy = " GROUP BY films.ID ORDER BY films.id DESC";
 
         if (by.equals("director")) {
             String sql = search + "WHERE LOWER (D.NAME) LIKE ? " + groupBy;
-            List<Film> filmsForReturn = jdbcTemplate.query(sql, this::mapRowToFilm, byLow);
+            List<Film> filmsForReturn = jdbcTemplate.query(sql, (rs, rowNum) -> mapRowToFilm(rs), byLow);
             return filmsForReturn;
 
         } else if (by.equals("title")) {
             String sql = search + " WHERE LOWER (films.NAME) LIKE ? " + groupBy;
-            List<Film> filmsForReturn = jdbcTemplate.query(sql, this::mapRowToFilm, byLow);
+            List<Film> filmsForReturn = jdbcTemplate.query(sql, (rs, rowNum) -> mapRowToFilm(rs), byLow);
+            return filmsForReturn;
+
+        } else if (by.equals("title,director")) {
+            String sql = search + "WHERE (LOWER (D.NAME)) LIKE ?  or (LOWER (films.NAME)) LIKE ? " + groupBy;
+            List<Film> filmsForReturn = jdbcTemplate.query(sql, (rs, rowNum) -> mapRowToFilm(rs), byLow, byLow);
             return filmsForReturn;
 
         } else {
-            String sql = search + "WHERE LOWER (D.NAME) AND LOWER (films.NAME) LIKE ? " + groupBy;
-            List<Film> filmsForReturn = jdbcTemplate.query(sql, this::mapRowToFilm, byLow);
-            return filmsForReturn;
+            List<Film> forReturn = new ArrayList<>();
+            return forReturn;
         }
     }
-
-
-    private Film mapRowToFilm(ResultSet rs, int rowNum) throws SQLException {  // TODO для метод для ревью
-        int id = rs.getInt("ID");
-        String name = rs.getString("NAME");
-        String description = rs.getString("DESCRIPTION");
-        LocalDate releaseDate = rs.getDate("RELEASE_DATE").toLocalDate();
-        int duration = rs.getInt("DURATION");
-        Mpa mpa = new Mpa(rs.getInt("MPA_ID"), rs.getString("MPA.NAME"));
-        SortedSet<Genre> genres = getSetOfGenres(rs);
-        Set<Integer> likes = getSetOfLikes(rs);
-        SortedSet<Director> directors = getSetOfDirectors(rs);
-        return new Film(id, likes, name, description, releaseDate, duration, mpa, genres, directors);
-    }
-
-    private SortedSet<Director> getSetOfDirectors(ResultSet row) throws SQLException {  // TODO для метод для ревью
-        Array idsArr = row.getArray("DIRECTOR_IDS");
-        Array namesArr = row.getArray("DIRECTOR_NAMES");
-        Object[] idsArrValues = (Object[]) idsArr.getArray();
-        if (idsArrValues[0] == null) {
-            return Collections.emptySortedSet();
-        }
-        Object[] namesArrValues = (Object[]) namesArr.getArray();
-        SortedSet<Director> result = new TreeSet<>();
-        for (int i = 0; i < idsArrValues.length; i++) {
-            result.add(new Director((Integer) idsArrValues[i], (String) namesArrValues[i]));
-        }
-        return result;
-    }
-}
 
     private String requestParamSQLMap(String sortBy) {
-        if(sortBy.equals(SortBy.year.toString())) {
+        if (sortBy.equals(SortBy.year.toString())) {
             return "RELEASE_YEAR";
         } else {
             return "LIKES";

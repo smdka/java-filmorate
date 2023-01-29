@@ -53,11 +53,11 @@ public class FilmsController {
 
     @GetMapping("/director/{directorId}")
     public Collection<Film> getFilmsByDirector(@PathVariable int directorId, @RequestParam String sortBy) {
-            boolean present = Arrays.stream(SortBy.values()).anyMatch(x -> Objects.equals(x.toString(), sortBy));
-        if(!present){
+        boolean present = Arrays.stream(SortBy.values()).anyMatch(x -> Objects.equals(x.toString(), sortBy));
+        if (!present) {
             throw new RuntimeException("неверный запрос параметра сортировки");
         }
-        log.debug("получен запрос GET /films/director/{directorId}?sortBy={}", sortBy );
+        log.debug("получен запрос GET /films/director/{directorId}?sortBy={}", sortBy);
         return filmService.getFilmsByDirector(directorId, sortBy);
     }
 
@@ -103,14 +103,13 @@ public class FilmsController {
 
     @GetMapping("/search")
     public List<Film> searchFilm(@RequestParam String query, @RequestParam String by) {
-        if (query == null || by == null) {
+        if (query == null || by == null || query.isEmpty() || by.isEmpty()) {
             throw new ValidationException("Не корректный запрос на поиск");
         }
-        log.debug("Получен запрос GEt /films/search?query= {} &by=by {}", query , by);
+        log.debug("Получен запрос GEt /films/search?query= {} &by=by {}", query, by);
         List<Film> filmsForReturn = filmService.searchFilm(query, by);
         return filmsForReturn;
     }
-
 
 
     @DeleteMapping("/{filmId}")
