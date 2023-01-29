@@ -8,9 +8,12 @@ import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.storage.film.SortBy;
 
 import javax.validation.Valid;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Objects;
 
 @Slf4j
 @RestController
@@ -39,6 +42,22 @@ public class FilmsController {
     public Collection<Film> getMostPopularFilms(@RequestParam(defaultValue = "10") int count) {
         log.debug("Получен запрос GET /films/popular/{}", count);
         return filmService.getTopNMostPopular(count);
+    }
+
+    @GetMapping("/common")
+    public Collection<Film> getCommonFilms(@RequestParam int userId, @RequestParam int friendId) {
+        log.debug("Получен запрос GET /films/common?userId={}&friendId={}", userId, friendId);
+        return filmService.getCommonFilms(userId, friendId);
+    }
+
+    @GetMapping("/director/{directorId}")
+    public Collection<Film> getFilmsByDirector(@PathVariable int directorId, @RequestParam String sortBy) {
+            boolean present = Arrays.stream(SortBy.values()).anyMatch(x -> Objects.equals(x.toString(), sortBy));
+        if(!present){
+            throw new RuntimeException("неверный запрос параметра сортировки");
+        }
+        log.debug("получен запрос GET /films/director/{directorId}?sortBy={}", sortBy );
+        return filmService.getFilmsByDirector(directorId, sortBy);
     }
 
     @PostMapping
