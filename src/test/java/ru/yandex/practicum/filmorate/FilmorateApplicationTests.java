@@ -120,8 +120,4 @@ class FilmorateApplicationTests {
         assertEquals("{\"error\":\"Фильм с id = " + WRONG_ID + " не существует\"}", actual);
     }
 
-    @Test
-    void getRecommendationsNoLikes() throws Exception {
-
-    }
 }

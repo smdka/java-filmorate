@@ -201,7 +201,10 @@ public class FilmDbStorage implements FilmStorage {
                         "FROM FILM_LIKES AS FL " +
                         "GROUP BY FL.film_id";
         Matrix matrix = jdbcTemplate.query(sql1, this::makeMatrixForRecommendations);
-        Recommender recommender = new Recommender(matrix);
+        if (matrix == null) {
+            return Collections.emptyList();
+        }
+        Recommender recommender = new Recommender(matrix, true);
         List<Integer> recommendations = recommender.getRecommendations(userId, Optional.empty());
         //second query for recommended films if necessary
         if (!recommendations.isEmpty()) {

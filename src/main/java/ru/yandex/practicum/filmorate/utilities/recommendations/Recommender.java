@@ -3,15 +3,18 @@ package ru.yandex.practicum.filmorate.utilities.recommendations;
 import java.util.*;
 
 public class Recommender {
-    private static final Boolean TREAT_EMPTY_AS_ZEROS = true; // when rates != 1, false needed
+
     private static final Integer HOW_MANY_SIMILAR_ITEMS_TO_ANALYZE = 2; //internal, subject for test
 
     private final Matrix matrix;
     private final Matrix preparedMatrix;
     private final Matrix similarities;
 
-    public Recommender(Matrix matrix) {
+    private final Boolean treatEmptyAsZeros; // when rates != 1, false needed
+
+    public Recommender(Matrix matrix, Boolean treatEmptyAsZeros) {
         this.matrix = matrix;
+        this.treatEmptyAsZeros = treatEmptyAsZeros;
         this.preparedMatrix = prepareMatrix();
         this.similarities = findSimilarities();
     }
@@ -149,7 +152,7 @@ public class Recommender {
     private Double findAverageValue(Map<Integer, Optional<Double>> map) {
         return map.values().stream()
                 .map(e -> {
-                    if (e.isEmpty() && TREAT_EMPTY_AS_ZEROS) {
+                    if (e.isEmpty() && treatEmptyAsZeros) {
                         return Optional.of((double) 0);
                     }
                     return e;
@@ -189,46 +192,5 @@ public class Recommender {
                 .map(e->e.getValue()*vector2.get(e.getKey()))
                 .mapToDouble(e->e)
                 .sum();
-    }
-
-
-    public static Matrix generateTestMatrix() {
-        Matrix testMatrix = new Matrix();
-        testMatrix.writeValue(1, 1, Optional.of((double) 1));
-        testMatrix.writeValue(1, 3, Optional.of((double) 3));
-        testMatrix.writeValue(1, 6, Optional.of((double) 5));
-        testMatrix.writeValue(1, 9, Optional.of((double) 5));
-        testMatrix.writeValue(1, 11, Optional.of((double) 4));
-        testMatrix.writeValue(2, 3, Optional.of((double) 5));
-        testMatrix.writeValue(2, 4, Optional.of((double) 4));
-        testMatrix.writeValue(2, 7, Optional.of((double) 4));
-        testMatrix.writeValue(2, 10, Optional.of((double) 2));
-        testMatrix.writeValue(2, 11, Optional.of((double) 1));
-        testMatrix.writeValue(2, 12, Optional.of((double) 3));
-        testMatrix.writeValue(3, 1, Optional.of((double) 2));
-        testMatrix.writeValue(3, 2, Optional.of((double) 4));
-        testMatrix.writeValue(3, 4, Optional.of((double) 1));
-        testMatrix.writeValue(3, 5, Optional.of((double) 2));
-        testMatrix.writeValue(3, 7, Optional.of((double) 3));
-        testMatrix.writeValue(3, 9, Optional.of((double) 4));
-        testMatrix.writeValue(3, 10, Optional.of((double) 3));
-        testMatrix.writeValue(3, 11, Optional.of((double) 5));
-        testMatrix.writeValue(4, 2, Optional.of((double) 2));
-        testMatrix.writeValue(4, 3, Optional.of((double) 4));
-        testMatrix.writeValue(4, 5, Optional.of((double) 5));
-        testMatrix.writeValue(4, 8, Optional.of((double) 4));
-        testMatrix.writeValue(4, 11, Optional.of((double) 2));
-        testMatrix.writeValue(5, 3, Optional.of((double) 4));
-        testMatrix.writeValue(5, 4, Optional.of((double) 3));
-        testMatrix.writeValue(5, 5, Optional.of((double) 4));
-        testMatrix.writeValue(5, 6, Optional.of((double) 2));
-        testMatrix.writeValue(5, 11, Optional.of((double) 2));
-        testMatrix.writeValue(5, 12, Optional.of((double) 5));
-        testMatrix.writeValue(6, 1, Optional.of((double) 1));
-        testMatrix.writeValue(6, 3, Optional.of((double) 3));
-        testMatrix.writeValue(6, 5, Optional.of((double) 3));
-        testMatrix.writeValue(6, 8, Optional.of((double) 2));
-        testMatrix.writeValue(6, 11, Optional.of((double) 4));
-        return testMatrix;
     }
 }
