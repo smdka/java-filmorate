@@ -75,11 +75,10 @@ public class InMemoryFilmStorage  {
         return true;
     }
 
-    @Override
     public Collection<Film> getRecommendations(int userId) {
         return null;
     }
-    
+
     public Collection<Film> findCommonFilms(int userId, int friendId) {
         return films.values().stream()
                 .filter(film -> film.getWhoLikedUserIds().contains(userId) &&
