@@ -71,4 +71,11 @@ public class RuntimeExceptionsHandler {
         log.warn(e.getMessage());
         return Map.of(ERROR, e.getMessage());
     }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public Map<String, String> handleNotExistingDirector(final DirectorNotFoundException e) {
+        log.warn(e.getMessage());
+        return Map.of(ERROR, e.getMessage());
+    }
 }

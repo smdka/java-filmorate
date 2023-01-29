@@ -3,21 +3,33 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.exception.DirectorNotFoundException;
 import ru.yandex.practicum.filmorate.exception.FilmNotFoundException;
+import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.storage.director.DirectorStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.util.Collection;
 import java.util.Optional;
+import java.util.List;
 
 @Service
 @Slf4j
 public class FilmService {
     private static final String FILM_NOT_EXISTS_MSG = "Фильм с id = %d не существует";
+    private static final String USER_NOT_EXISTS_MSG = "Пользователь с id = %d не существует";
     private final FilmStorage filmStorage;
+    private final UserStorage userStorage;
+    private final DirectorStorage directorStorage;
 
-    public FilmService(@Qualifier("filmDbStorage") FilmStorage filmStorage) {
+    public FilmService(@Qualifier("filmDbStorage") FilmStorage filmStorage,
+                       @Qualifier("userDdStorage") UserStorage userStorage,
+                       DirectorStorage directorStorage) {
         this.filmStorage = filmStorage;
+        this.userStorage =  userStorage;
+        this.directorStorage = directorStorage;
     }
 
     public Film add(Film film) {
@@ -41,6 +53,15 @@ public class FilmService {
                         new FilmNotFoundException(String.format(FILM_NOT_EXISTS_MSG, id)));
         log.debug("Фильм с id = {} успешно отправлен", id);
         return film;
+    }
+
+    public Collection<Film> getFilmsByDirector (int directorId, String sortBy) {
+            directorStorage.findById(directorId)
+                .orElseThrow(() ->
+                        new DirectorNotFoundException(String.format("Режиссер %d не найден", directorId)));
+            Collection<Film> filmList = filmStorage.getFilmsByDirector(directorId, sortBy);
+            log.debug("Список всех фильмов режиссера {} успешно отправлен", directorId);
+            return filmList;
     }
 
     public Collection<Film> getAllFilms() {
@@ -75,4 +96,15 @@ public class FilmService {
         log.debug("Топ {} фильмов успешно отправлен", limit);
         return filmStorage.findTopNMostPopular(limit, genreId, year);
     }
+
+    public Collection<Film> getCommonFilms(int userId, int friendId) {
+        if (userStorage.findById(userId).isEmpty()) {
+            throw new UserNotFoundException(String.format(USER_NOT_EXISTS_MSG, userId));
+        } else if (userStorage.findById(friendId).isEmpty()) {
+            throw new UserNotFoundException(String.format(USER_NOT_EXISTS_MSG, friendId));
+        }
+        log.debug("Список общих фильмов пользователя с id = {} и его друга с id = {} отправлен", userId, friendId);
+        return filmStorage.findCommonFilms(userId, friendId);
+    }
+
 }
