@@ -96,11 +96,13 @@ public class FilmService {
         return filmStorage.findTopNMostPopular(n);
     }
 
-    public Collection<Film> getCommonFilms(int userId, int friendId) {  if (userStorage.findById(userId).isEmpty()) {
-        throw new UserNotFoundException(String.format(USER_NOT_EXISTS_MSG, userId));
-    } else if (userStorage.findById(friendId).isEmpty()) {
-        throw new UserNotFoundException(String.format(USER_NOT_EXISTS_MSG, friendId));
-    }
+    public Collection<Film> getCommonFilms(int userId, int friendId) {
+        if (userStorage.findById(userId).isEmpty()) {
+            throw new UserNotFoundException(String.format(USER_NOT_EXISTS_MSG, userId));
+        } else if (userStorage.findById(friendId).isEmpty()) {
+            throw new UserNotFoundException(String.format(USER_NOT_EXISTS_MSG, friendId));
+        }
+        log.debug("Список общих фильмов пользователя с id = {} и его друга с id = {} отправлен", userId, friendId);
         return filmStorage.findCommonFilms(userId, friendId);
     }
     

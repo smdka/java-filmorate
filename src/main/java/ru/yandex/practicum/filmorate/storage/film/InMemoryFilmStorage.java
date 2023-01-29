@@ -1,44 +1,45 @@
 package ru.yandex.practicum.filmorate.storage.film;
 
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.util.*;
 
 import static java.util.stream.Collectors.*;
 
-@Component
-public class InMemoryFilmStorage  {
+@Repository
+public class InMemoryFilmStorage implements FilmStorage {
     private final Map<Integer, Film> films;
 
     public InMemoryFilmStorage() {
         this.films = new HashMap<>();
     }
 
-
+    @Override
     public Collection<Film> findAll() {
         return films.values();
     }
 
-
+    @Override
     public Film save(Film film) {
         films.put(film.getId(), film);
         return film;
     }
 
-
+    @Override
     public Optional<Film> update(Film film) {
         return films.replace(film.getId(), film) == null ?
                 Optional.empty() :
                 Optional.of(film);
     }
 
-
+    @Override
     public boolean deleteById(int filmId) {
         return films.remove(filmId) != null;
     }
 
-
+    @Override
     public Optional<Film> findById(int id) {
         Film film = films.get(id);
         return film == null ?
@@ -46,16 +47,15 @@ public class InMemoryFilmStorage  {
                 Optional.of(film);
     }
 
-
+    @Override
     public Collection<Film> findTopNMostPopular(int n) {
-        Comparator<Film> byLikesDesc = Comparator.comparingInt(Film::getId).reversed();
         return films.values().stream()
-                .sorted(byLikesDesc)
+                .sorted(Comparator.comparingInt(Film::getLikesCount).reversed())
                 .limit(n)
                 .collect(toList());
     }
 
-
+    @Override
     public boolean addLike(int filmId, int userId) {
         Film film = films.get(filmId);
         if (film == null) {
@@ -65,7 +65,7 @@ public class InMemoryFilmStorage  {
         return true;
     }
 
-
+    @Override
     public boolean deleteLike(int filmId, int userId) {
         Film film = films.get(filmId);
         if (film == null) {
@@ -79,10 +79,35 @@ public class InMemoryFilmStorage  {
         return null;
     }
 
+    @Override
     public Collection<Film> findCommonFilms(int userId, int friendId) {
         return films.values().stream()
                 .filter(film -> film.getWhoLikedUserIds().contains(userId) &&
-                        film.getWhoLikedUserIds().contains(friendId)).sorted(Comparator.comparingInt(Film::getId).reversed())
+                                film.getWhoLikedUserIds().contains(friendId))
+                .sorted(Comparator.comparingInt(Film::getLikesCount).reversed())
                 .collect(toList());
+    }
+
+    @Override
+    public Collection<Film> getFilmsByDirector(int directorId, String sortBy) {
+        SortedSet<Director> directors;
+        Collection<Film> result;
+        switch (sortBy.toLowerCase()) {
+            case "year":
+                result = new TreeSet<>(Comparator.comparingInt(film -> film.getReleaseDate().getYear()));
+                break;
+            case "likes":
+                result = new TreeSet<>(Comparator.comparingInt(Film::getLikesCount).reversed());
+                break;
+            default:
+                throw new IllegalArgumentException("Некорректный аргумент: " + sortBy);
+        }
+        for (Film film : films.values()) {
+            directors = film.getDirectors();
+            if (directors.stream().anyMatch(director -> director.getId() == directorId)) {
+                result.add(film);
+            }
+        }
+        return result;
     }
 }
