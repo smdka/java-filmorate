@@ -195,14 +195,15 @@ public class FilmDbStorage implements FilmStorage {
                 "WHERE FILM_ID = ? AND LIKED_BY_USER_ID = ?";
         return jdbcTemplate.update(sql, filmId, userId) > 0;
     }
+
     @Override
     public Collection<Film> findCommonFilms(int userId, int friendId) {
         String sql = FIND_ALL +
-                "JOIN FILM_LIKES F on FILMS.ID = F.FILM_ID " +
-                "JOIN FILM_LIKES L on FILMS.ID = L.FILM_ID " +
-                "WHERE F.LIKED_BY_USER_ID = ? AND L.LIKED_BY_USER_ID = ? " +
-                "GROUP BY FILMS.ID " +
-                "ORDER BY COUNT(DISTINCT FL.LIKED_BY_USER_ID) DESC";
+                    "JOIN FILM_LIKES F on FILMS.ID = F.FILM_ID " +
+                    "JOIN FILM_LIKES L on FILMS.ID = L.FILM_ID " +
+                    "WHERE F.LIKED_BY_USER_ID = ? AND L.LIKED_BY_USER_ID = ? " +
+                    "GROUP BY FILMS.ID " +
+                    "ORDER BY COUNT(DISTINCT FL.LIKED_BY_USER_ID) DESC";
         return jdbcTemplate.query(sql, (rs, rowNum) -> mapRowToFilm(rs), userId, friendId);
     }
 
