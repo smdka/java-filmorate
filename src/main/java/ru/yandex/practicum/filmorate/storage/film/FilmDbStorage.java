@@ -176,16 +176,16 @@ public class FilmDbStorage implements FilmStorage {
 
         if (genreId.isPresent() && year.isPresent()) {
             sql = FIND_ALL + yearSql + groupBySql + genreIdSql + limitSql;
-            return jdbcTemplate.query(sql, this::mapRowToFilm, year.get(), genreId.get(), limit);
+            return jdbcTemplate.query(sql, (rs, rowNum) -> mapRowToFilm(rs), year.get(), genreId.get(), limit);
         } else if (genreId.isPresent()) {
             sql = FIND_ALL + groupBySql + genreIdSql + limitSql;
-            return jdbcTemplate.query(sql, this::mapRowToFilm, genreId.get(), limit);
+            return jdbcTemplate.query(sql, (rs, rowNum) -> mapRowToFilm(rs), genreId.get(), limit);
         } else if (year.isPresent()) {
             sql = FIND_ALL + yearSql + groupBySql + limitSql;
-            return jdbcTemplate.query(sql, this::mapRowToFilm, year.get(), limit);
+            return jdbcTemplate.query(sql, (rs, rowNum) -> mapRowToFilm(rs), year.get(), limit);
         }
         sql = FIND_ALL + groupBySql + limitSql;
-        return jdbcTemplate.query(sql, this::mapRowToFilm, limit);
+        return jdbcTemplate.query(sql, (rs, rowNum) -> mapRowToFilm(rs), limit);
     }
 
     @Override
