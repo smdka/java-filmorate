@@ -3,7 +3,6 @@ package ru.yandex.practicum.filmorate.controller;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
@@ -11,7 +10,8 @@ import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
 
 import javax.validation.Valid;
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -57,9 +57,6 @@ public class UsersController {
 
     private void ifHasErrorsThrow(BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
-            for (FieldError e : bindingResult.getFieldErrors()) {
-                log.warn("Не пройдена валидация пользователя: {} = {}", e.getField(), e.getRejectedValue());
-            }
             throw new ValidationException(bindingResult.getFieldErrors().toString());
         }
     }
@@ -89,5 +86,12 @@ public class UsersController {
         ifNegativeThrow(friendId);
         log.debug("Получен запрос DELETE /users/{}/friends/{}", userId, friendId);
         userService.deleteFriend(userId, friendId);
+    }
+
+    @DeleteMapping("/{userId}")
+    public void delete(@PathVariable int userId) {
+        log.debug("Получен запрос DELETE /users/{}", userId);
+        ifNegativeThrow(userId);
+        userService.deleteUserById(userId);
     }
 }

@@ -1,13 +1,14 @@
 package ru.yandex.practicum.filmorate.storage.film;
 
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.util.*;
 
 import static java.util.stream.Collectors.*;
 
-@Component
+@Repository
 public class InMemoryFilmStorage implements FilmStorage {
     private final Map<Integer, Film> films;
 
@@ -48,9 +49,8 @@ public class InMemoryFilmStorage implements FilmStorage {
 
     @Override
     public Collection<Film> findTopNMostPopular(int n) {
-        Comparator<Film> byLikesDesc = Comparator.comparingInt(Film::getId).reversed();
         return films.values().stream()
-                .sorted(byLikesDesc)
+                .sorted(Comparator.comparingInt(Film::getLikesCount).reversed())
                 .limit(n)
                 .collect(toList());
     }
@@ -75,10 +75,35 @@ public class InMemoryFilmStorage implements FilmStorage {
         return true;
     }
 
-
-    ////////////////////для ревью/////////////////////
     @Override
-    public List<Film> searchFilm(String query, String by) {
-        return null;
+    public Collection<Film> findCommonFilms(int userId, int friendId) {
+        return films.values().stream()
+                .filter(film -> film.getWhoLikedUserIds().contains(userId) &&
+                                film.getWhoLikedUserIds().contains(friendId))
+                .sorted(Comparator.comparingInt(Film::getLikesCount).reversed())
+                .collect(toList());
+    }
+
+    @Override
+    public Collection<Film> getFilmsByDirector(int directorId, String sortBy) {
+        SortedSet<Director> directors;
+        Collection<Film> result;
+        switch (sortBy.toLowerCase()) {
+            case "year":
+                result = new TreeSet<>(Comparator.comparingInt(film -> film.getReleaseDate().getYear()));
+                break;
+            case "likes":
+                result = new TreeSet<>(Comparator.comparingInt(Film::getLikesCount).reversed());
+                break;
+            default:
+                throw new IllegalArgumentException("Некорректный аргумент: " + sortBy);
+        }
+        for (Film film : films.values()) {
+            directors = film.getDirectors();
+            if (directors.stream().anyMatch(director -> director.getId() == directorId)) {
+                result.add(film);
+            }
+        }
+        return result;
     }
 }
