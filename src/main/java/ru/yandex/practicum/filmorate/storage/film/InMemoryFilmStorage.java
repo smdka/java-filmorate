@@ -71,7 +71,6 @@ public class InMemoryFilmStorage {
         return null;
     }
 
-    @Override
     public Collection<Film> findCommonFilms(int userId, int friendId) {
         return films.values().stream()
                 .filter(film -> film.getWhoLikedUserIds().contains(userId) &&
@@ -80,7 +79,6 @@ public class InMemoryFilmStorage {
                 .collect(toList());
     }
 
-    @Override
     public Collection<Film> getFilmsByDirector(int directorId, String sortBy) {
         SortedSet<Director> directors;
         Collection<Film> result;

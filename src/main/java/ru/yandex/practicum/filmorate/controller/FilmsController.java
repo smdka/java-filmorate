@@ -43,13 +43,7 @@ public class FilmsController {
     public Collection<Film> getMostPopularFilms(@RequestParam(defaultValue = "10", name = "count", required = false) int limit,
                                                 @RequestParam(name = "genreId", required = false) Optional<Integer> genreId,
                                                 @RequestParam(name = "year", required = false) Optional<Integer> year) {
-        String request = "Получен запрос GET /films/popular/count=" + limit;
-        if (genreId.isPresent()) {
-            request += "&genreId=" + genreId;
-        }
-        if (year.isPresent()) {
-            request += "&year=" + year;
-        }
+        String request = "Получен запрос GET /films/popular/count=" + limit + (genreId.isPresent() ? "&genreId=" + genreId : "") + (year.isPresent() ? "&year=" + year : "");
         log.debug(request);
         return filmService.getTopNMostPopular(limit, genreId, year);
     }
