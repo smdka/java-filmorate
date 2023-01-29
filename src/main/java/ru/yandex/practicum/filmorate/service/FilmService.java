@@ -12,6 +12,7 @@ import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.util.Collection;
+import java.util.List;
 
 @Service
 @Slf4j
@@ -104,4 +105,5 @@ public class FilmService {
         log.debug("Список общих фильмов пользователя с id = {} и его друга с id = {} отправлен", userId, friendId);
         return filmStorage.findCommonFilms(userId, friendId);
     }
+    
 }

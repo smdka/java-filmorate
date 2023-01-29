@@ -75,6 +75,10 @@ public class InMemoryFilmStorage implements FilmStorage {
         return true;
     }
 
+    public Collection<Film> getRecommendations(int userId) {
+        return null;
+    }
+
     @Override
     public Collection<Film> findCommonFilms(int userId, int friendId) {
         return films.values().stream()

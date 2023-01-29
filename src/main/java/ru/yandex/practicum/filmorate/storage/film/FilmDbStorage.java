@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.storage.film;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
@@ -9,6 +10,9 @@ import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
+import ru.yandex.practicum.filmorate.utilities.recommendations.Recommender;
+import ru.yandex.practicum.filmorate.utilities.recommendations.Matrix;
+import ru.yandex.practicum.filmorate.utilities.sql.SqlArrayConverter;
 
 import java.sql.*;
 import java.sql.Date;
@@ -194,6 +198,54 @@ public class FilmDbStorage implements FilmStorage {
         String sql = "DELETE FROM FILM_LIKES " +
                 "WHERE FILM_ID = ? AND LIKED_BY_USER_ID = ?";
         return jdbcTemplate.update(sql, filmId, userId) > 0;
+    }
+
+    @Override
+    public Collection<Film> getRecommendations(int userId) {
+        //first query to make recommendations
+        String sql1 =
+                "SELECT fl.film_id film_ids, " +
+                        "ARRAY_AGG(fl.liked_by_user_id) user_ids, " +
+                        "ARRAY_AGG(fl.liked_by_user_id/fl.liked_by_user_id) rates " +
+                        "FROM FILM_LIKES AS FL " +
+                        "GROUP BY FL.film_id";
+        Matrix matrix = jdbcTemplate.query(sql1, this::makeMatrixForRecommendations);
+        if (matrix == null) {
+            return Collections.emptyList();
+        }
+        Recommender recommender = new Recommender(matrix, true);
+        List<Integer> recommendations = recommender.getRecommendations(userId, Optional.empty());
+        //second query for recommended films if necessary
+        if (!recommendations.isEmpty()) {
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.append("(");
+            for (Integer filmId : recommendations) {
+                stringBuilder.append(filmId).append(", ");
+            }
+            String sql2 = FIND_ALL +
+                    "WHERE FILMS.ID IN " +
+                    stringBuilder.substring(0, stringBuilder.length() - 2) + ") GROUP BY FILMS.ID";
+            return jdbcTemplate.query(sql2, (rs, rowNum) -> mapRowToFilm(rs));
+        } else {
+            return Collections.emptyList();
+        }
+    }
+
+    private Matrix makeMatrixForRecommendations (ResultSet rs) throws SQLException {
+        Matrix data = new Matrix();
+        try {
+            SqlArrayConverter converter = new SqlArrayConverter();
+            while (rs.next()) {
+                List<Integer> userIds = converter.convert(rs.getArray("user_ids"));
+                List<Integer> rates = converter.convert(rs.getArray("rates"));
+                for (int i = 0; i < userIds.size(); i++) {
+                    data.writeValue(rs.getInt("film_ids"), userIds.get(i), Optional.of(rates.get(i).doubleValue()));
+                }
+            }
+            return data;
+        } catch (EmptyResultDataAccessException exp) {
+            return null;
+        }
     }
 
     @Override
