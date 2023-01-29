@@ -107,6 +107,8 @@ public class Recommender {
                 Optional<Double> valueToWrite = column.get(rowI);
                 if (valueToWrite.isPresent()) {
                     valueToWrite = Optional.of(valueToWrite.get() - avg);
+                } else if (treatEmptyAsZeros) {
+                    valueToWrite = Optional.of(0 - avg);
                 }
                 column.put(rowI, valueToWrite);
             }
