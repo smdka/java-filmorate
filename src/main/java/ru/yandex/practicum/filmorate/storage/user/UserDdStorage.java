@@ -132,9 +132,12 @@ public class UserDdStorage implements UserStorage {
     public boolean removeFriend(int userId, int friendId) {
         String sql = "DELETE FROM USER_FRIENDS " +
                      "WHERE USER_ID = ? AND FRIEND_ID = ?";
-        jdbcTemplate.update(ADD_FEED,
-                userId, Instant.now().toEpochMilli(), "FRIEND", "REMOVE", friendId);
-        return jdbcTemplate.update(sql, userId, friendId) > 0;
+        if (jdbcTemplate.update(sql, userId, friendId) > 0) {
+            jdbcTemplate.update(ADD_FEED,
+                    userId, Instant.now().toEpochMilli(), "FRIEND", "REMOVE", friendId);
+            return true;
+        }
+        return false;
     }
 
     @Override
@@ -149,7 +152,6 @@ public class UserDdStorage implements UserStorage {
 
     @Override
     public List<Feed> getFeeds(int id) {
-        //String sql = "SELECT * FROM USER_FEEDS WHERE USER_ID = ?";
         String sql = "SELECT * FROM USER_FEEDS WHERE USER_ID IN (SELECT FRIEND_ID FROM USER_FRIENDS WHERE USER_ID = ? GROUP BY FRIEND_ID) OR USER_ID = ?";
         return jdbcTemplate.query(sql, this::mapRowToFeed, id, id);
     }

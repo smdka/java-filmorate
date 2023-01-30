@@ -6,6 +6,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.exception.ReviewNotFoundException;
 import ru.yandex.practicum.filmorate.model.Review;
 
 import java.sql.PreparedStatement;
@@ -98,14 +99,13 @@ public class ReviewDbStorage implements ReviewStorage {
 
     @Override
     public boolean deleteById(int id) {
-        try {
-            Integer filmId = jdbcTemplate.queryForObject("SELECT FILM_ID FROM REVIEWS WHERE ID = ?", Integer.class, id);
+        Integer filmId = jdbcTemplate.queryForObject("SELECT FILM_ID FROM REVIEWS WHERE ID = ?", Integer.class, id);
+        if (filmId != null && jdbcTemplate.update("DELETE FROM REVIEWS WHERE ID = ?", id) > 0) {
             jdbcTemplate.update(ADD_FEED,
                     id, Instant.now().toEpochMilli(), "REVIEW", "REMOVE", filmId);
-        } catch (EmptyResultDataAccessException e) {
-            return false;
+            return true;
         }
-        return jdbcTemplate.update("DELETE FROM REVIEWS WHERE ID = ?", id) > 0;
+        return false;
     }
 
     @Override

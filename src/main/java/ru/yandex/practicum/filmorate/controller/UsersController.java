@@ -99,6 +99,7 @@ public class UsersController {
     @GetMapping("/{id}/feed")
     public List<Feed> getFeeds(@PathVariable int id){
         log.debug("Получен запрос GET /users/{}/feed", id);
+        ifNegativeThrow(id);
         return userService.getFeeds(id);
     }
 }

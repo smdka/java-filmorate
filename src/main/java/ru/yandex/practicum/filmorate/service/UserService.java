@@ -106,7 +106,7 @@ public class UserService {
         if (storage.findById(id).isEmpty()) {
             throw new UserNotFoundException(String.format(USER_NOT_EXISTS_MSG, id));
         }
-        log.debug("Лента новостей для пользователя с id = {} отправлен", id);
+        log.debug("Лента новостей для пользователя с id = {} отправлена", id);
         return storage.getFeeds(id);
     }
 }
