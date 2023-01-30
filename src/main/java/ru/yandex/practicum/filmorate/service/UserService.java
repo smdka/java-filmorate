@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
+import ru.yandex.practicum.filmorate.model.Feed;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
@@ -17,7 +18,6 @@ import java.util.List;
 public class UserService {
     private static final String USER_NOT_EXISTS_MSG = "Пользователь с id = %d не существует";
     private final UserStorage userStorage;
-
     private final FilmStorage filmStorage;
 
     public UserService(@Qualifier("userDdStorage") UserStorage userStorage, @Qualifier("filmDbStorage") FilmStorage filmStorage) {
@@ -109,6 +109,14 @@ public class UserService {
     public List<Film> getRecommendations(int userId) {
         log.debug("Список рекомендаций успешно выдан пользователю с id {}", userId);
         return (List<Film>) filmStorage.getRecommendations(userId);
+    }
+
+    public List<Feed> getFeeds(int id) {
+        if (userStorage.findById(id).isEmpty()) {
+            throw new UserNotFoundException(String.format(USER_NOT_EXISTS_MSG, id));
+        }
+        log.debug("Лента новостей для пользователя с id = {} отправлена", id);
+        return userStorage.getFeeds(id);
     }
 }
 

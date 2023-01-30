@@ -16,6 +16,7 @@ import ru.yandex.practicum.filmorate.utilities.sql.SqlArrayConverter;
 
 import java.sql.*;
 import java.sql.Date;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.*;
 
@@ -26,7 +27,7 @@ import static java.util.stream.Collectors.*;
 public class FilmDbStorage implements FilmStorage {
     private static final String FIND_ALL =
             "SELECT FILMS.*, " +
-                    "MPA.NAME AS MPA_NAME, " +
+                   "MPA.NAME AS MPA_NAME, " +
                     "YEAR(RELEASE_DATE) AS RELEASE_YEAR, " +
                     "ARRAY_AGG(FG.GENRE_ID) AS GENRE_IDS, " +
                     "ARRAY_AGG(G.NAME) AS GENRE_NAMES, " +
@@ -40,6 +41,10 @@ public class FilmDbStorage implements FilmStorage {
                     "LEFT JOIN FILM_LIKES FL on FILMS.ID = FL.FILM_ID " +
                     "LEFT JOIN FILM_DIRECTOR FD on FILMS.ID = FD.FILM_ID " +
                     "LEFT JOIN DIRECTORS D on D.ID = FD.DIRECTOR_ID ";
+    private static final String ADD_FEED = "INSERT INTO USER_FEEDS " +
+            "(USER_ID, TIME_STAMP, EVENT_TYPE, OPERATION, ENTITY_ID) " +
+            "VALUES (?, ?, ?, ?, ?)";
+
     private final JdbcTemplate jdbcTemplate;
 
     @Override
@@ -204,13 +209,18 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public boolean addLike(int filmId, int userId) {
         String sql = "MERGE INTO FILM_LIKES(FILM_ID, LIKED_BY_USER_ID) VALUES (?, ?)";
+        jdbcTemplate.update(ADD_FEED,
+                userId, Instant.now().toEpochMilli(), "LIKE", "ADD", filmId);
         return jdbcTemplate.update(sql, filmId, userId) > 0;
     }
 
     @Override
     public boolean deleteLike(int filmId, int userId) {
         String sql = "DELETE FROM FILM_LIKES " +
-                "WHERE FILM_ID = ? AND LIKED_BY_USER_ID = ?";
+                     "WHERE FILM_ID = ? AND LIKED_BY_USER_ID = ?";
+        jdbcTemplate.update(ADD_FEED,
+                userId, Instant.now().toEpochMilli(), "LIKE", "REMOVE", filmId);
+
         return jdbcTemplate.update(sql, filmId, userId) > 0;
     }
 
