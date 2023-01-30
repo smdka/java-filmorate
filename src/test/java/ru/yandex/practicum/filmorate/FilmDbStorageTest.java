@@ -111,10 +111,34 @@ class FilmDbStorageTest {
     }
 
     @Test
-    void testMostPopularFilms() {
+    void testLimitInMostPopularFilms() {
         int n = 2;
-        Collection<Film> topNMostPopular = filmDdStorage.findTopNMostPopular(n);
-        assertThat(topNMostPopular).hasSize(n);
+        filmDdStorage.addLike(1, 1);
+        filmDdStorage.addLike(1, 2);
+        filmDdStorage.addLike(1, 3);
+        filmDdStorage.addLike(1, 4);
+        Film expectedFilm = filmDdStorage.findById(1).get();
+        Collection<Film> topNMostPopular = filmDdStorage.findTopNMostPopular(n, Optional.empty(), Optional.empty());
+        assertThat(topNMostPopular).hasSize(2);
+        assertEquals(expectedFilm, topNMostPopular.stream().findFirst().get());
+    }
+
+    @Test
+    void testMostPopularByGenreFilms() {
+        int n = 3;
+        Film expectedFilm = filmDdStorage.findById(2).get();
+        Collection<Film> topNMostPopular = filmDdStorage.findTopNMostPopular(n, Optional.of(6), Optional.empty());
+        assertThat(topNMostPopular).hasSize(2);
+        assertEquals(expectedFilm, topNMostPopular.stream().findFirst().get());
+    }
+
+    @Test
+    void testMostPopularByYearFilms() {
+        int n = 5;
+        Film expectedFilm = filmDdStorage.findById(1).get();
+        Collection<Film> topNMostPopular = filmDdStorage.findTopNMostPopular(n, Optional.empty(), Optional.of(1982));
+        assertThat(topNMostPopular).hasSize(1);
+        assertEquals(expectedFilm, topNMostPopular.stream().findFirst().get());
     }
 
     @Test
@@ -157,5 +181,36 @@ class FilmDbStorageTest {
         feeds = userDdStorage.getFeeds(2);
 
         assertThat(feeds).hasSize(2);
+        }
+        
+    @Test
+    void testFindCommonFilms() {
+        Collection<Film> commonFilms = filmDdStorage.findCommonFilms(1, 3);
+
+        assertThat(commonFilms).hasSize(2);
+
+        assertThat(commonFilms)
+                .anyMatch(film -> film.getId() == 3)
+                .anyMatch(film -> film.getId() == 2);
+    }
+
+    @Test
+    void commonFilmsWithWrongUserIdShouldBeEmpty() {
+        Collection<Film> commonFilms = filmDdStorage.findCommonFilms(WRONG_ID, 3);
+
+        assertThat(commonFilms).isEmpty();
+
+        commonFilms = filmDdStorage.findCommonFilms(1, WRONG_ID);
+
+        assertThat(commonFilms).isEmpty();
+    }
+
+    @Test
+    void getFilmsByDirectorTest() {
+        List<Film> filmListSortByYear = new ArrayList<>(filmDdStorage.getFilmsByDirector(2, "year"));
+        assertEquals("Terminator", filmListSortByYear.get(0).getName());
+
+        List<Film> filmListSortByLikes = new ArrayList<>(filmDdStorage.getFilmsByDirector(2, "likes"));
+        assertEquals("Snatch", filmListSortByLikes.get(0).getName());
     }
 }

@@ -5,7 +5,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
 import ru.yandex.practicum.filmorate.model.Feed;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.util.Collection;
@@ -15,15 +17,18 @@ import java.util.List;
 @Slf4j
 public class UserService {
     private static final String USER_NOT_EXISTS_MSG = "Пользователь с id = %d не существует";
-    private final UserStorage storage;
+    private final UserStorage userStorage;
 
-    public UserService(@Qualifier("userDdStorage") UserStorage storage) {
-        this.storage = storage;
+    private final FilmStorage filmStorage;
+
+    public UserService(@Qualifier("userDdStorage") UserStorage userStorage, @Qualifier("filmDbStorage") FilmStorage filmStorage) {
+        this.userStorage = userStorage;
+        this.filmStorage = filmStorage;
     }
 
     public User add(User user) {
         useLoginIfNameIsEmpty(user);
-        User savedUser = storage.save(user);
+        User savedUser = userStorage.save(user);
         log.info("Пользователь {} успешно добавлен и ему присвоен id = {}", savedUser.getName(), savedUser.getId());
         return savedUser;
     }
@@ -31,7 +36,7 @@ public class UserService {
     public User update(User newUser) {
         useLoginIfNameIsEmpty(newUser);
         int id = newUser.getId();
-        User updatedUser = storage.update(newUser)
+        User updatedUser = userStorage.update(newUser)
                 .orElseThrow(() ->
                         new UserNotFoundException(String.format(USER_NOT_EXISTS_MSG, id)));
         log.debug("Пользователь с id = {} успешно отправлен", id);
@@ -51,7 +56,7 @@ public class UserService {
     }
 
     public User getUserById(int id) {
-        User user = storage.findById(id)
+        User user = userStorage.findById(id)
                 .orElseThrow(() ->
                         new UserNotFoundException(String.format(USER_NOT_EXISTS_MSG, id)));
         log.debug("Пользователь с id = {} успешно отправлен", id);
@@ -60,18 +65,18 @@ public class UserService {
 
     public Collection<User> getAllUsers() {
         log.debug("Список всех пользователей успешно отправлен");
-        return storage.findAll();
+        return userStorage.findAll();
     }
 
     public void deleteUserById(int id) {
-        if (!storage.deleteById(id)) {
+        if (!userStorage.deleteById(id)) {
             throw new UserNotFoundException(String.format(USER_NOT_EXISTS_MSG, id));
         }
         log.debug("Пользователь с id = {} успешно удален", id);
     }
 
     public void sendFriendRequest(int fromUserId, int toUserId) {
-        if (storage.addFriend(fromUserId, toUserId)) {
+        if (userStorage.addFriend(fromUserId, toUserId)) {
             log.debug("Пользователь с id = {} теперь в списке друзей пользователя с id = {}", toUserId, fromUserId);
             return;
         }
@@ -80,7 +85,7 @@ public class UserService {
     }
 
     public void deleteFriend(int userId, int friendId) {
-        if (storage.removeFriend(userId, friendId)) {
+        if (userStorage.removeFriend(userId, friendId)) {
             log.debug("Пользователь с id = {} удален из друзей пользователя с id = {}", friendId, userId);
             return;
         }
@@ -91,15 +96,20 @@ public class UserService {
     public List<User> getCommonFriends(int  userId, int friendId) {
         log.debug("Список общих друзей для пользователя с id = {} и пользователя с id = {} отправлен",
                   userId, friendId);
-        return (List<User>) storage.findCommonFriendsByIds(userId, friendId);
+        return (List<User>) userStorage.findCommonFriendsByIds(userId, friendId);
     }
 
     public List<User> getFriendsById(int id) {
-        if (storage.findById(id).isEmpty()) {
+        if (userStorage.findById(id).isEmpty()) {
             throw new UserNotFoundException(String.format(USER_NOT_EXISTS_MSG, id));
         }
         log.debug("Список друзей для пользователя с id = {} отправлен", id);
-        return (List<User>) storage.findFriendsById(id);
+        return (List<User>) userStorage.findFriendsById(id);
+    }
+
+    public List<Film> getRecommendations(int userId) {
+        log.debug("Список рекомендаций успешно выдан пользователю с id {}", userId);
+        return (List<Film>) filmStorage.getRecommendations(userId);
     }
 
     public List<Feed> getFeeds(int id) {
