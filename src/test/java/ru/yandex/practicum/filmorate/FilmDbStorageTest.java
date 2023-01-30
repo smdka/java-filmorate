@@ -108,10 +108,34 @@ class FilmDbStorageTest {
     }
 
     @Test
-    void testMostPopularFilms() {
+    void testLimitInMostPopularFilms() {
         int n = 2;
-        Collection<Film> topNMostPopular = filmDdStorage.findTopNMostPopular(n);
-        assertThat(topNMostPopular).hasSize(n);
+        filmDdStorage.addLike(1, 1);
+        filmDdStorage.addLike(1, 2);
+        filmDdStorage.addLike(1, 3);
+        filmDdStorage.addLike(1, 4);
+        Film expectedFilm = filmDdStorage.findById(1).get();
+        Collection<Film> topNMostPopular = filmDdStorage.findTopNMostPopular(n, Optional.empty(), Optional.empty());
+        assertThat(topNMostPopular).hasSize(2);
+        assertEquals(expectedFilm, topNMostPopular.stream().findFirst().get());
+    }
+
+    @Test
+    void testMostPopularByGenreFilms() {
+        int n = 3;
+        Film expectedFilm = filmDdStorage.findById(2).get();
+        Collection<Film> topNMostPopular = filmDdStorage.findTopNMostPopular(n, Optional.of(6), Optional.empty());
+        assertThat(topNMostPopular).hasSize(2);
+        assertEquals(expectedFilm, topNMostPopular.stream().findFirst().get());
+    }
+
+    @Test
+    void testMostPopularByYearFilms() {
+        int n = 5;
+        Film expectedFilm = filmDdStorage.findById(1).get();
+        Collection<Film> topNMostPopular = filmDdStorage.findTopNMostPopular(n, Optional.empty(), Optional.of(1982));
+        assertThat(topNMostPopular).hasSize(1);
+        assertEquals(expectedFilm, topNMostPopular.stream().findFirst().get());
     }
 
     @Test

@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.storage.film;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
@@ -9,6 +10,9 @@ import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
+import ru.yandex.practicum.filmorate.utilities.recommendations.Recommender;
+import ru.yandex.practicum.filmorate.utilities.recommendations.Matrix;
+import ru.yandex.practicum.filmorate.utilities.sql.SqlArrayConverter;
 
 import java.sql.*;
 import java.sql.Date;
@@ -174,12 +178,26 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
-    public Collection<Film> findTopNMostPopular(int n) {
-        String sql = FIND_ALL +
-                "GROUP BY FILMS.ID " +
-                "ORDER BY COUNT(DISTINCT FL.LIKED_BY_USER_ID) DESC " +
-                "LIMIT ?";
-        return jdbcTemplate.query(sql, (rs, rowNum) -> mapRowToFilm(rs), n);
+    public Collection<Film> findTopNMostPopular(int limit, Optional<Integer> genreId, Optional<Integer> year) {
+        String sql;
+        String yearSql = "WHERE EXTRACT(YEAR from CAST(RELEASE_DATE as date)) = ? ";
+        String groupBySql = "GROUP BY FILMS.ID ";
+        String genreIdSql = "HAVING ARRAY_CONTAINS(GENRE_IDS, ?) ";
+        String limitSql = "ORDER BY COUNT(DISTINCT FL.LIKED_BY_USER_ID) DESC " +
+                          "LIMIT ?";
+
+        if (genreId.isPresent() && year.isPresent()) {
+            sql = FIND_ALL + yearSql + groupBySql + genreIdSql + limitSql;
+            return jdbcTemplate.query(sql, (rs, rowNum) -> mapRowToFilm(rs), year.get(), genreId.get(), limit);
+        } else if (genreId.isPresent()) {
+            sql = FIND_ALL + groupBySql + genreIdSql + limitSql;
+            return jdbcTemplate.query(sql, (rs, rowNum) -> mapRowToFilm(rs), genreId.get(), limit);
+        } else if (year.isPresent()) {
+            sql = FIND_ALL + yearSql + groupBySql + limitSql;
+            return jdbcTemplate.query(sql, (rs, rowNum) -> mapRowToFilm(rs), year.get(), limit);
+        }
+        sql = FIND_ALL + groupBySql + limitSql;
+        return jdbcTemplate.query(sql, (rs, rowNum) -> mapRowToFilm(rs), limit);
     }
 
     @Override
@@ -193,6 +211,54 @@ public class FilmDbStorage implements FilmStorage {
         String sql = "DELETE FROM FILM_LIKES " +
                 "WHERE FILM_ID = ? AND LIKED_BY_USER_ID = ?";
         return jdbcTemplate.update(sql, filmId, userId) > 0;
+    }
+
+    @Override
+    public Collection<Film> getRecommendations(int userId) {
+        //first query to make recommendations
+        String sql1 =
+                "SELECT fl.film_id film_ids, " +
+                        "ARRAY_AGG(fl.liked_by_user_id) user_ids, " +
+                        "ARRAY_AGG(fl.liked_by_user_id/fl.liked_by_user_id) rates " +
+                        "FROM FILM_LIKES AS FL " +
+                        "GROUP BY FL.film_id";
+        Matrix matrix = jdbcTemplate.query(sql1, this::makeMatrixForRecommendations);
+        if (matrix == null) {
+            return Collections.emptyList();
+        }
+        Recommender recommender = new Recommender(matrix, true);
+        List<Integer> recommendations = recommender.getRecommendations(userId, Optional.empty());
+        //second query for recommended films if necessary
+        if (!recommendations.isEmpty()) {
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.append("(");
+            for (Integer filmId : recommendations) {
+                stringBuilder.append(filmId).append(", ");
+            }
+            String sql2 = FIND_ALL +
+                    "WHERE FILMS.ID IN " +
+                    stringBuilder.substring(0, stringBuilder.length() - 2) + ") GROUP BY FILMS.ID";
+            return jdbcTemplate.query(sql2, (rs, rowNum) -> mapRowToFilm(rs));
+        } else {
+            return Collections.emptyList();
+        }
+    }
+
+    private Matrix makeMatrixForRecommendations (ResultSet rs) throws SQLException {
+        Matrix data = new Matrix();
+        try {
+            SqlArrayConverter converter = new SqlArrayConverter();
+            while (rs.next()) {
+                List<Integer> userIds = converter.convert(rs.getArray("user_ids"));
+                List<Integer> rates = converter.convert(rs.getArray("rates"));
+                for (int i = 0; i < userIds.size(); i++) {
+                    data.writeValue(rs.getInt("film_ids"), userIds.get(i), Optional.of(rates.get(i).doubleValue()));
+                }
+            }
+            return data;
+        } catch (EmptyResultDataAccessException exp) {
+            return null;
+        }
     }
 
     @Override

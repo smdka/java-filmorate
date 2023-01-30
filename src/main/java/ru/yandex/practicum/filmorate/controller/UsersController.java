@@ -6,7 +6,9 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.service.UserService;
 
 import javax.validation.Valid;
@@ -18,10 +20,12 @@ import java.util.List;
 @RequestMapping("/users")
 public class UsersController {
     private final UserService userService;
+    private final FilmService filmService;
 
     @Autowired
-    public UsersController(UserService userService) {
+    public UsersController(UserService userService, FilmService filmService) {
         this.userService = userService;
+        this.filmService = filmService;
     }
 
     @GetMapping
@@ -47,6 +51,13 @@ public class UsersController {
         log.debug("Получен запрос GET /users/{}/friends/common/{}", id, otherId);
         return userService.getCommonFriends(id, otherId);
     }
+
+    @GetMapping("/{id}/recommendations")
+    public List<Film> getRecommendations(@PathVariable int id) {
+        log.debug("Получен запрос GET /users/{}/recommendations", id);
+        return userService.getRecommendations(id);
+    }
+
 
     @PostMapping
     public User add(@Valid @RequestBody User user, BindingResult bindingResult) {
@@ -94,4 +105,8 @@ public class UsersController {
         ifNegativeThrow(userId);
         userService.deleteUserById(userId);
     }
+
+
+
+
 }

@@ -12,6 +12,7 @@ import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.util.Collection;
+import java.util.Optional;
 import java.util.List;
 
 @Service
@@ -91,9 +92,9 @@ public class FilmService {
         log.debug("Не удалось удалить лайк от пользователя с id = {} в фильм с id = {}", userId, filmId);
     }
 
-    public Collection<Film> getTopNMostPopular(int n) {
-        log.debug("Топ {} фильмов успешно отправлен", n);
-        return filmStorage.findTopNMostPopular(n);
+    public Collection<Film> getTopNMostPopular(int limit, Optional<Integer> genreId, Optional<Integer> year) {
+        log.debug("Топ {} фильмов успешно отправлен", limit);
+        return filmStorage.findTopNMostPopular(limit, genreId, year);
     }
 
     public List<Film> searchFilm(String query, String by) {
@@ -109,4 +110,5 @@ public class FilmService {
         log.debug("Список общих фильмов пользователя с id = {} и его друга с id = {} отправлен", userId, friendId);
         return filmStorage.findCommonFilms(userId, friendId);
     }
+
 }
