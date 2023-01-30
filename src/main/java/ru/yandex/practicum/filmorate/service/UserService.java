@@ -18,7 +18,6 @@ import java.util.List;
 public class UserService {
     private static final String USER_NOT_EXISTS_MSG = "Пользователь с id = %d не существует";
     private final UserStorage userStorage;
-
     private final FilmStorage filmStorage;
 
     public UserService(@Qualifier("userDdStorage") UserStorage userStorage, @Qualifier("filmDbStorage") FilmStorage filmStorage) {
@@ -113,11 +112,11 @@ public class UserService {
     }
 
     public List<Feed> getFeeds(int id) {
-        if (storage.findById(id).isEmpty()) {
+        if (userStorage.findById(id).isEmpty()) {
             throw new UserNotFoundException(String.format(USER_NOT_EXISTS_MSG, id));
         }
         log.debug("Лента новостей для пользователя с id = {} отправлена", id);
-        return storage.getFeeds(id);
+        return userStorage.getFeeds(id);
     }
 }
 
