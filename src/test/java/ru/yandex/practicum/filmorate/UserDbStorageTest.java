@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.jdbc.Sql;
+import ru.yandex.practicum.filmorate.model.Feed;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserDdStorage;
 
@@ -129,5 +130,21 @@ class UserDbStorageTest {
         friends = userDdStorage.findFriendsById(1);
 
         assertThat(friends).isEmpty();
+    }
+
+    @Test
+    void feedAfterFriendTest(){
+        Collection<Feed> feeds = userDdStorage.getFeeds(1);
+        assertThat(feeds).hasSize(0);
+
+        userDdStorage.addFriend(1,2);
+        feeds = userDdStorage.getFeeds(1);
+
+        assertThat(feeds).hasSize(1);
+
+        userDdStorage.removeFriend(1,2);
+        feeds = userDdStorage.getFeeds(1);
+
+        assertThat(feeds).hasSize(2);
     }
 }

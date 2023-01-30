@@ -6,10 +6,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.jdbc.Sql;
+import ru.yandex.practicum.filmorate.model.Feed;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
+import ru.yandex.practicum.filmorate.storage.user.UserDdStorage;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -25,6 +27,7 @@ class FilmDbStorageTest {
     private static final int WRONG_ID = 9999;
     private static final int EXPECTED_FILMS_COUNT = 3;
     private final FilmDbStorage filmDdStorage;
+    private final UserDdStorage userDdStorage;
 
     @Test
     void testFindFilmById() {
@@ -138,5 +141,21 @@ class FilmDbStorageTest {
         assertEquals(likesCount - 1, film.getLikesCount());
 
         assertThat(filmDdStorage.deleteLike(WRONG_ID, 2)).isFalse();
+    }
+
+    @Test
+    void feedWithLikeTest(){
+        Collection<Feed> feeds = userDdStorage.getFeeds(2);
+        assertThat(feeds).hasSize(0);
+
+        filmDdStorage.addLike(1, 2);
+        feeds = userDdStorage.getFeeds(2);
+
+        assertThat(feeds).hasSize(1);
+
+        filmDdStorage.deleteLike(1, 2);
+        feeds = userDdStorage.getFeeds(2);
+
+        assertThat(feeds).hasSize(2);
     }
 }

@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.storage.review;
 
 import lombok.RequiredArgsConstructor;
+import org.apache.catalina.valves.rewrite.RewriteCond;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
@@ -97,10 +98,11 @@ public class ReviewDbStorage implements ReviewStorage {
 
     @Override
     public boolean deleteById(int id) {
-        Integer filmId = jdbcTemplate.queryForObject("SELECT FILM_ID FROM REVIEWS WHERE ID = ?", Integer.class, id);
-        if (filmId != null && jdbcTemplate.update("DELETE FROM REVIEWS WHERE ID = ?", id) > 0) {
+        List<Review> review = jdbcTemplate.query("SELECT * FROM REVIEWS WHERE ID = ?",
+                (resultSet, rowNum) -> mapRowToReview(resultSet),  id);
+        if (!review.isEmpty() && jdbcTemplate.update("DELETE FROM REVIEWS WHERE ID = ?", id) > 0) {
             jdbcTemplate.update(ADD_FEED,
-                    id, Instant.now().toEpochMilli(), "REVIEW", "REMOVE", filmId);
+                    id, Instant.now().toEpochMilli(), "REVIEW", "REMOVE", review.get(0).getFilmId());
             return true;
         }
         return false;

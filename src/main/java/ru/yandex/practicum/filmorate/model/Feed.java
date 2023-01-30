@@ -19,7 +19,6 @@ public class Feed {
     private int eventId;
 
     @NotNull
-    @Positive
     private int userId;
 
     @NotNull
