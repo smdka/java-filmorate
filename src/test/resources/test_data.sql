@@ -19,7 +19,7 @@ VALUES ('user1@yandex.ru', 'Login1','Name1','19890501'),
        ('user5@yandex.ru', 'Login5','Name5','19890505');
 
 INSERT INTO FILMS (NAME, DESCRIPTION, RELEASE_DATE, DURATION, MPA_ID)
-VALUES ('Terminator', 'Film about killer-machine','19830823',120,2),
+VALUES ('Terminator', 'Film about killer-machine','19820823',120,2),
        ('Snatch', 'Film about gypsies','19831123',120,3),
        ('Jaws', 'Film about killer shark','19850823',120,5);
 

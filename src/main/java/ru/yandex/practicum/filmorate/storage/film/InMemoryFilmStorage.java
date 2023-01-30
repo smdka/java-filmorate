@@ -6,40 +6,35 @@ import ru.yandex.practicum.filmorate.model.Film;
 
 import java.util.*;
 
-import static java.util.stream.Collectors.*;
+import static java.util.stream.Collectors.toList;
 
 @Repository
-public class InMemoryFilmStorage implements FilmStorage {
+public class InMemoryFilmStorage {
     private final Map<Integer, Film> films;
 
     public InMemoryFilmStorage() {
         this.films = new HashMap<>();
     }
 
-    @Override
     public Collection<Film> findAll() {
         return films.values();
     }
 
-    @Override
     public Film save(Film film) {
         films.put(film.getId(), film);
         return film;
     }
 
-    @Override
     public Optional<Film> update(Film film) {
         return films.replace(film.getId(), film) == null ?
                 Optional.empty() :
                 Optional.of(film);
     }
 
-    @Override
     public boolean deleteById(int filmId) {
         return films.remove(filmId) != null;
     }
 
-    @Override
     public Optional<Film> findById(int id) {
         Film film = films.get(id);
         return film == null ?
@@ -47,7 +42,6 @@ public class InMemoryFilmStorage implements FilmStorage {
                 Optional.of(film);
     }
 
-    @Override
     public Collection<Film> findTopNMostPopular(int n) {
         return films.values().stream()
                 .sorted(Comparator.comparingInt(Film::getLikesCount).reversed())
@@ -55,7 +49,6 @@ public class InMemoryFilmStorage implements FilmStorage {
                 .collect(toList());
     }
 
-    @Override
     public boolean addLike(int filmId, int userId) {
         Film film = films.get(filmId);
         if (film == null) {
@@ -65,7 +58,6 @@ public class InMemoryFilmStorage implements FilmStorage {
         return true;
     }
 
-    @Override
     public boolean deleteLike(int filmId, int userId) {
         Film film = films.get(filmId);
         if (film == null) {
@@ -79,7 +71,6 @@ public class InMemoryFilmStorage implements FilmStorage {
         return null;
     }
 
-    @Override
     public Collection<Film> findCommonFilms(int userId, int friendId) {
         return films.values().stream()
                 .filter(film -> film.getWhoLikedUserIds().contains(userId) &&
@@ -88,7 +79,6 @@ public class InMemoryFilmStorage implements FilmStorage {
                 .collect(toList());
     }
 
-    @Override
     public Collection<Film> getFilmsByDirector(int directorId, String sortBy) {
         SortedSet<Director> directors;
         Collection<Film> result;

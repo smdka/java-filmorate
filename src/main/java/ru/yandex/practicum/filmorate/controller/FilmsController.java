@@ -14,6 +14,7 @@ import javax.validation.Valid;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Objects;
+import java.util.Optional;
 
 @Slf4j
 @RestController
@@ -39,9 +40,12 @@ public class FilmsController {
     }
 
     @GetMapping("/popular")
-    public Collection<Film> getMostPopularFilms(@RequestParam(defaultValue = "10") int count) {
-        log.debug("Получен запрос GET /films/popular/{}", count);
-        return filmService.getTopNMostPopular(count);
+    public Collection<Film> getMostPopularFilms(@RequestParam(defaultValue = "10", name = "count", required = false) int limit,
+                                                @RequestParam(name = "genreId", required = false) Optional<Integer> genreId,
+                                                @RequestParam(name = "year", required = false) Optional<Integer> year) {
+        String request = "Получен запрос GET /films/popular/count=" + limit + (genreId.isPresent() ? "&genreId=" + genreId : "") + (year.isPresent() ? "&year=" + year : "");
+        log.debug(request);
+        return filmService.getTopNMostPopular(limit, genreId, year);
     }
 
     @GetMapping("/common")
