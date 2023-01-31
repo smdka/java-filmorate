@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.SearchBy;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.storage.film.SortBy;
 
@@ -106,11 +107,12 @@ public class FilmsController {
     }
 
     @GetMapping("/search")
-    public List<Film> searchFilm(@RequestParam String query, @RequestParam String by) {
-        if (query == null || by == null || query.isEmpty() || by.isEmpty()) {
-            throw new ValidationException("Не корректный запрос на поиск");
+    public List<Film> searchFilm(@RequestParam String query, @RequestParam SearchBy[] by) {
+        if (by.length > SearchBy.values().length) {
+            throw new IllegalArgumentException(String.format("Получен запросGET /films/search?query=%s&by=%s",
+                    query, Arrays.toString(by)));
         }
-        log.debug("Получен запрос GEt /films/search?query= {} &by=by {}", query, by);
+        log.debug("Получен запрос GEt /films/search?query= {}&by={}", query, by);
         List<Film> filmsForReturn = filmService.searchFilm(query, by);
         return filmsForReturn;
     }

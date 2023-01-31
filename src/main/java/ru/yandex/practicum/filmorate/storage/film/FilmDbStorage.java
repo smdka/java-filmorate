@@ -6,10 +6,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
-import ru.yandex.practicum.filmorate.model.Director;
-import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.model.Mpa;
+import ru.yandex.practicum.filmorate.model.*;
 import ru.yandex.practicum.filmorate.utilities.recommendations.Recommender;
 import ru.yandex.practicum.filmorate.utilities.recommendations.Matrix;
 import ru.yandex.practicum.filmorate.utilities.sql.SqlArrayConverter;
@@ -27,7 +24,7 @@ import static java.util.stream.Collectors.*;
 public class FilmDbStorage implements FilmStorage {
     private static final String FIND_ALL =
             "SELECT FILMS.*, " +
-                   "MPA.NAME AS MPA_NAME, " +
+                    "MPA.NAME AS MPA_NAME, " +
                     "YEAR(RELEASE_DATE) AS RELEASE_YEAR, " +
                     "ARRAY_AGG(FG.GENRE_ID) AS GENRE_IDS, " +
                     "ARRAY_AGG(G.NAME) AS GENRE_NAMES, " +
@@ -189,7 +186,7 @@ public class FilmDbStorage implements FilmStorage {
         String groupBySql = "GROUP BY FILMS.ID ";
         String genreIdSql = "HAVING ARRAY_CONTAINS(GENRE_IDS, ?) ";
         String limitSql = "ORDER BY COUNT(DISTINCT FL.LIKED_BY_USER_ID) DESC " +
-                          "LIMIT ?";
+                "LIMIT ?";
 
         if (genreId.isPresent() && year.isPresent()) {
             sql = FIND_ALL + yearSql + groupBySql + genreIdSql + limitSql;
@@ -216,7 +213,7 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public boolean deleteLike(int filmId, int userId) {
         String sql = "DELETE FROM FILM_LIKES " +
-                     "WHERE FILM_ID = ? AND LIKED_BY_USER_ID = ?";
+                "WHERE FILM_ID = ? AND LIKED_BY_USER_ID = ?";
         jdbcTemplate.update(ADD_FEED,
                 userId, Instant.now().toEpochMilli(), "LIKE", "REMOVE", filmId);
 
@@ -254,7 +251,7 @@ public class FilmDbStorage implements FilmStorage {
         }
     }
 
-    private Matrix makeMatrixForRecommendations (ResultSet rs) throws SQLException {
+    private Matrix makeMatrixForRecommendations(ResultSet rs) throws SQLException {
         Matrix data = new Matrix();
         try {
             SqlArrayConverter converter = new SqlArrayConverter();
@@ -321,46 +318,30 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
-    public List<Film> searchFilm(String query, String by) {
-        String byLow = "%" + query.toLowerCase() + "%";
-        String search = "SELECT FILMS.*, " +
-                "MPA.NAME AS MPA_NAME, " +
-                "YEAR(RELEASE_DATE) AS RELEASE_YEAR, " +
-                "ARRAY_AGG(FG.GENRE_ID) AS GENRE_IDS, " +
-                "ARRAY_AGG(G.NAME) AS GENRE_NAMES, " +
-                "ARRAY_AGG(FL.LIKED_BY_USER_ID) AS LIKES," +
-                "ARRAY_AGG(FD. DIRECTOR_ID) AS DIRECTOR_IDS, " +
-                "ARRAY_AGG (D.NAME) AS DIRECTOR_NAMES, " +
-                "ARRAY_AGG(FL.LIKED_BY_USER_ID) AS WHO_LIKED_IDS, " +
-                "FROM films " +
-                "LEFT JOIN MPA on FILMS.MPA_ID = MPA.ID " +
-                "LEFT JOIN FILM_GENRE FG on FILMS.ID = FG.FILM_ID " +
-                "LEFT JOIN FILM_DIRECTOR FD on FILMS.ID = FD.FILM_ID " +
-                "LEFT JOIN GENRES G on G.ID = FG.GENRE_ID " +
-                "LEFT JOIN DIRECTORS D on D.ID = FD.DIRECTOR_ID " +
-                "LEFT JOIN FILM_LIKES FL on FILMS.ID = FL.FILM_ID ";
+    public List<Film> searchForFilmsByTitle(String query) {
+        String sql = FIND_ALL +
+                "WHERE FILMS.NAME ILIKE ? " +
+                "GROUP BY FILMS.ID " +
+                "ORDER BY FILMS.ID DESC ";
+        return jdbcTemplate.query(sql, (rs, rowNum) -> mapRowToFilm(rs), "%" + query + "%");
+    }
 
-        String groupBy = " GROUP BY films.ID ORDER BY films.id DESC";
+    @Override
+    public List<Film> searchForFilmsByDirector(String query) {
+        String sql = FIND_ALL +
+                "WHERE D.NAME ILIKE ? " +
+                "GROUP BY FILMS.ID " +
+                "ORDER BY FILMS.ID DESC ";
+        return jdbcTemplate.query(sql, (rs, rowNum) -> mapRowToFilm(rs), "%" + query + "%");
+    }
 
-        if (by.equals("director")) {
-            String sql = search + "WHERE LOWER (D.NAME) LIKE ? " + groupBy;
-            List<Film> filmsForReturn = jdbcTemplate.query(sql, (rs, rowNum) -> mapRowToFilm(rs), byLow);
-            return filmsForReturn;
-
-        } else if (by.equals("title")) {
-            String sql = search + " WHERE LOWER (films.NAME) LIKE ? " + groupBy;
-            List<Film> filmsForReturn = jdbcTemplate.query(sql, (rs, rowNum) -> mapRowToFilm(rs), byLow);
-            return filmsForReturn;
-
-        } else if (by.equals("title,director")) {
-            String sql = search + "WHERE (LOWER (D.NAME)) LIKE ?  or (LOWER (films.NAME)) LIKE ? " + groupBy;
-            List<Film> filmsForReturn = jdbcTemplate.query(sql, (rs, rowNum) -> mapRowToFilm(rs), byLow, byLow);
-            return filmsForReturn;
-
-        } else {
-            List<Film> forReturn = new ArrayList<>();
-            return forReturn;
-        }
+    @Override
+    public List<Film> searchForFilmsByDirectorAndTitle(String query) {
+        String sql = FIND_ALL +
+                "WHERE D.NAME ILIKE ? OR FILMS.NAME ILIKE ? " +
+                "GROUP BY FILMS.ID " +
+                "ORDER BY FILMS.ID DESC ";
+        return jdbcTemplate.query(sql, (rs, rowNum) -> mapRowToFilm(rs), "%" + query + "%", "%" + query + "%");
     }
 
     private String requestParamSQLMap(String sortBy) {

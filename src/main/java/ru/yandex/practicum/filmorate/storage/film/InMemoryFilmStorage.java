@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.storage.film;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.SearchBy;
 
 import java.util.*;
 
@@ -101,8 +102,7 @@ public class InMemoryFilmStorage {
         return result;
     }
 
-    @Override
-    public List<Film> searchFilm(String query, String by) {
+    public List<Film> searchForFilm(String query, SearchBy[] by) {
         return null;
     }
 }
