@@ -93,10 +93,10 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public Film save(Film film) {
         KeyHolder keyHolder = new GeneratedKeyHolder();
-        String SQL_ADD_FILM = "INSERT INTO FILMS (NAME, DESCRIPTION, RELEASE_DATE, DURATION, MPA_ID) " +
+        String sql = "INSERT INTO FILMS (NAME, DESCRIPTION, RELEASE_DATE, DURATION, MPA_ID) " +
                 "VALUES (?, ?, ?, ?, ?)";
         jdbcTemplate.update(connection -> {
-            PreparedStatement stm = connection.prepareStatement(SQL_ADD_FILM, new String[]{"ID"});
+            PreparedStatement stm = connection.prepareStatement(sql, new String[]{"ID"});
             stm.setString(1, film.getName());
             stm.setString(2, film.getDescription());
             stm.setDate(3, Date.valueOf(film.getReleaseDate()));
@@ -205,19 +205,22 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public boolean addLike(int filmId, int userId) {
         String sql = "MERGE INTO FILM_LIKES(FILM_ID, LIKED_BY_USER_ID) VALUES (?, ?)";
-        jdbcTemplate.update(ADD_FEED,
-                userId, Instant.now().toEpochMilli(), "LIKE", "ADD", filmId);
-        return jdbcTemplate.update(sql, filmId, userId) > 0;
+        if (jdbcTemplate.update(sql, filmId, userId) > 0) {
+            jdbcTemplate.update(ADD_FEED, userId, Instant.now().toEpochMilli(), "LIKE", "ADD", filmId);
+            return true;
+        }
+        return false;
     }
 
     @Override
     public boolean deleteLike(int filmId, int userId) {
         String sql = "DELETE FROM FILM_LIKES " +
                 "WHERE FILM_ID = ? AND LIKED_BY_USER_ID = ?";
-        jdbcTemplate.update(ADD_FEED,
-                userId, Instant.now().toEpochMilli(), "LIKE", "REMOVE", filmId);
-
-        return jdbcTemplate.update(sql, filmId, userId) > 0;
+        if (jdbcTemplate.update(sql, filmId, userId) > 0) {
+            jdbcTemplate.update(ADD_FEED, userId, Instant.now().toEpochMilli(), "LIKE", "REMOVE", filmId);
+            return true;
+        }
+        return false;
     }
 
     @Override
