@@ -6,6 +6,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.Feed;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.FilmService;
@@ -106,7 +107,10 @@ public class UsersController {
         userService.deleteUserById(userId);
     }
 
-
-
-
+    @GetMapping("/{id}/feed")
+    public List<Feed> getFeeds(@PathVariable int id){
+        log.debug("Получен запрос GET /users/{}/feed", id);
+        ifNegativeThrow(id);
+        return userService.getFeeds(id);
+    }
 }
