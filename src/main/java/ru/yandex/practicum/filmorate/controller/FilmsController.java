@@ -7,9 +7,11 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.SearchBy;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.storage.film.SortBy;
 
+import java.util.*;
 import javax.validation.Valid;
 import java.util.Arrays;
 import java.util.Collection;
@@ -56,11 +58,11 @@ public class FilmsController {
 
     @GetMapping("/director/{directorId}")
     public Collection<Film> getFilmsByDirector(@PathVariable int directorId, @RequestParam String sortBy) {
-            boolean present = Arrays.stream(SortBy.values()).anyMatch(x -> Objects.equals(x.toString(), sortBy));
-        if(!present){
+        boolean present = Arrays.stream(SortBy.values()).anyMatch(x -> Objects.equals(x.toString(), sortBy));
+        if (!present) {
             throw new RuntimeException("неверный запрос параметра сортировки");
         }
-        log.debug("получен запрос GET /films/director/{directorId}?sortBy={}", sortBy );
+        log.debug("получен запрос GET /films/director/{directorId}?sortBy={}", sortBy);
         return filmService.getFilmsByDirector(directorId, sortBy);
     }
 
@@ -103,6 +105,18 @@ public class FilmsController {
         ifNegativeThrow(userId);
         filmService.deleteLikeFromFilm(filmId, userId);
     }
+
+    @GetMapping("/search")
+    public List<Film> searchFilm(@RequestParam String query, @RequestParam SearchBy[] by) {
+        if (by.length > SearchBy.values().length) {
+            throw new IllegalArgumentException(String.format("Получен запросGET /films/search?query=%s&by=%s",
+                    query, Arrays.toString(by)));
+        }
+        log.debug("Получен запрос GEt /films/search?query= {}&by={}", query, by);
+        List<Film> filmsForReturn = filmService.searchFilm(query, by);
+        return filmsForReturn;
+    }
+
 
     @DeleteMapping("/{filmId}")
     public void delete(@PathVariable int filmId) {

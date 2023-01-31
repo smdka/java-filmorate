@@ -6,10 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.jdbc.Sql;
-import ru.yandex.practicum.filmorate.model.Feed;
-import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.model.Mpa;
+import ru.yandex.practicum.filmorate.model.*;
 import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserDdStorage;
 
@@ -168,7 +165,7 @@ class FilmDbStorageTest {
     }
 
     @Test
-    void feedWithLikeTest(){
+    void feedWithLikeTest() {
         Collection<Feed> feeds = userDdStorage.getFeeds(2);
         assertThat(feeds).hasSize(0);
 
@@ -181,8 +178,8 @@ class FilmDbStorageTest {
         feeds = userDdStorage.getFeeds(2);
 
         assertThat(feeds).hasSize(2);
-        }
-        
+    }
+
     @Test
     void testFindCommonFilms() {
         Collection<Film> commonFilms = filmDdStorage.findCommonFilms(1, 3);
@@ -212,5 +209,28 @@ class FilmDbStorageTest {
 
         List<Film> filmListSortByLikes = new ArrayList<>(filmDdStorage.getFilmsByDirector(2, "likes"));
         assertEquals("Snatch", filmListSortByLikes.get(0).getName());
+    }
+
+    @Test
+    void getFilmsSearchedForName() {
+        List<Film> films = new ArrayList<>(filmDdStorage.searchForFilmsByTitle("SnA"));
+        assertEquals(2, films.get(0).getId());
+        assertEquals("Snatch", films.get(0).getName());
+    }
+
+    @Test
+    void getFilmsSearchedForDirector() {
+        List<Film> films = new ArrayList<>(filmDdStorage.searchForFilmsByDirector("Cas"));
+        assertEquals(3, films.get(0).getId());
+        assertEquals("Jaws", films.get(0).getName());
+        assertEquals("Lucas", films.get(0).getDirectors().first().getName());
+    }
+
+    @Test
+    void getFilmsSearchedForDirectorAndTitle() {
+        List<Film> films = new ArrayList<>(filmDdStorage.searchForFilmsByDirectorAndTitle("s"));
+        assertEquals(2, films.size());
+        assertEquals("Jaws", films.get(0).getName());
+        assertEquals("Snatch", films.get(1).getName());
     }
 }
