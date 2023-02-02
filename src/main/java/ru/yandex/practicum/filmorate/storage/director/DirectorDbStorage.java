@@ -64,7 +64,7 @@ public class DirectorDbStorage implements DirectorStorage {
                 director.getId()) == 0)
         {
             return Optional.empty();
-        };
+        }
 
         return Optional.of(director);
     }

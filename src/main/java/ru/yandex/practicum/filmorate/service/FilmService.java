@@ -7,7 +7,7 @@ import ru.yandex.practicum.filmorate.exception.DirectorNotFoundException;
 import ru.yandex.practicum.filmorate.exception.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.SearchBy;
+import ru.yandex.practicum.filmorate.utilities.enums.SearchBy;
 import ru.yandex.practicum.filmorate.storage.director.DirectorStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
@@ -15,6 +15,7 @@ import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @Slf4j
@@ -26,7 +27,7 @@ public class FilmService {
     private final DirectorStorage directorStorage;
 
     public FilmService(@Qualifier("filmDbStorage") FilmStorage filmStorage,
-                       @Qualifier("userDdStorage") UserStorage userStorage,
+                       @Qualifier("userDbStorage") UserStorage userStorage,
                        DirectorStorage directorStorage) {
         this.filmStorage = filmStorage;
         this.userStorage =  userStorage;
@@ -98,11 +99,11 @@ public class FilmService {
         return filmStorage.findTopNMostPopular(limit, genreId, year);
     }
 
-    public List<Film> searchFilm(String query, SearchBy[] by) {
-       if (by.length ==SearchBy.values().length){
+    public List<Film> searchFilm(String query, Set<SearchBy> by) {
+       if (by.size() == SearchBy.values().length){
            log.debug("Поиск '{}' по названиям фильмов и режиссерам", query);
            return filmStorage.searchForFilmsByDirectorAndTitle (query);
-       }else if (by[0] == SearchBy.director){
+       }else if (by.contains(SearchBy.director)){
            log.debug("Поиск '{}' по режиссерам", query);
            return filmStorage.searchForFilmsByDirector (query);
        }

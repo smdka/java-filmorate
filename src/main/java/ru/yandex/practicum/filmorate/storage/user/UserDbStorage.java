@@ -5,12 +5,14 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
-import ru.yandex.practicum.filmorate.model.Feed;
+import ru.yandex.practicum.filmorate.model.FeedEvent;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.event.FeedEventStorage;
+import ru.yandex.practicum.filmorate.utilities.enums.EventType;
+import ru.yandex.practicum.filmorate.utilities.enums.Operation;
 
 import java.sql.*;
 import java.sql.Date;
-import java.time.Instant;
 import java.time.LocalDate;
 import java.util.*;
 
@@ -18,16 +20,16 @@ import static java.util.stream.Collectors.toSet;
 
 @Repository
 @RequiredArgsConstructor
-public class UserDdStorage implements UserStorage {
+public class UserDbStorage implements UserStorage {
     private static final String FIND_ALL =
             "SELECT USERS.*, " +
                    "ARRAY_AGG(UF.FRIEND_ID) AS FRIENDS_IDS " +
             "FROM USERS " +
             "LEFT JOIN USER_FRIENDS UF on USERS.ID = UF.USER_ID ";
-    private static final String ADD_FEED = "INSERT INTO USER_FEEDS " +
-            "(USER_ID, TIME_STAMP, EVENT_TYPE, OPERATION, ENTITY_ID) " +
-            "VALUES (?, ?, ?, ?, ?)";
+
     private final JdbcTemplate jdbcTemplate;
+    private final FeedEventStorage feedEventStorage;
+
 
     @Override
     public Collection<User> findAll() {
@@ -111,7 +113,7 @@ public class UserDdStorage implements UserStorage {
     }
 
     @Override
-    public Collection<User> findFriendsById(int id) {
+    public List<User> findFriendsById(int id) {
         String sql = FIND_ALL +
                     "INNER JOIN USER_FRIENDS U on USERS.ID = U.FRIEND_ID " +
                     "WHERE U.USER_ID = ? " +
@@ -124,7 +126,7 @@ public class UserDdStorage implements UserStorage {
         String sql = "MERGE INTO USER_FRIENDS(USER_ID, FRIEND_ID) " +
                      "VALUES (?, ?)";
         if (jdbcTemplate.update(sql, userId, friendId) > 0) {
-            jdbcTemplate.update(ADD_FEED, userId, Instant.now().toEpochMilli(), "FRIEND", "ADD", friendId);
+            feedEventStorage.save(userId, EventType.FRIEND, Operation.ADD, friendId);
             return true;
         }
         return false;
@@ -135,14 +137,14 @@ public class UserDdStorage implements UserStorage {
         String sql = "DELETE FROM USER_FRIENDS " +
                      "WHERE USER_ID = ? AND FRIEND_ID = ?";
         if (jdbcTemplate.update(sql, userId, friendId) > 0) {
-            jdbcTemplate.update(ADD_FEED, userId, Instant.now().toEpochMilli(), "FRIEND", "REMOVE", friendId);
+            feedEventStorage.save(userId, EventType.FRIEND, Operation.REMOVE, friendId);
             return true;
         }
         return false;
     }
 
     @Override
-    public Collection<User> findCommonFriendsByIds(int firstUserId, int secondUserId) {
+    public List<User> findCommonFriendsByIds(int firstUserId, int secondUserId) {
         String sql = FIND_ALL +
                     "JOIN USER_FRIENDS U on USERS.ID = U.FRIEND_ID " +
                     "JOIN USER_FRIENDS F on USERS.ID = F.FRIEND_ID " +
@@ -152,19 +154,7 @@ public class UserDdStorage implements UserStorage {
     }
 
     @Override
-    public List<Feed> getFeeds(int id) {
-        String sql = "SELECT * FROM USER_FEEDS WHERE USER_ID = ?";
-        return jdbcTemplate.query(sql, this::mapRowToFeed, id);
-    }
-
-    private Feed mapRowToFeed(ResultSet rs, int rowNum) throws SQLException {
-        return Feed.builder()
-                .eventId(rs.getInt("EVENT_ID"))
-                .userId(rs.getInt("USER_ID"))
-                .timestamp(rs.getLong("TIME_STAMP"))
-                .eventType(rs.getString("EVENT_TYPE"))
-                .operation(rs.getString("OPERATION"))
-                .entityId(rs.getInt("ENTITY_ID"))
-                .build();
+    public List<FeedEvent> getFeeds(int id) {
+        return feedEventStorage.findAllByUserId(id);
     }
 }

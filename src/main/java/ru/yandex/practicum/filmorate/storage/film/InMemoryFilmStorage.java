@@ -3,14 +3,13 @@ package ru.yandex.practicum.filmorate.storage.film;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.SearchBy;
 
 import java.util.*;
 
 import static java.util.stream.Collectors.toList;
 
 @Repository
-public class InMemoryFilmStorage {
+public class InMemoryFilmStorage implements FilmStorage {
     private final Map<Integer, Film> films;
 
     public InMemoryFilmStorage() {
@@ -41,6 +40,11 @@ public class InMemoryFilmStorage {
         return film == null ?
                 Optional.empty() :
                 Optional.of(film);
+    }
+
+    @Override
+    public Collection<Film> findTopNMostPopular(int limit, Optional<Integer> genreId, Optional<Integer> year) {
+        return null;
     }
 
     public Collection<Film> findTopNMostPopular(int n) {
@@ -81,7 +85,7 @@ public class InMemoryFilmStorage {
     }
 
     public Collection<Film> getFilmsByDirector(int directorId, String sortBy) {
-        SortedSet<Director> directors;
+        Set<Director> directors;
         Collection<Film> result;
         switch (sortBy.toLowerCase()) {
             case "year":
@@ -102,7 +106,18 @@ public class InMemoryFilmStorage {
         return result;
     }
 
-    public List<Film> searchForFilm(String query, SearchBy[] by) {
+    @Override
+    public List<Film> searchForFilmsByTitle(String query) {
+        return null;
+    }
+
+    @Override
+    public List<Film> searchForFilmsByDirector(String query) {
+        return null;
+    }
+
+    @Override
+    public List<Film> searchForFilmsByDirectorAndTitle(String query) {
         return null;
     }
 }

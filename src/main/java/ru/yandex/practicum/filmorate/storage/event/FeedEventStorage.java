@@ -1,0 +1,12 @@
+package ru.yandex.practicum.filmorate.storage.event;
+
+import ru.yandex.practicum.filmorate.model.FeedEvent;
+import ru.yandex.practicum.filmorate.utilities.enums.EventType;
+import ru.yandex.practicum.filmorate.utilities.enums.Operation;
+
+import java.util.List;
+
+public interface FeedEventStorage {
+    void save(int userId, EventType eventType, Operation operation, int entityId);
+    List<FeedEvent> findAllByUserId(int id);
+}

@@ -8,7 +8,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.jdbc.Sql;
 import ru.yandex.practicum.filmorate.model.*;
 import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
-import ru.yandex.practicum.filmorate.storage.user.UserDdStorage;
+import ru.yandex.practicum.filmorate.storage.user.UserDbStorage;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -24,7 +24,7 @@ class FilmDbStorageTest {
     private static final int WRONG_ID = 9999;
     private static final int EXPECTED_FILMS_COUNT = 3;
     private final FilmDbStorage filmDdStorage;
-    private final UserDdStorage userDdStorage;
+    private final UserDbStorage userDbStorage;
 
     @Test
     void testFindFilmById() {
@@ -166,18 +166,18 @@ class FilmDbStorageTest {
 
     @Test
     void feedWithLikeTest() {
-        Collection<Feed> feeds = userDdStorage.getFeeds(2);
-        assertThat(feeds).hasSize(0);
+        Collection<FeedEvent> feedEvents = userDbStorage.getFeeds(2);
+        assertThat(feedEvents).hasSize(0);
 
         filmDdStorage.addLike(1, 2);
-        feeds = userDdStorage.getFeeds(2);
+        feedEvents = userDbStorage.getFeeds(2);
 
-        assertThat(feeds).hasSize(1);
+        assertThat(feedEvents).hasSize(1);
 
         filmDdStorage.deleteLike(1, 2);
-        feeds = userDdStorage.getFeeds(2);
+        feedEvents = userDbStorage.getFeeds(2);
 
-        assertThat(feeds).hasSize(2);
+        assertThat(feedEvents).hasSize(2);
     }
 
     @Test
@@ -223,7 +223,6 @@ class FilmDbStorageTest {
         List<Film> films = new ArrayList<>(filmDdStorage.searchForFilmsByDirector("Cas"));
         assertEquals(3, films.get(0).getId());
         assertEquals("Jaws", films.get(0).getName());
-        assertEquals("Lucas", films.get(0).getDirectors().first().getName());
     }
 
     @Test

@@ -6,10 +6,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.jdbc.Sql;
-import ru.yandex.practicum.filmorate.model.Feed;
+import ru.yandex.practicum.filmorate.model.FeedEvent;
 import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.storage.review.ReviewDbStorage;
-import ru.yandex.practicum.filmorate.storage.user.UserDdStorage;
+import ru.yandex.practicum.filmorate.storage.user.UserDbStorage;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -27,7 +27,7 @@ class ReviewDbStorageTest {
     private static final int WRONG_ID = 9999;
     private static final int EXPECTED_REVIEWS_COUNT = 3;
     private final ReviewDbStorage reviewDbStorage;
-    private final UserDdStorage userDdStorage;
+    private final UserDbStorage userDbStorage;
 
     @Test
     void findByIdTest() {
@@ -183,8 +183,8 @@ class ReviewDbStorageTest {
 
     @Test
     void feedWithReviewTest(){
-        Collection<Feed> feeds = userDdStorage.getFeeds(1);
-        assertThat(feeds).hasSize(0);
+        Collection<FeedEvent> feedEvents = userDbStorage.getFeeds(1);
+        assertThat(feedEvents).hasSize(0);
 
         Review review = new Review();
         review.setContent("Review 4");
@@ -193,9 +193,9 @@ class ReviewDbStorageTest {
         review.setUserId(1);
         review.setIsPositive(true);
         reviewDbStorage.save(review);
-        feeds = userDdStorage.getFeeds(1);
+        feedEvents = userDbStorage.getFeeds(1);
 
-        assertThat(feeds).hasSize(1);
+        assertThat(feedEvents).hasSize(1);
 
         Review updatedReview = new Review();
         updatedReview.setReviewId(1);
@@ -205,14 +205,14 @@ class ReviewDbStorageTest {
         updatedReview.setUserId(2);
         updatedReview.setIsPositive(true);
         reviewDbStorage.update(updatedReview);
-        feeds = userDdStorage.getFeeds(1);
+        feedEvents = userDbStorage.getFeeds(1);
 
-        assertThat(feeds).hasSize(2);
+        assertThat(feedEvents).hasSize(2);
 
         reviewDbStorage.deleteById(1);
-        feeds = userDdStorage.getFeeds(1);
+        feedEvents = userDbStorage.getFeeds(1);
 
-        assertThat(feeds).hasSize(3);
+        assertThat(feedEvents).hasSize(3);
     }
 
 

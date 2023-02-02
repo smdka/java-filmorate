@@ -4,14 +4,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
-import ru.yandex.practicum.filmorate.model.Feed;
+import ru.yandex.practicum.filmorate.model.FeedEvent;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.util.Collection;
-import java.util.List;
 
 @Service
 @Slf4j
@@ -20,7 +19,8 @@ public class UserService {
     private final UserStorage userStorage;
     private final FilmStorage filmStorage;
 
-    public UserService(@Qualifier("userDdStorage") UserStorage userStorage, @Qualifier("filmDbStorage") FilmStorage filmStorage) {
+    public UserService(@Qualifier("userDbStorage") UserStorage userStorage,
+                       @Qualifier("filmDbStorage") FilmStorage filmStorage) {
         this.userStorage = userStorage;
         this.filmStorage = filmStorage;
     }
@@ -92,26 +92,26 @@ public class UserService {
                 friendId, userId);
     }
 
-    public List<User> getCommonFriends(int  userId, int friendId) {
+    public Collection<User> getCommonFriends(int  userId, int friendId) {
         log.debug("Список общих друзей для пользователя с id = {} и пользователя с id = {} отправлен",
                   userId, friendId);
-        return (List<User>) userStorage.findCommonFriendsByIds(userId, friendId);
+        return userStorage.findCommonFriendsByIds(userId, friendId);
     }
 
-    public List<User> getFriendsById(int id) {
+    public Collection<User> getFriendsById(int id) {
         if (userStorage.findById(id).isEmpty()) {
             throw new UserNotFoundException(String.format(USER_NOT_EXISTS_MSG, id));
         }
         log.debug("Список друзей для пользователя с id = {} отправлен", id);
-        return (List<User>) userStorage.findFriendsById(id);
+        return userStorage.findFriendsById(id);
     }
 
-    public List<Film> getRecommendations(int userId) {
+    public Collection<Film> getRecommendations(int userId) {
         log.debug("Список рекомендаций успешно выдан пользователю с id {}", userId);
-        return (List<Film>) filmStorage.getRecommendations(userId);
+        return filmStorage.getRecommendations(userId);
     }
 
-    public List<Feed> getFeeds(int id) {
+    public Collection<FeedEvent> getFeeds(int id) {
         if (userStorage.findById(id).isEmpty()) {
             throw new UserNotFoundException(String.format(USER_NOT_EXISTS_MSG, id));
         }

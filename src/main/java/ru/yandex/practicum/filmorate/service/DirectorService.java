@@ -12,6 +12,7 @@ import java.util.Collection;
 @Service
 @Slf4j
 public class DirectorService {
+    private static final String DIRECTOR_NOT_FOUND_MSG = "Режиссер c id=%d не найден";
     private final DirectorStorage directorDbStorage;
 
     public DirectorService(DirectorDbStorage directorDbStorage) {
@@ -31,14 +32,14 @@ public class DirectorService {
     public Director findById (int id) {
         Director director = directorDbStorage.findById(id)
                 .orElseThrow(() ->
-                        new DirectorNotFoundException(String.format("Режиссер {} не найден", id)));
+                        new DirectorNotFoundException(String.format(DIRECTOR_NOT_FOUND_MSG, id)));
         log.debug("Режиссер {} найден", id);
         return director;
     }
 
     public void deleteById (int id) {
         if(!directorDbStorage.deleteById(id)) {
-            throw new DirectorNotFoundException(String.format("Режиссер {} не найден", id));
+            throw new DirectorNotFoundException(String.format(DIRECTOR_NOT_FOUND_MSG, id));
         }
         log.debug("Режиссер {} удален", id);
     }
@@ -46,7 +47,7 @@ public class DirectorService {
     public Director update (Director director) {
         Director dir = directorDbStorage.update(director)
                 .orElseThrow(() ->
-                        new DirectorNotFoundException(String.format("Режиссер {} не найден", director.getId())));
+                        new DirectorNotFoundException(String.format(DIRECTOR_NOT_FOUND_MSG, director.getId())));
         log.debug("Режиссер {} обновлен", dir.getId());
         return dir;
     }

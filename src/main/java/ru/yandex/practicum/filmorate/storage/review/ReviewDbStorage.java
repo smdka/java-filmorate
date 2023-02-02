@@ -6,11 +6,13 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Review;
+import ru.yandex.practicum.filmorate.storage.event.FeedEventStorage;
+import ru.yandex.practicum.filmorate.utilities.enums.EventType;
+import ru.yandex.practicum.filmorate.utilities.enums.Operation;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -25,10 +27,9 @@ public class ReviewDbStorage implements ReviewStorage {
                                                   "SET USEFUL = USEFUL - 1 " +
                                                   "WHERE ID = ?";
     private static final String FIND_ALL = "SELECT * FROM REVIEWS ";
-    private static final String ADD_FEED = "INSERT INTO USER_FEEDS " +
-            "(USER_ID, TIME_STAMP, EVENT_TYPE, OPERATION, ENTITY_ID) " +
-            "VALUES (?, ?, ?, ?, ?)";
+
     private final JdbcTemplate jdbcTemplate;
+    private final FeedEventStorage feedEventStorage;
 
     @Override
     public Collection<Review> findAll() {
@@ -72,8 +73,7 @@ public class ReviewDbStorage implements ReviewStorage {
 
         int reviewId = keyHolder.getKey().intValue();
         review.setReviewId(reviewId);
-        jdbcTemplate.update(ADD_FEED,
-                review.getUserId(), Instant.now().toEpochMilli(), "REVIEW", "ADD", reviewId);
+        feedEventStorage.save(review.getUserId(), EventType.REVIEW, Operation.ADD, reviewId);
         return review;
     }
 
@@ -87,11 +87,13 @@ public class ReviewDbStorage implements ReviewStorage {
                 review.getReviewId()) == 0) {
             return Optional.empty();
         }
-        sql = FIND_ALL +
-             "WHERE ID = ?";
-        Review updatedReview = jdbcTemplate.query(sql, (resultSet, rowNum) -> mapRowToReview(resultSet), review.getReviewId()).get(0);
-        jdbcTemplate.update(ADD_FEED,
-                updatedReview.getReviewId(), Instant.now().toEpochMilli(), "REVIEW", "UPDATE", updatedReview.getFilmId());
+        sql = FIND_ALL + "WHERE ID = ?";
+        Review updatedReview = jdbcTemplate.query(sql, (resultSet, rowNum) -> mapRowToReview(resultSet),
+                review.getReviewId()).get(0);
+
+        feedEventStorage.save(updatedReview.getReviewId(), EventType.REVIEW, Operation.UPDATE,
+                updatedReview.getFilmId());
+
         return Optional.of(updatedReview);
     }
 
@@ -100,8 +102,7 @@ public class ReviewDbStorage implements ReviewStorage {
         List<Review> review = jdbcTemplate.query("SELECT * FROM REVIEWS WHERE ID = ?",
                 (resultSet, rowNum) -> mapRowToReview(resultSet),  id);
         if (!review.isEmpty() && jdbcTemplate.update("DELETE FROM REVIEWS WHERE ID = ?", id) > 0) {
-            jdbcTemplate.update(ADD_FEED,
-                    id, Instant.now().toEpochMilli(), "REVIEW", "REMOVE", review.get(0).getFilmId());
+            feedEventStorage.save(id, EventType.REVIEW, Operation.REMOVE, review.get(0).getFilmId());
             return true;
         }
         return false;
@@ -111,8 +112,7 @@ public class ReviewDbStorage implements ReviewStorage {
     public boolean addLike(int reviewId, int userId) {
         String sql = "MERGE INTO REVIEW_LIKES(REVIEW_ID, USER_ID) VALUES (?, ?)";
         if (jdbcTemplate.update(sql, reviewId, userId) > 0) {
-            sql = INCREASE_USEFUL;
-            jdbcTemplate.update(sql, reviewId);
+            jdbcTemplate.update(INCREASE_USEFUL, reviewId);
             return true;
         }
         return false;
@@ -122,8 +122,7 @@ public class ReviewDbStorage implements ReviewStorage {
     public boolean addDislike(int reviewId, int userId) {
         String sql = "MERGE INTO REVIEW_DISLIKES(REVIEW_ID, USER_ID) VALUES (?, ?)";
         if (jdbcTemplate.update(sql, reviewId, userId) > 0) {
-            sql = DECREASE_USEFUL;
-            jdbcTemplate.update(sql, reviewId);
+            jdbcTemplate.update(DECREASE_USEFUL, reviewId);
             return true;
         }
         return false;
@@ -134,8 +133,7 @@ public class ReviewDbStorage implements ReviewStorage {
         String sql = "DELETE FROM REVIEW_LIKES " +
                      "WHERE REVIEW_ID = ? AND USER_ID = ?";
         if (jdbcTemplate.update(sql, reviewId, userId) > 0) {
-            sql = DECREASE_USEFUL;
-            jdbcTemplate.update(sql, reviewId);
+            jdbcTemplate.update(DECREASE_USEFUL, reviewId);
             return true;
         }
         return false;
@@ -146,8 +144,7 @@ public class ReviewDbStorage implements ReviewStorage {
         String sql = "DELETE FROM REVIEW_DISLIKES " +
                      "WHERE REVIEW_ID = ? AND USER_ID = ?";
         if (jdbcTemplate.update(sql, reviewId, userId) > 0) {
-            sql = INCREASE_USEFUL;
-            jdbcTemplate.update(sql, reviewId);
+            jdbcTemplate.update(INCREASE_USEFUL, reviewId);
             return true;
         }
         return false;

@@ -32,7 +32,7 @@ public class Film {
     @Positive(message = "Продолжительность фильма должна быть больше 0")
     private int duration;
     private Mpa mpa;
-    private SortedSet<Director> directors = new TreeSet<>(Comparator.comparing(Director::getId));
+    private Set<Director> directors = new HashSet<>();
     private SortedSet<Genre> genres = new TreeSet<>(Comparator.comparing(Genre::getId));
 
     public void addLikeFromUser(int userId) {
@@ -50,8 +50,8 @@ public class Film {
     public SortedSet<Genre> getGenres() {
         return Collections.unmodifiableSortedSet(genres);
     }
-    public SortedSet<Director> getDirectors() {
-        return Collections.unmodifiableSortedSet(directors);
+    public Set<Director> getDirectors() {
+        return Collections.unmodifiableSet(directors);
     }
 
     public Set<Integer> getWhoLikedUserIds() {

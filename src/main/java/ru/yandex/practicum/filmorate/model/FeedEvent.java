@@ -13,7 +13,7 @@ import javax.validation.constraints.Positive;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class Feed {
+public class FeedEvent {
 
     @NotNull
     private int eventId;

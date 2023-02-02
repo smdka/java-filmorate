@@ -3,11 +3,10 @@ package ru.yandex.practicum.filmorate.controller;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.service.DirectorService;
+import ru.yandex.practicum.filmorate.validation.Validator;
 
 import javax.validation.Valid;
 import java.util.Collection;
@@ -36,7 +35,7 @@ public class DirectorController {
     }
     @PostMapping
     public Director addDirector(@Valid @RequestBody Director director, BindingResult bindingResult) {
-        ifHasErrorsThrow(bindingResult);
+        Validator.ifHasErrorsThrowValidationException(bindingResult);
         log.debug("Получен запрос GET /directors");
         return directorService.addDirector(director);
     }
@@ -51,13 +50,5 @@ public class DirectorController {
     public Director update(@Valid @RequestBody Director director) {
         log.debug("Получен запрос PUT /directors");
         return directorService.update(director);
-    }
-
-    private void ifHasErrorsThrow(BindingResult bindingResult) {
-        if (bindingResult.hasErrors()) {
-            for (FieldError e : bindingResult.getFieldErrors()) {
-            }
-            throw new ValidationException(bindingResult.getFieldErrors().toString());
-        }
     }
 }

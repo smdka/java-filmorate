@@ -4,9 +4,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.service.ReviewService;
+import ru.yandex.practicum.filmorate.validation.Validator;
 
 import javax.validation.Valid;
 import java.util.Collection;
@@ -27,20 +27,14 @@ public class ReviewsController {
     @PostMapping
     public Review add(@Valid @RequestBody Review review, BindingResult bindingResult) {
         log.debug("Получен запрос POST /reviews");
-        ifHasErrorsThrow(bindingResult);
+        Validator.ifHasErrorsThrowValidationException(bindingResult);
         return reviewService.add(review);
-    }
-
-    private void ifHasErrorsThrow(BindingResult bindingResult) {
-        if (bindingResult.hasErrors()) {
-            throw new ValidationException(bindingResult.getFieldErrors().toString());
-        }
     }
 
     @PutMapping
     public Review update(@Valid @RequestBody Review newReview, BindingResult bindingResult) {
         log.debug("Получен запрос PUT /reviews");
-        ifHasErrorsThrow(bindingResult);
+        Validator.ifHasErrorsThrowValidationException(bindingResult);
         return reviewService.update(newReview);
     }
 

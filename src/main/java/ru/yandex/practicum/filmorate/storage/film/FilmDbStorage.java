@@ -7,13 +7,16 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.*;
+import ru.yandex.practicum.filmorate.storage.event.FeedEventStorage;
+import ru.yandex.practicum.filmorate.utilities.enums.EventType;
+import ru.yandex.practicum.filmorate.utilities.enums.Operation;
+import ru.yandex.practicum.filmorate.utilities.enums.SortBy;
 import ru.yandex.practicum.filmorate.utilities.recommendations.Recommender;
 import ru.yandex.practicum.filmorate.utilities.recommendations.Matrix;
 import ru.yandex.practicum.filmorate.utilities.sql.SqlArrayConverter;
 
 import java.sql.*;
 import java.sql.Date;
-import java.time.Instant;
 import java.time.LocalDate;
 import java.util.*;
 
@@ -38,11 +41,10 @@ public class FilmDbStorage implements FilmStorage {
                     "LEFT JOIN FILM_LIKES FL on FILMS.ID = FL.FILM_ID " +
                     "LEFT JOIN FILM_DIRECTOR FD on FILMS.ID = FD.FILM_ID " +
                     "LEFT JOIN DIRECTORS D on D.ID = FD.DIRECTOR_ID ";
-    private static final String ADD_FEED = "INSERT INTO USER_FEEDS " +
-            "(USER_ID, TIME_STAMP, EVENT_TYPE, OPERATION, ENTITY_ID) " +
-            "VALUES (?, ?, ?, ?, ?)";
 
     private final JdbcTemplate jdbcTemplate;
+
+    private final FeedEventStorage feedEventStorage;
 
     @Override
     public Collection<Film> findAll() {
@@ -206,7 +208,7 @@ public class FilmDbStorage implements FilmStorage {
     public boolean addLike(int filmId, int userId) {
         String sql = "MERGE INTO FILM_LIKES(FILM_ID, LIKED_BY_USER_ID) VALUES (?, ?)";
         if (jdbcTemplate.update(sql, filmId, userId) > 0) {
-            jdbcTemplate.update(ADD_FEED, userId, Instant.now().toEpochMilli(), "LIKE", "ADD", filmId);
+            feedEventStorage.save(userId, EventType.LIKE, Operation.ADD, filmId);
             return true;
         }
         return false;
@@ -217,7 +219,7 @@ public class FilmDbStorage implements FilmStorage {
         String sql = "DELETE FROM FILM_LIKES " +
                 "WHERE FILM_ID = ? AND LIKED_BY_USER_ID = ?";
         if (jdbcTemplate.update(sql, filmId, userId) > 0) {
-            jdbcTemplate.update(ADD_FEED, userId, Instant.now().toEpochMilli(), "LIKE", "REMOVE", filmId);
+            feedEventStorage.save(userId, EventType.LIKE, Operation.REMOVE, filmId);
             return true;
         }
         return false;
@@ -274,10 +276,8 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public Collection<Film> findCommonFilms(int userId, int friendId) {
         String sql = FIND_ALL +
-                "JOIN FILM_LIKES F on FILMS.ID = F.FILM_ID " +
-                "JOIN FILM_LIKES L on FILMS.ID = L.FILM_ID " +
-                "WHERE F.LIKED_BY_USER_ID = ? AND L.LIKED_BY_USER_ID = ? " +
                 "GROUP BY FILMS.ID " +
+                "HAVING ARRAY_CONTAINS(LIKES, ?) AND ARRAY_CONTAINS(LIKES, ?) " +
                 "ORDER BY COUNT(DISTINCT FL.LIKED_BY_USER_ID) DESC";
         return jdbcTemplate.query(sql, (rs, rowNum) -> mapRowToFilm(rs), userId, friendId);
     }
@@ -294,7 +294,7 @@ public class FilmDbStorage implements FilmStorage {
 
     private void saveDirectors(Film film) {
         jdbcTemplate.update("DELETE FROM FILM_DIRECTOR WHERE FILM_ID = ?", film.getId());
-        SortedSet<Director> directors = film.getDirectors();
+        Set<Director> directors = film.getDirectors();
         int filmId = film.getId();
         String sql = "INSERT INTO FILM_DIRECTOR(DIRECTOR_ID, FILM_ID) VALUES (?,?) ";
 

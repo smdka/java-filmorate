@@ -1,7 +1,7 @@
 package ru.yandex.practicum.filmorate.storage.user;
 
 import org.springframework.stereotype.Repository;
-import ru.yandex.practicum.filmorate.model.Feed;
+import ru.yandex.practicum.filmorate.model.FeedEvent;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.*;
@@ -48,7 +48,7 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public Collection<User> findFriendsById(int userId) {
+    public List<User> findFriendsById(int userId) {
         User user = users.get(userId);
         return user == null ?
                 null :
@@ -78,7 +78,7 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public Collection<User> findCommonFriendsByIds(int firstUserId, int secondUserId) {
+    public List<User> findCommonFriendsByIds(int firstUserId, int secondUserId) {
         User firstUser = users.get(firstUserId);
         User secondUser = users.get(secondUserId);
         if (firstUser == null || secondUser == null) {
@@ -91,7 +91,7 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public List<Feed> getFeeds(int id) {
+    public List<FeedEvent> getFeeds(int id) {
         return null;
     }
 }
