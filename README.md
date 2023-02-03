@@ -1,4 +1,4 @@
-# java-filmorate
+# Приложение Filmorate
 
 ## Список задач, выполненных командой 2:
 ###### Функциональность «Лента событий»
@@ -26,7 +26,7 @@
 Выполнила Алина Завражина
 
 ## ER-диаграмма
-![ER diagram](https://github.com/smdka/java-filmorate/blob/a13481a7833c5e54689339f81202ac4e06e66276/Untitled%20(1).png)
+![ER diagram](https://github.com/smdka/java-filmorate/blob/a13481a7833c5e54689339f81202ac4e06e66276/ER-diagram.png)
 ## Примеры SQL-запросов
 ###### Получение всех пользователей:
 ```
