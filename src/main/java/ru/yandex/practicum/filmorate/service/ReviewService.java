@@ -43,7 +43,7 @@ public class ReviewService {
 
 
     public Review add(Review review) {
-        ifUserNotExistsThrow(review.getUserId());
+        ifUserNotExistsThrowNotFoundException(review.getUserId());
 
         ifFilmNotExistsThrow(review.getFilmId());
 
@@ -54,15 +54,16 @@ public class ReviewService {
     }
 
     private void ifFilmNotExistsThrow(int filmId) {
-        filmStorage.findById(filmId)
-                .orElseThrow(() -> new FilmNotFoundException(String.format(FILM_NOT_EXISTS_MSG, filmId)));
+        if (filmStorage.findById(filmId).isEmpty()) {
+            throw new FilmNotFoundException(String.format(FILM_NOT_EXISTS_MSG, filmId));
+        }
     }
 
-    private void ifUserNotExistsThrow(int userId) {
-        userStorage.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException(String.format(USER_NOT_EXISTS_MSG, userId)));
+    private void ifUserNotExistsThrowNotFoundException(int userId) {
+        if (userStorage.findById(userId).isEmpty()) {
+            throw new UserNotFoundException(String.format(USER_NOT_EXISTS_MSG, userId));
+        }
     }
-
 
     public Review update(Review newReview) {
         int id = newReview.getReviewId();
@@ -93,7 +94,7 @@ public class ReviewService {
     }
 
     public void addLikeToReview(int reviewId, int userId) {
-        ifUserNotExistsThrow(userId);
+        ifUserNotExistsThrowNotFoundException(userId);
         if (reviewStorage.addLike(reviewId, userId)) {
             log.debug("Лайк от пользователя с id = {} успешно добавлен в отзыв с id = {}", userId, reviewId);
             return;
@@ -102,7 +103,7 @@ public class ReviewService {
     }
 
     public void addDislikeToReview(int reviewId, int userId) {
-        ifUserNotExistsThrow(userId);
+        ifUserNotExistsThrowNotFoundException(userId);
         if (reviewStorage.addDislike(reviewId, userId)) {
             log.debug("Дизлайк от пользователя с id = {} успешно добавлен в отзыв с id = {}", userId, reviewId);
             return;
@@ -112,7 +113,7 @@ public class ReviewService {
 
 
     public void deleteLikeFromReview(int reviewId, int userId) {
-        ifUserNotExistsThrow(userId);
+        ifUserNotExistsThrowNotFoundException(userId);
         if (reviewStorage.deleteLike(reviewId, userId)) {
             log.debug("Лайк от пользователя с id = {} успешно удален из отзыва с id = {}", userId, reviewId);
             return;
@@ -121,7 +122,7 @@ public class ReviewService {
     }
 
     public void deleteDislikeFromReview(int reviewId, int userId) {
-        ifUserNotExistsThrow(userId);
+        ifUserNotExistsThrowNotFoundException(userId);
         if (reviewStorage.deleteDislike(reviewId, userId)) {
             log.debug("Дизлайк от пользователя с id = {} успешно удален из отзыва с id = {}", userId, reviewId);
             return;

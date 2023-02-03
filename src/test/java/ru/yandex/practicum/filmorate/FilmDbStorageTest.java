@@ -9,6 +9,7 @@ import org.springframework.test.context.jdbc.Sql;
 import ru.yandex.practicum.filmorate.model.*;
 import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserDbStorage;
+import ru.yandex.practicum.filmorate.utilities.enums.SortBy;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -166,16 +167,16 @@ class FilmDbStorageTest {
 
     @Test
     void feedWithLikeTest() {
-        Collection<FeedEvent> feedEvents = userDbStorage.getFeeds(2);
-        assertThat(feedEvents).hasSize(0);
+        Collection<FeedEvent> feedEvents = userDbStorage.getFeedEventsByUserId(2);
+        assertThat(feedEvents).isEmpty();
 
         filmDdStorage.addLike(1, 2);
-        feedEvents = userDbStorage.getFeeds(2);
+        feedEvents = userDbStorage.getFeedEventsByUserId(2);
 
         assertThat(feedEvents).hasSize(1);
 
         filmDdStorage.deleteLike(1, 2);
-        feedEvents = userDbStorage.getFeeds(2);
+        feedEvents = userDbStorage.getFeedEventsByUserId(2);
 
         assertThat(feedEvents).hasSize(2);
     }
@@ -184,9 +185,7 @@ class FilmDbStorageTest {
     void testFindCommonFilms() {
         Collection<Film> commonFilms = filmDdStorage.findCommonFilms(1, 3);
 
-        assertThat(commonFilms).hasSize(2);
-
-        assertThat(commonFilms)
+        assertThat(commonFilms).hasSize(2)
                 .anyMatch(film -> film.getId() == 3)
                 .anyMatch(film -> film.getId() == 2);
     }
@@ -204,10 +203,10 @@ class FilmDbStorageTest {
 
     @Test
     void getFilmsByDirectorTest() {
-        List<Film> filmListSortByYear = new ArrayList<>(filmDdStorage.getFilmsByDirector(2, "year"));
+        List<Film> filmListSortByYear = new ArrayList<>(filmDdStorage.getFilmsByDirector(2, SortBy.year));
         assertEquals("Terminator", filmListSortByYear.get(0).getName());
 
-        List<Film> filmListSortByLikes = new ArrayList<>(filmDdStorage.getFilmsByDirector(2, "likes"));
+        List<Film> filmListSortByLikes = new ArrayList<>(filmDdStorage.getFilmsByDirector(2, SortBy.likes));
         assertEquals("Snatch", filmListSortByLikes.get(0).getName());
     }
 

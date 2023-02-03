@@ -111,12 +111,12 @@ public class UserService {
         return filmStorage.getRecommendations(userId);
     }
 
-    public Collection<FeedEvent> getFeeds(int id) {
+    public Collection<FeedEvent> getFeedEvents(int id) {
         if (userStorage.findById(id).isEmpty()) {
             throw new UserNotFoundException(String.format(USER_NOT_EXISTS_MSG, id));
         }
         log.debug("Лента новостей для пользователя с id = {} отправлена", id);
-        return userStorage.getFeeds(id);
+        return userStorage.getFeedEventsByUserId(id);
     }
 }
 

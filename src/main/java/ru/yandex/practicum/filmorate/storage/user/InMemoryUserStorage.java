@@ -91,7 +91,7 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public List<FeedEvent> getFeeds(int id) {
+    public List<FeedEvent> getFeedEventsByUserId(int id) {
         return null;
     }
 }

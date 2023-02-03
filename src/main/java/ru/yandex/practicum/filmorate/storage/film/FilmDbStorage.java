@@ -61,7 +61,7 @@ public class FilmDbStorage implements FilmStorage {
         int duration = rs.getInt("DURATION");
         Mpa mpa = new Mpa(rs.getInt("MPA_ID"), rs.getString("MPA_NAME"));
         SortedSet<Genre> genres = getSetOfGenres(rs);
-        SortedSet<Director> director = getSetOfDirector(rs);
+        Set<Director> director = getSetOfDirector(rs);
         Set<Integer> likes = getSetOfLikes(rs);
         return new Film(id, likes, name, description, releaseDate, duration, mpa, director, genres);
     }
@@ -77,6 +77,21 @@ public class FilmDbStorage implements FilmStorage {
         SortedSet<Genre> result = new TreeSet<>();
         for (int i = 0; i < idsArrValues.length; i++) {
             result.add(new Genre((Integer) idsArrValues[i], (String) namesArrValues[i]));
+        }
+        return result;
+    }
+
+    private Set<Director> getSetOfDirector(ResultSet row) throws SQLException {
+        Array idsArr = row.getArray("DIRECTOR_IDS");
+        Array namesArr = row.getArray("DIRECTOR_NAMES");
+        Object[] idsArrValues = (Object[]) idsArr.getArray();
+        if (idsArrValues[0] == null) {
+            return Collections.emptySortedSet();
+        }
+        Object[] namesArrValues = (Object[]) namesArr.getArray();
+        SortedSet<Director> result = new TreeSet<>();
+        for (int i = 0; i < idsArrValues.length; i++) {
+            result.add(new Director((Integer) idsArrValues[i], (String) namesArrValues[i]));
         }
         return result;
     }
@@ -283,12 +298,11 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
-    public Collection<Film> getFilmsByDirector(int directorId, String sortBy) {
+    public Collection<Film> getFilmsByDirector(int directorId, SortBy sortBy) {
         String sql = FIND_ALL +
                 "WHERE DIRECTOR_ID = ? " +
                 "GROUP BY FILMS.ID " +
                 "ORDER BY " + requestParamSQLMap(sortBy);
-
         return jdbcTemplate.query(sql, (rs, rowNum) -> mapRowToFilm(rs), directorId);
     }
 
@@ -305,23 +319,8 @@ public class FilmDbStorage implements FilmStorage {
         }
     }
 
-    private SortedSet<Director> getSetOfDirector(ResultSet row) throws SQLException {
-        Array idsArr = row.getArray("DIRECTOR_IDS");
-        Array namesArr = row.getArray("DIRECTOR_NAMES");
-        Object[] idsArrValues = (Object[]) idsArr.getArray();
-        if (idsArrValues[0] == null) {
-            return Collections.emptySortedSet();
-        }
-        Object[] namesArrValues = (Object[]) namesArr.getArray();
-        SortedSet<Director> result = new TreeSet<>();
-        for (int i = 0; i < idsArrValues.length; i++) {
-            result.add(new Director((Integer) idsArrValues[i], (String) namesArrValues[i]));
-        }
-        return result;
-    }
-
     @Override
-    public List<Film> searchForFilmsByTitle(String query) {
+    public Collection<Film> searchForFilmsByTitle(String query) {
         String sql = FIND_ALL +
                 "WHERE FILMS.NAME ILIKE ? " +
                 "GROUP BY FILMS.ID " +
@@ -330,7 +329,7 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
-    public List<Film> searchForFilmsByDirector(String query) {
+    public Collection<Film> searchForFilmsByDirector(String query) {
         String sql = FIND_ALL +
                 "WHERE D.NAME ILIKE ? " +
                 "GROUP BY FILMS.ID " +
@@ -339,7 +338,7 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
-    public List<Film> searchForFilmsByDirectorAndTitle(String query) {
+    public Collection<Film> searchForFilmsByDirectorAndTitle(String query) {
         String sql = FIND_ALL +
                 "WHERE D.NAME ILIKE ? OR FILMS.NAME ILIKE ? " +
                 "GROUP BY FILMS.ID " +
@@ -347,8 +346,8 @@ public class FilmDbStorage implements FilmStorage {
         return jdbcTemplate.query(sql, (rs, rowNum) -> mapRowToFilm(rs), "%" + query + "%", "%" + query + "%");
     }
 
-    private String requestParamSQLMap(String sortBy) {
-        if (sortBy.equals(SortBy.year.toString())) {
+    private String requestParamSQLMap(SortBy sortBy) {
+        if (sortBy.equals(SortBy.year)) {
             return "RELEASE_YEAR";
         } else {
             return "LIKES";

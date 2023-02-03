@@ -11,10 +11,10 @@ import ru.yandex.practicum.filmorate.utilities.enums.SearchBy;
 import ru.yandex.practicum.filmorate.storage.director.DirectorStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
+import ru.yandex.practicum.filmorate.utilities.enums.SortBy;
 
 import java.util.Collection;
 import java.util.Optional;
-import java.util.List;
 import java.util.Set;
 
 @Service
@@ -57,13 +57,12 @@ public class FilmService {
         return film;
     }
 
-    public Collection<Film> getFilmsByDirector (int directorId, String sortBy) {
-            directorStorage.findById(directorId)
-                .orElseThrow(() ->
-                        new DirectorNotFoundException(String.format("Режиссер %d не найден", directorId)));
-            Collection<Film> filmList = filmStorage.getFilmsByDirector(directorId, sortBy);
-            log.debug("Список всех фильмов режиссера {} успешно отправлен", directorId);
-            return filmList;
+    public Collection<Film> getFilmsByDirector(int directorId, SortBy sortBy) {
+        if (directorStorage.findById(directorId).isEmpty()) {
+            throw new DirectorNotFoundException(String.format("Режиссер %d не найден", directorId));
+        }
+        log.debug("Список всех фильмов режиссера {} успешно отправлен", directorId);
+        return filmStorage.getFilmsByDirector(directorId, sortBy);
     }
 
     public Collection<Film> getAllFilms() {
@@ -79,6 +78,7 @@ public class FilmService {
     }
 
     public void addLikeToFilm(int filmId, int userId) {
+        ifUserNotExistsThrowNotFoundException(userId);
         if (filmStorage.addLike(filmId, userId)) {
             log.debug("Лайк от пользователя с id = {} успешно добавлен в фильм с id = {}", userId, filmId);
             return;
@@ -86,7 +86,14 @@ public class FilmService {
         log.debug("Не удалось добавить лайк от пользователя с id = {} в фильм с id = {}", userId, filmId);
     }
 
+    private void ifUserNotExistsThrowNotFoundException(int userId) {
+        if (userStorage.findById(userId).isEmpty()) {
+                throw new UserNotFoundException(String.format(USER_NOT_EXISTS_MSG, userId));
+        }
+    }
+
     public void deleteLikeFromFilm(int filmId, int userId) {
+        ifUserNotExistsThrowNotFoundException(userId);
         if (filmStorage.deleteLike(filmId, userId)) {
             log.debug("Лайк от пользователя с id = {} успешно удален из фильма с id = {}", userId, filmId);
             return;
@@ -99,8 +106,8 @@ public class FilmService {
         return filmStorage.findTopNMostPopular(limit, genreId, year);
     }
 
-    public List<Film> searchFilm(String query, Set<SearchBy> by) {
-       if (by.size() == SearchBy.values().length){
+    public Collection<Film> searchFilm(String query, Set<SearchBy> by) {
+       if (by.size() == SearchBy.values().length) {
            log.debug("Поиск '{}' по названиям фильмов и режиссерам", query);
            return filmStorage.searchForFilmsByDirectorAndTitle (query);
        }else if (by.contains(SearchBy.director)){
@@ -112,11 +119,8 @@ public class FilmService {
     }
 
     public Collection<Film> getCommonFilms(int userId, int friendId) {
-        if (userStorage.findById(userId).isEmpty()) {
-            throw new UserNotFoundException(String.format(USER_NOT_EXISTS_MSG, userId));
-        } else if (userStorage.findById(friendId).isEmpty()) {
-            throw new UserNotFoundException(String.format(USER_NOT_EXISTS_MSG, friendId));
-        }
+        ifUserNotExistsThrowNotFoundException(userId);
+        ifUserNotExistsThrowNotFoundException(friendId);
         log.debug("Список общих фильмов пользователя с id = {} и его друга с id = {} отправлен", userId, friendId);
         return filmStorage.findCommonFilms(userId, friendId);
     }

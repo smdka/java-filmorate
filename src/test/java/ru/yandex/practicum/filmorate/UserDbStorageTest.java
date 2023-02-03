@@ -134,16 +134,16 @@ class UserDbStorageTest {
 
     @Test
     void feedAfterFriendTest(){
-        Collection<FeedEvent> feedEvents = userDbStorage.getFeeds(1);
-        assertThat(feedEvents).hasSize(0);
+        Collection<FeedEvent> feedEvents = userDbStorage.getFeedEventsByUserId(1);
+        assertThat(feedEvents).isEmpty();
 
         userDbStorage.addFriend(1,2);
-        feedEvents = userDbStorage.getFeeds(1);
+        feedEvents = userDbStorage.getFeedEventsByUserId(1);
 
         assertThat(feedEvents).hasSize(1);
 
         userDbStorage.removeFriend(1,2);
-        feedEvents = userDbStorage.getFeeds(1);
+        feedEvents = userDbStorage.getFeedEventsByUserId(1);
 
         assertThat(feedEvents).hasSize(2);
     }

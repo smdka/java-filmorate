@@ -66,13 +66,6 @@ public class RuntimeExceptionsHandler {
     }
 
     @ExceptionHandler
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public Map<String, String> handleRuntimeException(final RuntimeException e) {
-        log.warn(e.getMessage());
-        return Map.of(ERROR, e.getMessage());
-    }
-
-    @ExceptionHandler
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public Map<String, String> handleNotExistingDirector(final DirectorNotFoundException e) {
         log.warn(e.getMessage());

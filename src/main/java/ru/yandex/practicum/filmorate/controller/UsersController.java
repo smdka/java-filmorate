@@ -101,6 +101,6 @@ public class UsersController {
     public Collection<FeedEvent> getFeeds(@PathVariable int id){
         log.debug("Получен запрос GET /users/{}/feed", id);
         ifNegativeThrowNotFoundException(id);
-        return userService.getFeeds(id);
+        return userService.getFeedEvents(id);
     }
 }

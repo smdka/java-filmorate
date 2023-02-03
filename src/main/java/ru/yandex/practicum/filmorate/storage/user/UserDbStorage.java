@@ -154,7 +154,7 @@ public class UserDbStorage implements UserStorage {
     }
 
     @Override
-    public List<FeedEvent> getFeeds(int id) {
+    public List<FeedEvent> getFeedEventsByUserId(int id) {
         return feedEventStorage.findAllByUserId(id);
     }
 }

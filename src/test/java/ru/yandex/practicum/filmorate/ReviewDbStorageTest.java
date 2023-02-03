@@ -183,8 +183,8 @@ class ReviewDbStorageTest {
 
     @Test
     void feedWithReviewTest(){
-        Collection<FeedEvent> feedEvents = userDbStorage.getFeeds(1);
-        assertThat(feedEvents).hasSize(0);
+        Collection<FeedEvent> feedEvents = userDbStorage.getFeedEventsByUserId(1);
+        assertThat(feedEvents).isEmpty();
 
         Review review = new Review();
         review.setContent("Review 4");
@@ -193,7 +193,7 @@ class ReviewDbStorageTest {
         review.setUserId(1);
         review.setIsPositive(true);
         reviewDbStorage.save(review);
-        feedEvents = userDbStorage.getFeeds(1);
+        feedEvents = userDbStorage.getFeedEventsByUserId(1);
 
         assertThat(feedEvents).hasSize(1);
 
@@ -205,12 +205,12 @@ class ReviewDbStorageTest {
         updatedReview.setUserId(2);
         updatedReview.setIsPositive(true);
         reviewDbStorage.update(updatedReview);
-        feedEvents = userDbStorage.getFeeds(1);
+        feedEvents = userDbStorage.getFeedEventsByUserId(1);
 
         assertThat(feedEvents).hasSize(2);
 
         reviewDbStorage.deleteById(1);
-        feedEvents = userDbStorage.getFeeds(1);
+        feedEvents = userDbStorage.getFeedEventsByUserId(1);
 
         assertThat(feedEvents).hasSize(3);
     }

@@ -6,22 +6,16 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Positive;
 
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
 public class FeedEvent {
-
-    @NotNull
     private int eventId;
 
-    @NotNull
     private int userId;
 
-    @NotNull
     private long timestamp;
 
     @NotBlank
@@ -30,7 +24,5 @@ public class FeedEvent {
     @NotBlank
     private String operation;
 
-    @NotNull
-    @Positive
     private int entityId;
 }

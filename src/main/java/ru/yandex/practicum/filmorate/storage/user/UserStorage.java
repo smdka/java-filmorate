@@ -17,5 +17,5 @@ public interface UserStorage {
     boolean addFriend(int userId, int friendId);
     boolean removeFriend(int userId, int friendId);
     List<User> findCommonFriendsByIds(int firstUserId, int secondUserId);
-    List<FeedEvent> getFeeds(int id);
+    List<FeedEvent> getFeedEventsByUserId(int id);
 }

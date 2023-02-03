@@ -1,9 +1,9 @@
 package ru.yandex.practicum.filmorate.storage.film;
 
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.utilities.enums.SortBy;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Optional;
 
 public interface FilmStorage {
@@ -17,8 +17,8 @@ public interface FilmStorage {
     boolean deleteLike(int filmId, int userId);
     Collection<Film> getRecommendations(int userId);
     Collection<Film> findCommonFilms(int userId, int friendId);
-    Collection<Film> getFilmsByDirector (int directorId, String sortBy);
-    List<Film> searchForFilmsByTitle(String query);
-    List<Film> searchForFilmsByDirector(String query);
-    List<Film> searchForFilmsByDirectorAndTitle(String query);
+    Collection<Film> getFilmsByDirector (int directorId, SortBy sortBy);
+    Collection<Film> searchForFilmsByTitle(String query);
+    Collection<Film> searchForFilmsByDirector(String query);
+    Collection<Film> searchForFilmsByDirectorAndTitle(String query);
 }

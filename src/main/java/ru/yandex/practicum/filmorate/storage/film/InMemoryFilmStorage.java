@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.storage.film;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.utilities.enums.SortBy;
 
 import java.util.*;
 
@@ -84,14 +85,14 @@ public class InMemoryFilmStorage implements FilmStorage {
                 .collect(toList());
     }
 
-    public Collection<Film> getFilmsByDirector(int directorId, String sortBy) {
+    public Collection<Film> getFilmsByDirector(int directorId, SortBy sortBy) {
         Set<Director> directors;
         Collection<Film> result;
-        switch (sortBy.toLowerCase()) {
-            case "year":
+        switch (sortBy) {
+            case year:
                 result = new TreeSet<>(Comparator.comparingInt(film -> film.getReleaseDate().getYear()));
                 break;
-            case "likes":
+            case likes:
                 result = new TreeSet<>(Comparator.comparingInt(Film::getLikesCount).reversed());
                 break;
             default:

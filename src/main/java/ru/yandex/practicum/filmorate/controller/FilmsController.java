@@ -4,7 +4,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.utilities.enums.SearchBy;
 import ru.yandex.practicum.filmorate.service.FilmService;
@@ -58,11 +57,7 @@ public class FilmsController {
     }
 
     @GetMapping("/director/{directorId}")
-    public Collection<Film> getFilmsByDirector(@PathVariable int directorId, @RequestParam String sortBy) {
-        boolean present = Arrays.stream(SortBy.values()).anyMatch(x -> Objects.equals(x.toString(), sortBy));
-        if (!present) {
-            throw new RuntimeException("неверный запрос параметра сортировки");
-        }
+    public Collection<Film> getFilmsByDirector(@PathVariable int directorId, @RequestParam SortBy sortBy) {
         log.debug("получен запрос GET /films/director/{directorId}?sortBy={}", sortBy);
         return filmService.getFilmsByDirector(directorId, sortBy);
     }
@@ -84,20 +79,12 @@ public class FilmsController {
     @PutMapping("/{filmId}/like/{userId}")
     public void addLikeToFilm(@PathVariable int filmId, @PathVariable int userId) {
         log.debug("Получен запрос PUT /films/{}/like/{}", filmId, userId);
-        ifNegativeThrowNotFoundException(userId);
         filmService.addLikeToFilm(filmId, userId);
-    }
-
-    private void ifNegativeThrowNotFoundException(int userId) {
-        if (userId <= 0) {
-            throw new UserNotFoundException("Пользователь с id = " + userId + " не существует");
-        }
     }
 
     @DeleteMapping("/{filmId}/like/{userId}")
     public void deleteLikeFromFilm(@PathVariable int filmId, @PathVariable int userId) {
         log.debug("Получен запрос DELETE /films/{}/like/{}", filmId, userId);
-        ifNegativeThrowNotFoundException(userId);
         filmService.deleteLikeFromFilm(filmId, userId);
     }
 
@@ -111,7 +98,6 @@ public class FilmsController {
     @DeleteMapping("/{filmId}")
     public void delete(@PathVariable int filmId) {
         log.debug("Получен запрос DELETE /films/{}", filmId);
-        ifNegativeThrowNotFoundException(filmId);
         filmService.deleteFilmById(filmId);
     }
 }
