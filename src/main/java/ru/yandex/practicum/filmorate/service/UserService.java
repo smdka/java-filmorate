@@ -4,9 +4,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
-import ru.yandex.practicum.filmorate.model.FeedEvent;
-import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.model.*;
+import ru.yandex.practicum.filmorate.storage.event.FeedEventStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
@@ -18,11 +17,14 @@ public class UserService {
     private static final String USER_NOT_EXISTS_MSG = "Пользователь с id = %d не существует";
     private final UserStorage userStorage;
     private final FilmStorage filmStorage;
+    private final FeedEventStorage feedEventStorage;
 
     public UserService(@Qualifier("userDbStorage") UserStorage userStorage,
-                       @Qualifier("filmDbStorage") FilmStorage filmStorage) {
+                       @Qualifier("filmDbStorage") FilmStorage filmStorage,
+                       FeedEventStorage feedEventStorage) {
         this.userStorage = userStorage;
         this.filmStorage = filmStorage;
+        this.feedEventStorage = feedEventStorage;
     }
 
     public User add(User user) {
@@ -77,6 +79,7 @@ public class UserService {
     public void sendFriendRequest(int fromUserId, int toUserId) {
         if (userStorage.addFriend(fromUserId, toUserId)) {
             log.debug("Пользователь с id = {} теперь в списке друзей пользователя с id = {}", toUserId, fromUserId);
+            feedEventStorage.save(fromUserId, EventType.FRIEND, Operation.ADD, toUserId);
             return;
         }
         log.debug("Не удалось добавить пользователя с id = {} в список друзей пользователя с id = {}",
@@ -86,6 +89,7 @@ public class UserService {
     public void deleteFriend(int userId, int friendId) {
         if (userStorage.removeFriend(userId, friendId)) {
             log.debug("Пользователь с id = {} удален из друзей пользователя с id = {}", friendId, userId);
+            feedEventStorage.save(userId, EventType.FRIEND, Operation.REMOVE, friendId);
             return;
         }
         log.debug("Не удалось удалить пользователя с id = {} из списка друзей пользователя с id = {}",
@@ -116,7 +120,7 @@ public class UserService {
             throw new UserNotFoundException(String.format(USER_NOT_EXISTS_MSG, id));
         }
         log.debug("Лента новостей для пользователя с id = {} отправлена", id);
-        return userStorage.getFeedEventsByUserId(id);
+        return feedEventStorage.findAllByUserId(id);
     }
 }
 

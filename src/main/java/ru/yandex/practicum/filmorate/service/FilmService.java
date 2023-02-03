@@ -6,12 +6,11 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.DirectorNotFoundException;
 import ru.yandex.practicum.filmorate.exception.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
-import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.utilities.enums.SearchBy;
+import ru.yandex.practicum.filmorate.model.*;
 import ru.yandex.practicum.filmorate.storage.director.DirectorStorage;
+import ru.yandex.practicum.filmorate.storage.event.FeedEventStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
-import ru.yandex.practicum.filmorate.utilities.enums.SortBy;
 
 import java.util.Collection;
 import java.util.Optional;
@@ -25,13 +24,16 @@ public class FilmService {
     private final FilmStorage filmStorage;
     private final UserStorage userStorage;
     private final DirectorStorage directorStorage;
+    private final FeedEventStorage feedEventStorage;
 
     public FilmService(@Qualifier("filmDbStorage") FilmStorage filmStorage,
                        @Qualifier("userDbStorage") UserStorage userStorage,
-                       DirectorStorage directorStorage) {
+                       DirectorStorage directorStorage,
+                       FeedEventStorage feedEventStorage) {
         this.filmStorage = filmStorage;
         this.userStorage =  userStorage;
         this.directorStorage = directorStorage;
+        this.feedEventStorage = feedEventStorage;
     }
 
     public Film add(Film film) {
@@ -81,6 +83,7 @@ public class FilmService {
         ifUserNotExistsThrowNotFoundException(userId);
         if (filmStorage.addLike(filmId, userId)) {
             log.debug("Лайк от пользователя с id = {} успешно добавлен в фильм с id = {}", userId, filmId);
+            feedEventStorage.save(userId, EventType.LIKE, Operation.ADD, filmId);
             return;
         }
         log.debug("Не удалось добавить лайк от пользователя с id = {} в фильм с id = {}", userId, filmId);
@@ -96,6 +99,7 @@ public class FilmService {
         ifUserNotExistsThrowNotFoundException(userId);
         if (filmStorage.deleteLike(filmId, userId)) {
             log.debug("Лайк от пользователя с id = {} успешно удален из фильма с id = {}", userId, filmId);
+            feedEventStorage.save(userId, EventType.LIKE, Operation.REMOVE, filmId);
             return;
         }
         log.debug("Не удалось удалить лайк от пользователя с id = {} в фильм с id = {}", userId, filmId);

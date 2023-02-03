@@ -6,13 +6,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.jdbc.Sql;
-import ru.yandex.practicum.filmorate.model.FeedEvent;
 import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.storage.review.ReviewDbStorage;
-import ru.yandex.practicum.filmorate.storage.user.UserDbStorage;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,7 +24,6 @@ class ReviewDbStorageTest {
     private static final int WRONG_ID = 9999;
     private static final int EXPECTED_REVIEWS_COUNT = 3;
     private final ReviewDbStorage reviewDbStorage;
-    private final UserDbStorage userDbStorage;
 
     @Test
     void findByIdTest() {
@@ -180,40 +176,4 @@ class ReviewDbStorageTest {
         assertThat(reviews.get(1))
                 .hasFieldOrPropertyWithValue("reviewId", 2);
     }
-
-    @Test
-    void feedWithReviewTest(){
-        Collection<FeedEvent> feedEvents = userDbStorage.getFeedEventsByUserId(1);
-        assertThat(feedEvents).isEmpty();
-
-        Review review = new Review();
-        review.setContent("Review 4");
-        review.setUseful(0);
-        review.setFilmId(3);
-        review.setUserId(1);
-        review.setIsPositive(true);
-        reviewDbStorage.save(review);
-        feedEvents = userDbStorage.getFeedEventsByUserId(1);
-
-        assertThat(feedEvents).hasSize(1);
-
-        Review updatedReview = new Review();
-        updatedReview.setReviewId(1);
-        updatedReview.setContent("UpdatedReview 4");
-        updatedReview.setUseful(0);
-        updatedReview.setFilmId(3);
-        updatedReview.setUserId(2);
-        updatedReview.setIsPositive(true);
-        reviewDbStorage.update(updatedReview);
-        feedEvents = userDbStorage.getFeedEventsByUserId(1);
-
-        assertThat(feedEvents).hasSize(2);
-
-        reviewDbStorage.deleteById(1);
-        feedEvents = userDbStorage.getFeedEventsByUserId(1);
-
-        assertThat(feedEvents).hasSize(3);
-    }
-
-
 }

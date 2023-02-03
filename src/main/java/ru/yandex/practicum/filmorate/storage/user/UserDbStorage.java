@@ -5,11 +5,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
-import ru.yandex.practicum.filmorate.model.FeedEvent;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.event.FeedEventStorage;
-import ru.yandex.practicum.filmorate.utilities.enums.EventType;
-import ru.yandex.practicum.filmorate.utilities.enums.Operation;
 
 import java.sql.*;
 import java.sql.Date;
@@ -28,8 +24,6 @@ public class UserDbStorage implements UserStorage {
             "LEFT JOIN USER_FRIENDS UF on USERS.ID = UF.USER_ID ";
 
     private final JdbcTemplate jdbcTemplate;
-    private final FeedEventStorage feedEventStorage;
-
 
     @Override
     public Collection<User> findAll() {
@@ -125,22 +119,14 @@ public class UserDbStorage implements UserStorage {
     public boolean addFriend(int userId, int friendId) {
         String sql = "MERGE INTO USER_FRIENDS(USER_ID, FRIEND_ID) " +
                      "VALUES (?, ?)";
-        if (jdbcTemplate.update(sql, userId, friendId) > 0) {
-            feedEventStorage.save(userId, EventType.FRIEND, Operation.ADD, friendId);
-            return true;
-        }
-        return false;
+        return jdbcTemplate.update(sql, userId, friendId) > 0;
     }
 
     @Override
     public boolean removeFriend(int userId, int friendId) {
         String sql = "DELETE FROM USER_FRIENDS " +
                      "WHERE USER_ID = ? AND FRIEND_ID = ?";
-        if (jdbcTemplate.update(sql, userId, friendId) > 0) {
-            feedEventStorage.save(userId, EventType.FRIEND, Operation.REMOVE, friendId);
-            return true;
-        }
-        return false;
+        return jdbcTemplate.update(sql, userId, friendId) > 0;
     }
 
     @Override
@@ -151,10 +137,5 @@ public class UserDbStorage implements UserStorage {
                     "WHERE U.USER_ID = ? AND F.USER_ID = ? " +
                     "GROUP BY USERS.ID";
         return jdbcTemplate.query(sql, (rs, rowNum) -> mapRowToUser(rs), firstUserId, secondUserId);
-    }
-
-    @Override
-    public List<FeedEvent> getFeedEventsByUserId(int id) {
-        return feedEventStorage.findAllByUserId(id);
     }
 }

@@ -2,7 +2,7 @@ package ru.yandex.practicum.filmorate.storage.film;
 
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.utilities.enums.SortBy;
+import ru.yandex.practicum.filmorate.model.SortBy;
 
 import java.util.*;
 import java.util.function.Predicate;

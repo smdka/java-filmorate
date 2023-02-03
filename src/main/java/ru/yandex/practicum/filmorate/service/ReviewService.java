@@ -6,7 +6,10 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ReviewNotFoundException;
 import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
+import ru.yandex.practicum.filmorate.model.EventType;
+import ru.yandex.practicum.filmorate.model.Operation;
 import ru.yandex.practicum.filmorate.model.Review;
+import ru.yandex.practicum.filmorate.storage.event.FeedEventStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.review.ReviewStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
@@ -23,14 +26,17 @@ public class ReviewService {
     private final ReviewStorage reviewStorage;
     private final UserStorage userStorage;
     private final FilmStorage filmStorage;
+    private final FeedEventStorage feedEventStorage;
 
     public ReviewService(ReviewStorage reviewStorage,
                          @Qualifier("userDbStorage") UserStorage userStorage,
-                         @Qualifier("filmDbStorage") FilmStorage filmStorage)
+                         @Qualifier("filmDbStorage") FilmStorage filmStorage,
+                         FeedEventStorage feedEventStorage)
     {
         this.reviewStorage = reviewStorage;
         this.userStorage = userStorage;
         this.filmStorage = filmStorage;
+        this.feedEventStorage = feedEventStorage;
     }
 
     public Review getReviewById(int id) {
@@ -48,8 +54,11 @@ public class ReviewService {
         ifFilmNotExistsThrow(review.getFilmId());
 
         Review savedReview = reviewStorage.save(review);
+        int reviewId = savedReview.getReviewId();
+
         log.info("Отзыв о фильме с id = {} успешно добавлен и ему присвоен id = {}",
-                savedReview.getFilmId(), savedReview.getReviewId());
+                savedReview.getFilmId(), reviewId);
+        feedEventStorage.save(review.getUserId(), EventType.REVIEW, Operation.ADD, reviewId);
         return savedReview;
     }
 
@@ -71,15 +80,19 @@ public class ReviewService {
                 .orElseThrow(() ->
                         new ReviewNotFoundException(String.format(REVIEW_NOT_EXISTS_MSG, id)));
         log.debug("Отзыв с id = {} успешно обновлен", id);
+        feedEventStorage.save(updatedReview.getReviewId(), EventType.REVIEW, Operation.UPDATE,
+                updatedReview.getFilmId());
         return updatedReview;
     }
 
 
     public void deleteReviewById(int id) {
-        if (!reviewStorage.deleteById(id)) {
-            throw new ReviewNotFoundException(String.format(REVIEW_NOT_EXISTS_MSG, id));
-        }
+        Review review = reviewStorage.findById(id)
+                .orElseThrow(() ->
+                        new ReviewNotFoundException(String.format(REVIEW_NOT_EXISTS_MSG, id)));
+        reviewStorage.deleteById(id);
         log.debug("Отзыв с id = {} успешно удален", id);
+        feedEventStorage.save(id, EventType.REVIEW, Operation.REMOVE, review.getFilmId());
     }
 
     public Collection<Review> getReviewsByFilmId(int filmId, int n) {

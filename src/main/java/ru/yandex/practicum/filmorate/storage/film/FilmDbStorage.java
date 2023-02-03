@@ -7,10 +7,7 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.*;
-import ru.yandex.practicum.filmorate.storage.event.FeedEventStorage;
-import ru.yandex.practicum.filmorate.utilities.enums.EventType;
-import ru.yandex.practicum.filmorate.utilities.enums.Operation;
-import ru.yandex.practicum.filmorate.utilities.enums.SortBy;
+import ru.yandex.practicum.filmorate.model.SortBy;
 import ru.yandex.practicum.filmorate.utilities.recommendations.Recommender;
 import ru.yandex.practicum.filmorate.utilities.recommendations.Matrix;
 import ru.yandex.practicum.filmorate.utilities.sql.SqlArrayConverter;
@@ -19,6 +16,8 @@ import java.sql.*;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static java.util.stream.Collectors.*;
 
@@ -43,8 +42,6 @@ public class FilmDbStorage implements FilmStorage {
 
     private final JdbcTemplate jdbcTemplate;
 
-    private final FeedEventStorage feedEventStorage;
-
     @Override
     public Collection<Film> findAll() {
         String sql = FIND_ALL +
@@ -59,25 +56,24 @@ public class FilmDbStorage implements FilmStorage {
         LocalDate releaseDate = rs.getDate("RELEASE_DATE").toLocalDate();
         int duration = rs.getInt("DURATION");
         Mpa mpa = new Mpa(rs.getInt("MPA_ID"), rs.getString("MPA_NAME"));
-        SortedSet<Genre> genres = getSetOfGenres(rs);
+        Set<Genre> genres = getSetOfGenres(rs);
         Set<Director> director = getSetOfDirector(rs);
         Set<Integer> likes = getSetOfLikes(rs);
         return new Film(id, likes, name, description, releaseDate, duration, mpa, director, genres);
     }
 
-    private SortedSet<Genre> getSetOfGenres(ResultSet row) throws SQLException {
+    private Set<Genre> getSetOfGenres(ResultSet row) throws SQLException {
         Array idsArr = row.getArray("GENRE_IDS");
         Array namesArr = row.getArray("GENRE_NAMES");
         Object[] idsArrValues = (Object[]) idsArr.getArray();
         if (idsArrValues[0] == null) {
-            return Collections.emptySortedSet();
+            return Collections.emptySet();
         }
         Object[] namesArrValues = (Object[]) namesArr.getArray();
-        SortedSet<Genre> result = new TreeSet<>();
-        for (int i = 0; i < idsArrValues.length; i++) {
-            result.add(new Genre((Integer) idsArrValues[i], (String) namesArrValues[i]));
-        }
-        return result;
+        return IntStream.iterate(0, i -> i < idsArrValues.length, i -> i + 1)
+                .mapToObj(i -> new Genre((Integer) idsArrValues[i], (String) namesArrValues[i]))
+                .sorted(Comparator.comparingInt(Genre::getId))
+                .collect(toCollection(LinkedHashSet::new));
     }
 
     private Set<Director> getSetOfDirector(ResultSet row) throws SQLException {
@@ -88,11 +84,9 @@ public class FilmDbStorage implements FilmStorage {
             return Collections.emptySortedSet();
         }
         Object[] namesArrValues = (Object[]) namesArr.getArray();
-        SortedSet<Director> result = new TreeSet<>();
-        for (int i = 0; i < idsArrValues.length; i++) {
-            result.add(new Director((Integer) idsArrValues[i], (String) namesArrValues[i]));
-        }
-        return result;
+        return IntStream.range(0, idsArrValues.length)
+                .mapToObj(i -> new Director((Integer) idsArrValues[i], (String) namesArrValues[i]))
+                .collect(toSet());
     }
 
     private Set<Integer> getSetOfLikes(ResultSet rs) throws SQLException {
@@ -125,13 +119,21 @@ public class FilmDbStorage implements FilmStorage {
 
         saveGenres(film);
         saveDirectors(film);
+        setGenresSortedById(film);
         return film;
+    }
+
+    private void setGenresSortedById(Film film) {
+        Set<Genre> genres = film.getGenres().stream()
+                .sorted(Comparator.comparingInt(Genre::getId))
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+        film.setGenres(genres);
     }
 
     private void saveGenres(Film film) {
         jdbcTemplate.update("DELETE FROM FILM_GENRE WHERE FILM_ID = ?", film.getId());
 
-        SortedSet<Genre> genres = film.getGenres();
+        Set<Genre> genres = film.getGenres();
         int filmId = film.getId();
         String sql = "INSERT INTO FILM_GENRE (FILM_ID, GENRE_ID) VALUES (?, ?)";
 
@@ -147,8 +149,8 @@ public class FilmDbStorage implements FilmStorage {
         String sql = "UPDATE FILMS SET " +
                 "NAME = ?, DESCRIPTION = ?, RELEASE_DATE = ?, DURATION = ?, MPA_ID = ? " +
                 "WHERE ID = ?";
-        if (
-                jdbcTemplate.update(sql,
+
+        if (jdbcTemplate.update(sql,
                         film.getName(),
                         film.getDescription(),
                         Date.valueOf(film.getReleaseDate()),
@@ -161,6 +163,7 @@ public class FilmDbStorage implements FilmStorage {
         saveGenres(film);
         saveLikes(film);
         saveDirectors(film);
+        setGenresSortedById(film);
         return Optional.of(film);
     }
 
@@ -221,22 +224,14 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public boolean addLike(int filmId, int userId) {
         String sql = "MERGE INTO FILM_LIKES(FILM_ID, LIKED_BY_USER_ID) VALUES (?, ?)";
-        if (jdbcTemplate.update(sql, filmId, userId) > 0) {
-            feedEventStorage.save(userId, EventType.LIKE, Operation.ADD, filmId);
-            return true;
-        }
-        return false;
+        return jdbcTemplate.update(sql, filmId, userId) > 0;
     }
 
     @Override
     public boolean deleteLike(int filmId, int userId) {
         String sql = "DELETE FROM FILM_LIKES " +
                 "WHERE FILM_ID = ? AND LIKED_BY_USER_ID = ?";
-        if (jdbcTemplate.update(sql, filmId, userId) > 0) {
-            feedEventStorage.save(userId, EventType.LIKE, Operation.REMOVE, filmId);
-            return true;
-        }
-        return false;
+        return jdbcTemplate.update(sql, filmId, userId) > 0;
     }
 
     @Override

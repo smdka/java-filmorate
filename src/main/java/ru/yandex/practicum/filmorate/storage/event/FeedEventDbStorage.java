@@ -4,8 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.FeedEvent;
-import ru.yandex.practicum.filmorate.utilities.enums.EventType;
-import ru.yandex.practicum.filmorate.utilities.enums.Operation;
+import ru.yandex.practicum.filmorate.model.EventType;
+import ru.yandex.practicum.filmorate.model.Operation;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -15,8 +15,8 @@ import java.util.List;
 @Repository
 @RequiredArgsConstructor
 public class FeedEventDbStorage implements FeedEventStorage {
-
     private final JdbcTemplate jdbcTemplate;
+
     @Override
     public void save(int userId, EventType eventType, Operation operation, int entityId) {
         String sql =

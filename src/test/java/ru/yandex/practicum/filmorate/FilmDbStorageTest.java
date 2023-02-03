@@ -8,8 +8,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.jdbc.Sql;
 import ru.yandex.practicum.filmorate.model.*;
 import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
-import ru.yandex.practicum.filmorate.storage.user.UserDbStorage;
-import ru.yandex.practicum.filmorate.utilities.enums.SortBy;
+import ru.yandex.practicum.filmorate.model.SortBy;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -25,7 +24,6 @@ class FilmDbStorageTest {
     private static final int WRONG_ID = 9999;
     private static final int EXPECTED_FILMS_COUNT = 3;
     private final FilmDbStorage filmDdStorage;
-    private final UserDbStorage userDbStorage;
 
     @Test
     void testFindFilmById() {
@@ -71,7 +69,7 @@ class FilmDbStorageTest {
         film.setDuration(120);
         film.setMpa(new Mpa(1, "G"));
         film.setReleaseDate(LocalDate.of(2022, 1, 11));
-        film.setGenres(new TreeSet<>(Set.of(new Genre(1, "Комедия"))));
+        film.setGenres(new LinkedHashSet<>(Set.of(new Genre(1, "Комедия"))));
         Film savedFilm = filmDdStorage.save(film);
 
         assertThat(savedFilm).usingRecursiveComparison()
@@ -92,7 +90,7 @@ class FilmDbStorageTest {
         film.setDuration(120);
         film.setMpa(new Mpa(1, "G"));
         film.setReleaseDate(LocalDate.of(2022, 1, 11));
-        film.setGenres(new TreeSet<>(Set.of(new Genre(1, "Комедия"))));
+        film.setGenres(new LinkedHashSet<>(Set.of(new Genre(1, "Комедия"))));
 
         filmDdStorage.update(film);
         Optional<Film> updatedFilm = filmDdStorage.findById(1);
@@ -163,22 +161,6 @@ class FilmDbStorageTest {
         assertEquals(likesCount - 1, film.getLikesCount());
 
         assertThat(filmDdStorage.deleteLike(WRONG_ID, 2)).isFalse();
-    }
-
-    @Test
-    void feedWithLikeTest() {
-        Collection<FeedEvent> feedEvents = userDbStorage.getFeedEventsByUserId(2);
-        assertThat(feedEvents).isEmpty();
-
-        filmDdStorage.addLike(1, 2);
-        feedEvents = userDbStorage.getFeedEventsByUserId(2);
-
-        assertThat(feedEvents).hasSize(1);
-
-        filmDdStorage.deleteLike(1, 2);
-        feedEvents = userDbStorage.getFeedEventsByUserId(2);
-
-        assertThat(feedEvents).hasSize(2);
     }
 
     @Test

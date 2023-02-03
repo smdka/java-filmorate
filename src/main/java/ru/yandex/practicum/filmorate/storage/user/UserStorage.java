@@ -1,6 +1,5 @@
 package ru.yandex.practicum.filmorate.storage.user;
 
-import ru.yandex.practicum.filmorate.model.FeedEvent;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.Collection;
@@ -17,5 +16,4 @@ public interface UserStorage {
     boolean addFriend(int userId, int friendId);
     boolean removeFriend(int userId, int friendId);
     List<User> findCommonFriendsByIds(int firstUserId, int secondUserId);
-    List<FeedEvent> getFeedEventsByUserId(int id);
 }
