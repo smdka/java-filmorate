@@ -58,14 +58,9 @@ public class DirectorDbStorage implements DirectorStorage {
         String sql = "UPDATE DIRECTORS " +
                 "SET NAME = ?" +
                 "WHERE ID = ?";
-        if(
-        jdbcTemplate.update(sql,
-                director.getName(),
-                director.getId()) == 0)
-        {
+        if (jdbcTemplate.update(sql, director.getName(), director.getId()) == 0) {
             return Optional.empty();
         }
-
         return Optional.of(director);
     }
 

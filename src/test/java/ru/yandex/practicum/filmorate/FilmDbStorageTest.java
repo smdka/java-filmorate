@@ -207,7 +207,7 @@ class FilmDbStorageTest {
         assertEquals("Terminator", filmListSortByYear.get(0).getName());
 
         List<Film> filmListSortByLikes = new ArrayList<>(filmDdStorage.getFilmsByDirector(2, SortBy.likes));
-        assertEquals("Snatch", filmListSortByLikes.get(0).getName());
+        assertEquals("Terminator", filmListSortByLikes.get(0).getName());
     }
 
     @Test

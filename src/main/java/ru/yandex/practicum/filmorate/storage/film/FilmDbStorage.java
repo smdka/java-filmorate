@@ -28,19 +28,18 @@ public class FilmDbStorage implements FilmStorage {
     private static final String FIND_ALL =
             "SELECT FILMS.*, " +
                     "MPA.NAME AS MPA_NAME, " +
-                    "YEAR(RELEASE_DATE) AS RELEASE_YEAR, " +
                     "ARRAY_AGG(FG.GENRE_ID) AS GENRE_IDS, " +
                     "ARRAY_AGG(G.NAME) AS GENRE_NAMES, " +
                     "ARRAY_AGG(FL.LIKED_BY_USER_ID) AS LIKES," +
                     "ARRAY_AGG(FD.DIRECTOR_ID) AS DIRECTOR_IDS," +
                     "ARRAY_AGG(D.NAME) AS DIRECTOR_NAMES," +
-                    "FROM FILMS " +
-                    "LEFT JOIN MPA on FILMS.MPA_ID = MPA.ID " +
-                    "LEFT JOIN FILM_GENRE FG on FILMS.ID = FG.FILM_ID " +
-                    "LEFT JOIN GENRES G on G.ID = FG.GENRE_ID " +
-                    "LEFT JOIN FILM_LIKES FL on FILMS.ID = FL.FILM_ID " +
-                    "LEFT JOIN FILM_DIRECTOR FD on FILMS.ID = FD.FILM_ID " +
-                    "LEFT JOIN DIRECTORS D on D.ID = FD.DIRECTOR_ID ";
+            "FROM FILMS " +
+            "LEFT JOIN MPA on FILMS.MPA_ID = MPA.ID " +
+            "LEFT JOIN FILM_GENRE FG on FILMS.ID = FG.FILM_ID " +
+            "LEFT JOIN GENRES G on G.ID = FG.GENRE_ID " +
+            "LEFT JOIN FILM_LIKES FL on FILMS.ID = FL.FILM_ID " +
+            "LEFT JOIN FILM_DIRECTOR FD on FILMS.ID = FD.FILM_ID " +
+            "LEFT JOIN DIRECTORS D on D.ID = FD.DIRECTOR_ID ";
 
     private final JdbcTemplate jdbcTemplate;
 
@@ -293,7 +292,7 @@ public class FilmDbStorage implements FilmStorage {
         String sql = FIND_ALL +
                 "GROUP BY FILMS.ID " +
                 "HAVING ARRAY_CONTAINS(LIKES, ?) AND ARRAY_CONTAINS(LIKES, ?) " +
-                "ORDER BY COUNT(DISTINCT FL.LIKED_BY_USER_ID) DESC";
+                "ORDER BY LIKES DESC";
         return jdbcTemplate.query(sql, (rs, rowNum) -> mapRowToFilm(rs), userId, friendId);
     }
 
@@ -301,9 +300,12 @@ public class FilmDbStorage implements FilmStorage {
     public Collection<Film> getFilmsByDirector(int directorId, SortBy sortBy) {
         String sql = FIND_ALL +
                 "WHERE DIRECTOR_ID = ? " +
-                "GROUP BY FILMS.ID " +
-                "ORDER BY " + requestParamSQLMap(sortBy);
-        return jdbcTemplate.query(sql, (rs, rowNum) -> mapRowToFilm(rs), directorId);
+                "GROUP BY FILMS.ID ";
+        String sqlSortBy = "ORDER BY LIKES DESC";
+        if (sortBy == SortBy.year) {
+            sqlSortBy = "ORDER BY YEAR(RELEASE_DATE)";
+        }
+        return jdbcTemplate.query(sql + sqlSortBy, (rs, rowNum) -> mapRowToFilm(rs), directorId);
     }
 
     private void saveDirectors(Film film) {
@@ -324,7 +326,7 @@ public class FilmDbStorage implements FilmStorage {
         String sql = FIND_ALL +
                 "WHERE FILMS.NAME ILIKE ? " +
                 "GROUP BY FILMS.ID " +
-                "ORDER BY FILMS.ID DESC ";
+                "ORDER BY FILMS.ID DESC";
         return jdbcTemplate.query(sql, (rs, rowNum) -> mapRowToFilm(rs), "%" + query + "%");
     }
 
@@ -333,7 +335,7 @@ public class FilmDbStorage implements FilmStorage {
         String sql = FIND_ALL +
                 "WHERE D.NAME ILIKE ? " +
                 "GROUP BY FILMS.ID " +
-                "ORDER BY FILMS.ID DESC ";
+                "ORDER BY FILMS.ID DESC";
         return jdbcTemplate.query(sql, (rs, rowNum) -> mapRowToFilm(rs), "%" + query + "%");
     }
 
@@ -342,15 +344,7 @@ public class FilmDbStorage implements FilmStorage {
         String sql = FIND_ALL +
                 "WHERE D.NAME ILIKE ? OR FILMS.NAME ILIKE ? " +
                 "GROUP BY FILMS.ID " +
-                "ORDER BY FILMS.ID DESC ";
+                "ORDER BY FILMS.ID DESC";
         return jdbcTemplate.query(sql, (rs, rowNum) -> mapRowToFilm(rs), "%" + query + "%", "%" + query + "%");
-    }
-
-    private String requestParamSQLMap(SortBy sortBy) {
-        if (sortBy.equals(SortBy.year)) {
-            return "RELEASE_YEAR";
-        } else {
-            return "LIKES";
-        }
     }
 }

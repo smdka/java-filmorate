@@ -1,16 +1,18 @@
 package ru.yandex.practicum.filmorate.storage.film;
 
 import org.springframework.stereotype.Repository;
-import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.utilities.enums.SortBy;
 
 import java.util.*;
+import java.util.function.Predicate;
 
 import static java.util.stream.Collectors.toList;
 
 @Repository
 public class InMemoryFilmStorage implements FilmStorage {
+    private static final Comparator<Film> BY_LIKES_DESC = Comparator.comparingInt(Film::getLikesCount).reversed();
+    private static final Comparator<Film> BY_FILM_ID_DESC = Comparator.comparingInt(Film::getId).reversed();
     private final Map<Integer, Film> films;
 
     public InMemoryFilmStorage() {
@@ -45,14 +47,31 @@ public class InMemoryFilmStorage implements FilmStorage {
 
     @Override
     public Collection<Film> findTopNMostPopular(int limit, Optional<Integer> genreId, Optional<Integer> year) {
-        return null;
+        Predicate<Film> p = film -> true;
+        if (genreId.isPresent() && year.isPresent()) {
+            p = film -> isReleaseYearEquals(year.get(), film) && hasGenreId(genreId.get(), film);
+        } else if (genreId.isPresent()) {
+            p = film -> hasGenreId(genreId.get(), film);
+        } else if (year.isPresent()) {
+            p = film -> isReleaseYearEquals(year.get(), film);
+        }
+        return films.values().stream()
+                .filter(p)
+                .sorted(BY_LIKES_DESC)
+                .limit(limit)
+                .collect(toList());
     }
 
-    public Collection<Film> findTopNMostPopular(int n) {
-        return films.values().stream()
-                .sorted(Comparator.comparingInt(Film::getLikesCount).reversed())
-                .limit(n)
-                .collect(toList());
+    private boolean hasGenreId(int genreId, Film film) {
+        return film.getGenres().stream().anyMatch(genre -> genre.getId() == genreId);
+    }
+
+    private boolean isReleaseYearEquals(int year, Film film) {
+        return getYear(film) == year;
+    }
+
+    private int getYear(Film film) {
+        return film.getReleaseDate().getYear();
     }
 
     public boolean addLike(int filmId, int userId) {
@@ -74,51 +93,62 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     public Collection<Film> getRecommendations(int userId) {
-        return null;
+        return Collections.emptyList();
     }
 
     public Collection<Film> findCommonFilms(int userId, int friendId) {
         return films.values().stream()
                 .filter(film -> film.getWhoLikedUserIds().contains(userId) &&
                                 film.getWhoLikedUserIds().contains(friendId))
-                .sorted(Comparator.comparingInt(Film::getLikesCount).reversed())
+                .sorted(BY_LIKES_DESC)
                 .collect(toList());
     }
 
     public Collection<Film> getFilmsByDirector(int directorId, SortBy sortBy) {
-        Set<Director> directors;
-        Collection<Film> result;
-        switch (sortBy) {
-            case year:
-                result = new TreeSet<>(Comparator.comparingInt(film -> film.getReleaseDate().getYear()));
-                break;
-            case likes:
-                result = new TreeSet<>(Comparator.comparingInt(Film::getLikesCount).reversed());
-                break;
-            default:
-                throw new IllegalArgumentException("Некорректный аргумент: " + sortBy);
+        Comparator<Film> c = BY_LIKES_DESC;
+        if (sortBy == SortBy.year) {
+            c = Comparator.comparingInt(this::getYear).reversed();
         }
-        for (Film film : films.values()) {
-            directors = film.getDirectors();
-            if (directors.stream().anyMatch(director -> director.getId() == directorId)) {
-                result.add(film);
-            }
-        }
-        return result;
+        return films.values().stream()
+                .filter(film -> hasDirectorId(directorId, film))
+                .sorted(c)
+                .collect(toList());
+    }
+
+    private boolean hasDirectorId(int directorId, Film film) {
+        return film.getDirectors().stream().anyMatch(director -> director.getId() == directorId);
     }
 
     @Override
-    public List<Film> searchForFilmsByTitle(String query) {
-        return null;
+    public Collection<Film> searchForFilmsByTitle(String query) {
+        return films.values().stream()
+                .filter(film -> isFilmTitleContains(query, film))
+                .sorted(BY_FILM_ID_DESC)
+                .collect(toList());
+    }
+
+    private boolean isFilmTitleContains(String query, Film film) {
+        return film.getName().toLowerCase().contains(query.toLowerCase());
     }
 
     @Override
-    public List<Film> searchForFilmsByDirector(String query) {
-        return null;
+    public Collection<Film> searchForFilmsByDirector(String query) {
+        return films.values().stream()
+                .filter(film -> isDirectorNameContains(query, film))
+                .sorted(BY_FILM_ID_DESC)
+                .collect(toList());
+    }
+
+    private boolean isDirectorNameContains(String query, Film film) {
+        return film.getDirectors().stream()
+                .anyMatch(director -> director.getName().toLowerCase().contains(query.toLowerCase()));
     }
 
     @Override
-    public List<Film> searchForFilmsByDirectorAndTitle(String query) {
-        return null;
+    public Collection<Film> searchForFilmsByDirectorAndTitle(String query) {
+        return films.values().stream()
+                .filter(film -> isFilmTitleContains(query, film) || isDirectorNameContains(query, film))
+                .sorted(BY_FILM_ID_DESC)
+                .collect(toList());
     }
 }
