@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.storage.film;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
@@ -70,7 +71,7 @@ public class FilmDbStorage implements FilmStorage {
             return Collections.emptySet();
         }
         Object[] namesArrValues = (Object[]) namesArr.getArray();
-        return IntStream.iterate(0, i -> i < idsArrValues.length, i -> i + 1)
+        return IntStream.range(0, idsArrValues.length)
                 .mapToObj(i -> new Genre((Integer) idsArrValues[i], (String) namesArrValues[i]))
                 .sorted(Comparator.comparingInt(Genre::getId))
                 .collect(toCollection(LinkedHashSet::new));
@@ -133,14 +134,23 @@ public class FilmDbStorage implements FilmStorage {
     private void saveGenres(Film film) {
         jdbcTemplate.update("DELETE FROM FILM_GENRE WHERE FILM_ID = ?", film.getId());
 
-        Set<Genre> genres = film.getGenres();
+        List<Genre> genres = new ArrayList<>(film.getGenres());
         int filmId = film.getId();
         String sql = "INSERT INTO FILM_GENRE (FILM_ID, GENRE_ID) VALUES (?, ?)";
 
         if (!genres.isEmpty()) {
-            for (Genre genre : genres) {
-                jdbcTemplate.update(sql, filmId, genre.getId());
-            }
+            jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
+                @Override
+                public void setValues(PreparedStatement ps, int i) throws SQLException {
+                    ps.setInt(1, filmId);
+                    ps.setInt(2, genres.get(i).getId());
+                }
+
+                @Override
+                public int getBatchSize() {
+                    return genres.size();
+                }
+            });
         }
     }
 
@@ -170,15 +180,24 @@ public class FilmDbStorage implements FilmStorage {
     private void saveLikes(Film film) {
         jdbcTemplate.update("DELETE FROM FILM_LIKES WHERE FILM_ID = ?", film.getId());
 
-        Set<Integer> whoLikedUserIds = film.getWhoLikedUserIds();
+        List<Integer> whoLikedUserIds = new ArrayList<>(film.getWhoLikedUserIds());
 
         String sql = "INSERT INTO FILM_LIKES (FILM_ID, LIKED_BY_USER_ID) VALUES (?, ?)";
         int filmId = film.getId();
 
         if (!whoLikedUserIds.isEmpty()) {
-            for (int id : whoLikedUserIds) {
-                jdbcTemplate.update(sql, filmId, id);
-            }
+            jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
+                @Override
+                public void setValues(PreparedStatement ps, int i) throws SQLException {
+                    ps.setInt(1, filmId);
+                    ps.setInt(2, whoLikedUserIds.get(i));
+                }
+
+                @Override
+                public int getBatchSize() {
+                    return whoLikedUserIds.size();
+                }
+            });
         }
     }
 
@@ -305,14 +324,23 @@ public class FilmDbStorage implements FilmStorage {
 
     private void saveDirectors(Film film) {
         jdbcTemplate.update("DELETE FROM FILM_DIRECTOR WHERE FILM_ID = ?", film.getId());
-        Set<Director> directors = film.getDirectors();
+        List<Director> directors = new ArrayList<>(film.getDirectors());
         int filmId = film.getId();
         String sql = "INSERT INTO FILM_DIRECTOR(DIRECTOR_ID, FILM_ID) VALUES (?,?) ";
 
         if (!directors.isEmpty()) {
-            for (Director director : directors) {
-                jdbcTemplate.update(sql, director.getId(), filmId);
-            }
+            jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
+                @Override
+                public void setValues(PreparedStatement ps, int i) throws SQLException {
+                    ps.setInt(1, directors.get(i).getId());
+                    ps.setInt(2, filmId);
+                }
+
+                @Override
+                public int getBatchSize() {
+                    return directors.size();
+                }
+            });
         }
     }
 
