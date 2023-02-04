@@ -3,15 +3,15 @@ package ru.yandex.practicum.filmorate.controller;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.SearchBy;
 import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.model.SortBy;
+import ru.yandex.practicum.filmorate.validation.Validator;
 
-import javax.validation.Valid;
 import java.util.*;
+import javax.validation.Valid;
 
 @Slf4j
 @RestController
@@ -37,51 +37,67 @@ public class FilmsController {
     }
 
     @GetMapping("/popular")
-    public Collection<Film> getMostPopularFilms(@RequestParam(defaultValue = "10") int count) {
-        log.debug("Получен запрос GET /films/popular/{}", count);
-        return filmService.getTopNMostPopular(count);
+    public Collection<Film> getMostPopularFilms(@RequestParam(defaultValue = "10", name = "count", required = false) int limit,
+                                                @RequestParam(name = "genreId", required = false) Optional<Integer> genreId,
+                                                @RequestParam(name = "year", required = false) Optional<Integer> year) {
+        String request =
+                "Получен запрос GET /films/popular/count=" +
+                limit +
+                (genreId.isPresent() ? "&genreId=" + genreId : "") +
+                (year.isPresent() ? "&year=" + year : "");
+
+        log.debug(request);
+        return filmService.getTopNMostPopular(limit, genreId, year);
+    }
+
+    @GetMapping("/common")
+    public Collection<Film> getCommonFilms(@RequestParam int userId, @RequestParam int friendId) {
+        log.debug("Получен запрос GET /films/common?userId={}&friendId={}", userId, friendId);
+        return filmService.getCommonFilms(userId, friendId);
+    }
+
+    @GetMapping("/director/{directorId}")
+    public Collection<Film> getFilmsByDirector(@PathVariable int directorId, @RequestParam SortBy sortBy) {
+        log.debug("получен запрос GET /films/director/{directorId}?sortBy={}", sortBy);
+        return filmService.getFilmsByDirector(directorId, sortBy);
     }
 
     @PostMapping
     public Film add(@Valid @RequestBody Film film, BindingResult bindingResult) {
         log.debug("Получен запрос POST /films");
-        ifHasErrorsThrow(bindingResult);
+        Validator.ifHasErrorsThrowValidationException(bindingResult);
         return filmService.add(film);
-    }
-
-    private void ifHasErrorsThrow(BindingResult bindingResult) {
-        if (bindingResult.hasErrors()) {
-            for (FieldError e : bindingResult.getFieldErrors()) {
-                log.warn("Не пройдена валидация фильма: {} = {}", e.getField(), e.getRejectedValue());
-            }
-            throw new ValidationException(bindingResult.getFieldErrors().toString());
-        }
     }
 
     @PutMapping
     public Film update(@Valid @RequestBody Film newFilm, BindingResult bindingResult) {
         log.debug("Получен запрос PUT /films");
-        ifHasErrorsThrow(bindingResult);
+        Validator.ifHasErrorsThrowValidationException(bindingResult);
         return filmService.update(newFilm);
     }
 
     @PutMapping("/{filmId}/like/{userId}")
     public void addLikeToFilm(@PathVariable int filmId, @PathVariable int userId) {
         log.debug("Получен запрос PUT /films/{}/like/{}", filmId, userId);
-        ifNegativeThrow(userId);
         filmService.addLikeToFilm(filmId, userId);
-    }
-
-    private void ifNegativeThrow(int userId) {
-        if (userId <= 0) {
-            throw new UserNotFoundException("Пользователь с id = " + userId + " не существует");
-        }
     }
 
     @DeleteMapping("/{filmId}/like/{userId}")
     public void deleteLikeFromFilm(@PathVariable int filmId, @PathVariable int userId) {
         log.debug("Получен запрос DELETE /films/{}/like/{}", filmId, userId);
-        ifNegativeThrow(userId);
         filmService.deleteLikeFromFilm(filmId, userId);
+    }
+
+    @GetMapping("/search")
+    public Collection<Film> searchFilm(@RequestParam String query, @RequestParam Set<SearchBy> by) {
+        log.debug("Получен запрос GET /films/search?query={}&by={}", query, by);
+        return filmService.searchFilm(query, by);
+    }
+
+
+    @DeleteMapping("/{filmId}")
+    public void delete(@PathVariable int filmId) {
+        log.debug("Получен запрос DELETE /films/{}", filmId);
+        filmService.deleteFilmById(filmId);
     }
 }

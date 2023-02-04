@@ -6,10 +6,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.jdbc.Sql;
-import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.model.Mpa;
+import ru.yandex.practicum.filmorate.model.*;
 import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
+import ru.yandex.practicum.filmorate.model.SortBy;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -70,7 +69,7 @@ class FilmDbStorageTest {
         film.setDuration(120);
         film.setMpa(new Mpa(1, "G"));
         film.setReleaseDate(LocalDate.of(2022, 1, 11));
-        film.setGenres(new TreeSet<>(Set.of(new Genre(1, "Комедия"))));
+        film.setGenres(new LinkedHashSet<>(Set.of(new Genre(1, "Комедия"))));
         Film savedFilm = filmDdStorage.save(film);
 
         assertThat(savedFilm).usingRecursiveComparison()
@@ -91,7 +90,7 @@ class FilmDbStorageTest {
         film.setDuration(120);
         film.setMpa(new Mpa(1, "G"));
         film.setReleaseDate(LocalDate.of(2022, 1, 11));
-        film.setGenres(new TreeSet<>(Set.of(new Genre(1, "Комедия"))));
+        film.setGenres(new LinkedHashSet<>(Set.of(new Genre(1, "Комедия"))));
 
         filmDdStorage.update(film);
         Optional<Film> updatedFilm = filmDdStorage.findById(1);
@@ -108,10 +107,34 @@ class FilmDbStorageTest {
     }
 
     @Test
-    void testMostPopularFilms() {
+    void testLimitInMostPopularFilms() {
         int n = 2;
-        Collection<Film> topNMostPopular = filmDdStorage.findTopNMostPopular(n);
-        assertThat(topNMostPopular).hasSize(n);
+        filmDdStorage.addLike(1, 1);
+        filmDdStorage.addLike(1, 2);
+        filmDdStorage.addLike(1, 3);
+        filmDdStorage.addLike(1, 4);
+        Film expectedFilm = filmDdStorage.findById(1).get();
+        Collection<Film> topNMostPopular = filmDdStorage.findTopNMostPopular(n, Optional.empty(), Optional.empty());
+        assertThat(topNMostPopular).hasSize(2);
+        assertEquals(expectedFilm, topNMostPopular.stream().findFirst().get());
+    }
+
+    @Test
+    void testMostPopularByGenreFilms() {
+        int n = 3;
+        Film expectedFilm = filmDdStorage.findById(2).get();
+        Collection<Film> topNMostPopular = filmDdStorage.findTopNMostPopular(n, Optional.of(6), Optional.empty());
+        assertThat(topNMostPopular).hasSize(2);
+        assertEquals(expectedFilm, topNMostPopular.stream().findFirst().get());
+    }
+
+    @Test
+    void testMostPopularByYearFilms() {
+        int n = 5;
+        Film expectedFilm = filmDdStorage.findById(1).get();
+        Collection<Film> topNMostPopular = filmDdStorage.findTopNMostPopular(n, Optional.empty(), Optional.of(1982));
+        assertThat(topNMostPopular).hasSize(1);
+        assertEquals(expectedFilm, topNMostPopular.stream().findFirst().get());
     }
 
     @Test
@@ -138,5 +161,56 @@ class FilmDbStorageTest {
         assertEquals(likesCount - 1, film.getLikesCount());
 
         assertThat(filmDdStorage.deleteLike(WRONG_ID, 2)).isFalse();
+    }
+
+    @Test
+    void testFindCommonFilms() {
+        Collection<Film> commonFilms = filmDdStorage.findCommonFilms(1, 3);
+
+        assertThat(commonFilms).hasSize(2)
+                .anyMatch(film -> film.getId() == 3)
+                .anyMatch(film -> film.getId() == 2);
+    }
+
+    @Test
+    void commonFilmsWithWrongUserIdShouldBeEmpty() {
+        Collection<Film> commonFilms = filmDdStorage.findCommonFilms(WRONG_ID, 3);
+
+        assertThat(commonFilms).isEmpty();
+
+        commonFilms = filmDdStorage.findCommonFilms(1, WRONG_ID);
+
+        assertThat(commonFilms).isEmpty();
+    }
+
+    @Test
+    void getFilmsByDirectorTest() {
+        List<Film> filmListSortByYear = new ArrayList<>(filmDdStorage.getFilmsByDirector(2, SortBy.year));
+        assertEquals("Terminator", filmListSortByYear.get(0).getName());
+
+        List<Film> filmListSortByLikes = new ArrayList<>(filmDdStorage.getFilmsByDirector(2, SortBy.likes));
+        assertEquals("Terminator", filmListSortByLikes.get(0).getName());
+    }
+
+    @Test
+    void getFilmsSearchedForName() {
+        List<Film> films = new ArrayList<>(filmDdStorage.searchForFilmsByTitle("SnA"));
+        assertEquals(2, films.get(0).getId());
+        assertEquals("Snatch", films.get(0).getName());
+    }
+
+    @Test
+    void getFilmsSearchedForDirector() {
+        List<Film> films = new ArrayList<>(filmDdStorage.searchForFilmsByDirector("Cas"));
+        assertEquals(3, films.get(0).getId());
+        assertEquals("Jaws", films.get(0).getName());
+    }
+
+    @Test
+    void getFilmsSearchedForDirectorAndTitle() {
+        List<Film> films = new ArrayList<>(filmDdStorage.searchForFilmsByDirectorAndTitle("s"));
+        assertEquals(2, films.size());
+        assertEquals("Jaws", films.get(0).getName());
+        assertEquals("Snatch", films.get(1).getName());
     }
 }

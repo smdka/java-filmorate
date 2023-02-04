@@ -1,13 +1,13 @@
 package ru.yandex.practicum.filmorate.storage.user;
 
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.*;
 
 import static java.util.stream.Collectors.*;
 
-@Component
+@Repository
 public class InMemoryUserStorage implements UserStorage {
     private final Map<Integer, User> users;
 
@@ -47,7 +47,7 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public Collection<User> findFriendsById(int userId) {
+    public List<User> findFriendsById(int userId) {
         User user = users.get(userId);
         return user == null ?
                 null :
@@ -77,7 +77,7 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public Collection<User> findCommonFriendsByIds(int firstUserId, int secondUserId) {
+    public List<User> findCommonFriendsByIds(int firstUserId, int secondUserId) {
         User firstUser = users.get(firstUserId);
         User secondUser = users.get(secondUserId);
         if (firstUser == null || secondUser == null) {
